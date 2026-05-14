@@ -5,3 +5,35 @@ description = "使用严谨的规范定义软件"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = []
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # D203 and D211 are incompatible
+    "D203",
+    # D212 and D213 are incompatible
+    "D213",
+]
+allowed-confusables = ["（", "）"]
+
+[tool.ruff.lint.per-file-ignores]
+# Allow 'assert' in tests/**
+"tests/**" = ["S101"]
+# Dynamic table name cause S608 issue, use a separated file.
+"src/db/sql.py" = ["S608"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0",
+    "ruff>=0.15.12",
+]
+
+[project.scripts]
+check = "sh:uv run ruff check --ignore-noqa && uv run pytest"

@@ -1,0 +1,17 @@
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - run: uv run ruff check --ignore-noqa
+      - run: uv run pytest
+      - run: uv run src/checker/main.py
