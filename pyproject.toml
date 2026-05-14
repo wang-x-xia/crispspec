@@ -1,0 +1,7 @@
+[project]
+name = "crispspec"
+version = "0.1.0"
+description = "使用严谨的规范定义软件"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
