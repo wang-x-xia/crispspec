@@ -37,6 +37,7 @@ _TYPE_TO_PREFIX: dict[str, str] = {
     "contract-test": "CT",
     "transition-test": "TT",
     "benchmark": "BM",
+    "type-def": "TYPE",
 }
 
 PREFIX_TO_TYPE = {v: k for k, v in _TYPE_TO_PREFIX.items()}

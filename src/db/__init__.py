@@ -43,6 +43,7 @@ from .types import (
     scenario_test,
     schedule,
     transition_test,
+    type_def,
     user_story,
 )
 
@@ -87,6 +88,7 @@ __all__ = [
     "scenario_test",
     "schedule",
     "transition_test",
+    "type_def",
     "type_to_prefix",
     "user_story",
 ]

@@ -34,6 +34,7 @@ integration_test = "integration-test"
 contract_test = "contract-test"
 transition_test = "transition-test"
 benchmark = "benchmark"
+type_def = "type-def"
 
 __all__ = [
     "ALL_TYPES",
@@ -70,6 +71,7 @@ __all__ = [
     "scenario_test",
     "schedule",
     "transition_test",
+    "type_def",
     "user_story",
 ]
 
@@ -108,4 +110,5 @@ ALL_TYPES = (
     contract_test,
     transition_test,
     benchmark,
+    type_def,
 )
