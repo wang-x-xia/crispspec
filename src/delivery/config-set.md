@@ -22,7 +22,7 @@
 | 值 | 含义 |
 |----|------|
 | `ENVIRONMENT` | 环境级配置（引用 [Environment](environment.md)） |
-| `MODULE` | 模块级配置（引用 [Module](../../module.md)） |
+| `MODULE` | 模块级配置（引用 [Module](../module/module.md)） |
 
 ---
 
@@ -77,5 +77,5 @@ config_overrides:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| 出 → | `APPLIES_TO` | [Environment](environment.md) / [Module](../../module.md) |
+| 出 → | `APPLIES_TO` | [Environment](environment.md) / [Module](../module/module.md) |
 | 出 → | `OVERRIDES` | [Configuration](configuration.md) |

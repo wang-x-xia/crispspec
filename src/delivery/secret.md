@@ -95,5 +95,5 @@ access_control_ids:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `REQUIRES` | [Environment](environment.md) / [Module](../../module.md) |
+| ← 入 | `REQUIRES` | [Environment](environment.md) / [Module](../module/module.md) |
 | 出 → | `AUTHORIZED_BY` | [Permission](../governance/rbac/permission.md) |

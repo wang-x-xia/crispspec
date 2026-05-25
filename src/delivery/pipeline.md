@@ -87,6 +87,6 @@ stages:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| 出 → | `BUILDS` | [Module](../../module.md) |
+| 出 → | `BUILDS` | [Module](../module/module.md) |
 | 出 → | `DEPLOYS_TO` | [Environment](environment.md) |
 | 出 → | `GATES_ON` | [Constraint](../governance/constraint.md) |

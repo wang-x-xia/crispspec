@@ -83,6 +83,6 @@ global_timeout: "30s"
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| 出 → | `COORDINATES` | [Module](../../module.md)（参与者模块） |
+| 出 → | `COORDINATES` | [Module](../module/module.md)（参与者模块） |
 | 出 → | `COMPOSES` | [Interface](../contract/interface.md)（正向 / 补偿接口） |
 | 出 → | `TESTED_BY` | [Integration Test](../test/integration-test.md) |

@@ -2,7 +2,7 @@
 
 ## 目标
 
-验证 [Module](../../module.md) 之间的交互是否符合预期——依赖协议是否正确、失败场景下的降级行为是否生效。每个 Integration Test 聚焦一对模块之间的一种调用场景。
+验证 [Module](../module/module.md) 之间的交互是否符合预期——依赖协议是否正确、失败场景下的降级行为是否生效。每个 Integration Test 聚焦一对模块之间的一种调用场景。
 
 ---
 
@@ -104,4 +104,4 @@ expected_fallback: DEGRADE
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `TESTED_BY` | [Module](../../module.md) |
+| ← 入 | `TESTED_BY` | [Module](../module/module.md) |

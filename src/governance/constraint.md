@@ -101,6 +101,6 @@ violation_action: REJECT
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `CONSTRAINED_BY` | 任意制品（[Module](../../module.md)、[Interface](../contract/interface.md)、[Entity](../contract/entity.md) 等） |
+| ← 入 | `CONSTRAINED_BY` | 任意制品（[Module](../module/module.md)、[Interface](../contract/interface.md)、[Entity](../contract/entity.md) 等） |
 | 出 → | `MEASURES` | [Metric](metric.md) |
 | 出 → | `TESTED_BY` | [Benchmark](../test/benchmark.md) |

@@ -147,5 +147,5 @@ communication_plan:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | 出 → | `HANDLES` | [Incident](incident.md) |
-| ← 入 | `MANAGES` | [Module](../../module.md) |
+| ← 入 | `MANAGES` | [Module](../module/module.md) |
 | 出 → | `EXECUTES` | [Runbook](runbook.md) |

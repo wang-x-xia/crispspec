@@ -179,4 +179,4 @@ introduction_reason: "对象存储服务"
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `DEPENDS_ON` | [Module](../../module.md) |
+| ← 入 | `DEPENDS_ON` | [Module](../module/module.md) |

@@ -20,9 +20,9 @@
 | `type` | enum | 见下方 | 模块类型 |
 | `version` | string | semver（如 `2.1.0`） | 当前版本 |
 | `owner` | string | 团队 / 人员 ID | 负责人 |
-| `status` | enum | 见下方 | 生命周期状态 |
+| `used` | boolean | 默认 `true` | 是否在使用 |
+| `deprecated` | boolean | 默认 `false` | 是否已废弃 |
 | `dependencies` | list\<Dependency\> | | 依赖的其他模块 |
-| `entities` | list\<EntityAccess\> | | 操作的数据实体 |
 | `interface_ids` | list\<ref\> | `API-\d+` | 暴露的接口 |
 | `process_ids` | list\<ref\> | `PROC-\d+` | 关联的流程 |
 | `constraint_ids` | list\<ref\> | `CON-\d+` | 关联的约束 |
@@ -32,22 +32,9 @@
 
 | 值 | 含义 |
 |----|------|
-| `MICROSERVICE` | 独立部署的微服务 |
-| `LIBRARY` | 共享库 / SDK |
-| `FUNCTION` | 无状态函数（FaaS） |
-| `GATEWAY` | API 网关 / BFF |
-| `WORKER` | 后台异步任务处理器 |
-| `SCHEDULER` | 定时任务调度器 |
-
-### status 枚举
-
-| 值 | 含义 |
-|----|------|
-| `DESIGN` | 设计中 |
-| `DEVELOPMENT` | 开发中 |
-| `ACTIVE` | 已上线 |
-| `DEPRECATED` | 已废弃（仍运行） |
-| `RETIRED` | 已下线 |
+| `CLI` | 命令行模块 |
+| `INTERNAL_LIB` | 内部功能模块 |
+| `EXTERNAL_LIB` | 外部功能模块 |
 
 ---
 
@@ -58,15 +45,8 @@
 | 字段 | 类型 | 约束 |
 |------|------|------|
 | `module_id` | ref | `MOD-\d+` |
-| `protocol` | enum | `gRPC` / `HTTP` / `EVENT` / `SDK` / `DB_SHARED` |
+| `protocol` | enum | `PYTHON_API` |
 | `required` | boolean | `true` = 强依赖（不可降级），`false` = 弱依赖 |
-
-### EntityAccess
-
-| 字段 | 类型 | 约束 |
-|------|------|------|
-| `entity_id` | ref | `ENT-\d+` |
-| `access` | enum | `READ` / `WRITE` / `READ_WRITE` |
 
 ### CodeRef
 
@@ -83,53 +63,40 @@
 ## 格式
 
 ```yaml
-id: "MOD-010"
-name: "RefundService"
-description: "处理退款申请的核心服务，包含 SLA 计算与审核流程"
+id: "MOD-001"
+name: "CrispSpec"
+description: "CrispSpec 命令行工具主模块"
 
-type: MICROSERVICE
-version: "2.1.0"
-owner: "payments-team"
-status: ACTIVE
+type: CLI
+version: "0.1.0"
+owner: "core-team"
+used: true
+deprecated: false
 
 dependencies:
+  - module_id: "MOD-002"
+    protocol: PYTHON_API
+    required: true
   - module_id: "MOD-003"
-    protocol: gRPC
-    required: true
-  - module_id: "MOD-011"
-    protocol: HTTP
+    protocol: PYTHON_API
     required: true
 
-entities:
-  - entity_id: "ENT-003"
-    access: READ_WRITE
-  - entity_id: "ENT-001"
-    access: READ
-
-interface_ids: ["API-020", "API-021"]
-process_ids: ["PROC-005"]
-constraint_ids: ["CON-010", "CON-011"]
+interface_ids: ["API-001", "API-002"]
+process_ids: ["PROC-001"]
+constraint_ids: ["CON-001"]
 
 code_refs:
-  - artifact_id: "API-020"
-    path: "src/refund/handlers/create_refund.ts"
-    symbol: "CreateRefundHandler"
+  - artifact_id: "API-001"
+    path: "src/cli/commands/create.py"
+    symbol: "CreateCommand"
 
-  - artifact_id: "API-021"
-    path: "src/refund/handlers/approve_refund.ts"
-    symbol: "ApproveRefundHandler"
+  - artifact_id: "API-002"
+    path: "src/cli/commands/validate.py"
+    symbol: "ValidateCommand"
 
-  - artifact_id: "ENT-003"
-    path: "src/refund/models/order.ts"
-    symbol: "Order"
-
-  - artifact_id: "PROC-005"
-    path: "src/refund/machines/refund_lifecycle.ts"
-    symbol: "RefundLifecycleMachine"
-
-  - artifact_id: "SUB-2"
-    path: "src/refund/subscribers/on_refund_success.ts"
-    symbol: "OnRefundSuccessHandler"
+  - artifact_id: "PROC-001"
+    path: "src/cli/workflow/pipeline.py"
+    symbol: "PipelineWorkflow"
 ```
 
 ---
@@ -139,4 +106,4 @@ code_refs:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | 出 ↔ | `DEPENDS_ON` | [Module](module.md)（自引用） |
-| 出 → | `TESTED_BY` | [Integration Test](src/test/integration-test.md) |
+| 出 → | `TESTED_BY` | [Integration Test](../test/integration-test.md) |

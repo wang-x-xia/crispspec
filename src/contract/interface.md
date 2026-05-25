@@ -105,7 +105,7 @@ rate_limit:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `EXPOSES` | [Module](../../module.md) |
+| ← 入 | `EXPOSES` | [Module](../module/module.md) |
 | 出 → | `USES_TYPE` | [Entity](entity.md) |
 | 出 → | `RETURNS` | [Error](error.md) |
 | 出 → | `AUTHORIZED_BY` | [Role](../governance/rbac/role.md) |

@@ -86,7 +86,7 @@ playbook_id: "PB-1"
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `MANAGES` | [Module](../../module.md) |
+| ← 入 | `MANAGES` | [Module](../module/module.md) |
 | 出 → | `AFFECTS` | [Entity](../contract/entity.md) |
 | 出 → | `RESOLVED_BY` | [Runbook](runbook.md) |
 | 出 → | `EMERGENCY_PLAN` | [Playbook](playbook.md) |

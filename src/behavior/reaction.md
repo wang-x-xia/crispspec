@@ -50,6 +50,6 @@ idempotent: true
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `OWNS` | [Module](../../module.md) |
+| ← 入 | `OWNS` | [Module](../module/module.md) |
 | 出 → | `LISTENS_TO` | [Event](../contract/event.md) |
 | 出 → | `TARGETS` | [Entity](../contract/entity.md) |
