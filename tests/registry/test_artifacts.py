@@ -28,6 +28,11 @@ VALID_PRIORITY = frozenset({"P0", "P1", "P2"})
 VALID_STAGES = frozenset({STAGE_ONE, STAGE_TWO})
 
 
+def _phase_artifacts(phase: dict) -> list[str]:
+    """Return every artifact a mainline phase mentions."""
+    return list(phase.get("produces") or []) + list(phase.get("prepares") or [])
+
+
 @pytest.fixture(scope="module")
 def registry() -> dict:
     """Load artifacts.yaml."""
@@ -141,7 +146,7 @@ def test_meta_counts_are_accurate(registry: dict, artifacts: list[dict]) -> None
 def test_mainline_covers_every_artifact_exactly_once(registry: dict, artifacts: list[dict]) -> None:
     """Every artifact type belongs to exactly one phase of the mainline."""
     phases = registry["mainline"]
-    covered = [name for phase in phases for name in phase["artifacts"]]
+    covered = [name for phase in phases for name in _phase_artifacts(phase)]
     assert len(covered) == len(set(covered)), "an artifact appears in two phases"
     assert sorted(covered) == sorted(a["type"] for a in artifacts)
 
@@ -156,8 +161,17 @@ def test_mainline_phases_are_known_artifacts(registry: dict, artifacts: list[dic
     """A phase only names artifact types that exist."""
     known = {a["type"] for a in artifacts}
     for phase in registry["mainline"]:
-        for name in phase["artifacts"]:
+        for name in _phase_artifacts(phase):
             assert name in known, f"{phase['id']}: {name}"
+
+
+def test_lateral_phases_produce_nothing(registry: dict) -> None:
+    """A cross-cutting phase prepares artifacts, it does not create them."""
+    for phase in registry["mainline"]:
+        if phase.get("lateral"):
+            assert not phase.get("produces"), phase["id"]
+        else:
+            assert phase.get("produces"), phase["id"]
 
 
 def test_mainline_handoffs_are_real_relations(registry: dict) -> None:
@@ -174,10 +188,20 @@ def test_mainline_handoffs_are_real_relations(registry: dict) -> None:
             assert key in known, f"{phase['id']}: {key}"
 
 
+def test_mainline_handoffs_touch_their_phase(registry: dict) -> None:
+    """Every hand-off has at least one end inside the phase that declares it."""
+    for phase in registry["mainline"]:
+        placed = set(_phase_artifacts(phase))
+        for handoff in phase.get("handoff", []):
+            assert handoff["from"] in placed or handoff["to"] in placed, (
+                f"{phase['id']}: {handoff} touches no artifact of the phase"
+            )
+
+
 def test_mainline_handoffs_stay_inside_the_mainline(registry: dict) -> None:
     """A hand-off only moves between artifacts that are on the mainline."""
     on_mainline = {
-        name for phase in registry["mainline"] for name in phase["artifacts"]
+        name for phase in registry["mainline"] for name in _phase_artifacts(phase)
     }
     for phase in registry["mainline"]:
         for handoff in phase.get("handoff", []):

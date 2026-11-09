@@ -238,6 +238,8 @@ pre.raw {
 .band-title { font: 600 13.5px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--text); pointer-events: none; }
 .band-question { font: 11.5px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--muted); pointer-events: none; }
 .band-count { font: 10.5px ui-monospace, Menlo, monospace; fill: var(--muted); pointer-events: none; }
+.band-split { stroke: var(--border); stroke-width: 1; stroke-dasharray: 4 4; }
+.band-split-label { font: 10px "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--muted); text-anchor: end; pointer-events: none; }
 .spine { stroke: var(--border); stroke-width: 2; fill: none; }
 .mainline .edge { opacity: .1; }
 .mainline .edge.main { opacity: 1; stroke: var(--accent); stroke-width: 2.2px; }
@@ -254,6 +256,7 @@ pre.raw {
 .overlay.mainline-legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
 .overlay.mainline-legend .dot.main { background: var(--accent); }
 .overlay.mainline-legend .dot.side { background: #6b7fa8; }
+.overlay.mainline-legend .dot.prepared { background: transparent; border: 1px dashed var(--muted); }
 .overlay.mainline-legend .dot.lateral { background: transparent; border: 1px dashed var(--muted); }
 .node { cursor: pointer; }
 .node .halo { fill: none; stroke: transparent; stroke-width: 6; }
@@ -263,6 +266,13 @@ pre.raw {
 .node.dim { opacity: .16; }
 .node.missing .body { fill: color-mix(in srgb, var(--danger) 20%, transparent); stroke: var(--danger); stroke-dasharray: 3 2; }
 .node.missing .prefix { fill: var(--danger); }
+.node.prepared .body {
+  fill: color-mix(in srgb, var(--domain) 18%, transparent);
+  stroke: var(--domain); stroke-dasharray: 4 3;
+}
+.node.prepared .prefix { fill: color-mix(in srgb, var(--domain) 60%, var(--muted)); }
+.node.prepared .title { fill: var(--muted); }
+.node.prepared .halo { stroke: color-mix(in srgb, var(--domain) 30%, transparent); }
 .node.selected .body { stroke: #fff; stroke-width: 2.6; }
 .node.selected .halo { stroke: var(--accent); }
 .node.neighbor .halo { stroke: color-mix(in srgb, var(--accent) 55%, transparent); }
@@ -351,6 +361,7 @@ pre.raw {
       <div class="overlay mainline-legend" id="mainlineLegend" hidden>
         <span><i class="dot main"></i>主线交接</span>
         <span><i class="dot side"></i>上下文关系</span>
+        <span><i class="dot prepared"></i>可提前准备</span>
         <span><i class="dot lateral"></i>横切关注点</span>
       </div>
     </section>
@@ -468,8 +479,10 @@ pre.raw {
 
   function buildMainlineGraph() {
     var phaseOf = {};
+    var preparedOf = {};
     DATA.phases.forEach(function (phase) {
       phase.artifacts.forEach(function (id) { phaseOf[id] = phase; });
+      (phase.prepares || []).forEach(function (id) { preparedOf[id] = true; });
     });
     var nodes = DATA.types.map(function (t) {
       var phase = phaseOf[t.id];
@@ -480,6 +493,7 @@ pre.raw {
         domain: t.domain,
         status: t.status,
         phase: phase ? phase.id : null,
+        prepared: !!preparedOf[t.id],
         lateral: phase ? !!phase.lateral : false,
         radius: 15 + Math.min(9, (t.fields || []).length * 1.1),
         raw: t,
@@ -649,20 +663,36 @@ pre.raw {
 
     graph.bands = [];
     DATA.phases.forEach(function (phase, index) {
-      var nodes = graph.nodes.filter(function (n) { return n.phase === phase.id; });
-      var rows = Math.max(1, Math.ceil(nodes.length / perRow));
+      var produced = graph.nodes.filter(function (n) {
+        return n.phase === phase.id && !n.prepared;
+      });
+      var prepared = graph.nodes.filter(function (n) {
+        return n.phase === phase.id && n.prepared;
+      });
+      var prodRows = produced.length ? Math.ceil(produced.length / perRow) : 0;
+      var prepRows = prepared.length ? Math.ceil(prepared.length / perRow) : 0;
+      var rows = Math.max(1, prodRows + prepRows);
       var top = y;
       var height = BAND_TOP + rows * ROW + BAND_PAD;
-      nodes.forEach(function (n, i) {
-        if (n.fx !== null) return;
-        var col = i % perRow;
-        var row = Math.floor(i / perRow);
-        n.x = RAIL + col * CARD + CARD / 2;
-        n.y = top + BAND_TOP + row * ROW + ROW / 2;
-        n.vx = 0; n.vy = 0;
-      });
+
+      function place(list, offset) {
+        list.forEach(function (n, i) {
+          if (n.fx !== null) return;
+          var col = i % perRow;
+          var row = offset + Math.floor(i / perRow);
+          n.x = RAIL + col * CARD + CARD / 2;
+          n.y = top + BAND_TOP + row * ROW + ROW / 2;
+          n.vx = 0; n.vy = 0;
+        });
+      }
+      place(produced, 0);
+      place(prepared, prodRows);
+
       graph.bands.push({
-        phase: phase, index: index, top: top, height: height, count: nodes.length
+        phase: phase, index: index, top: top, height: height,
+        count: produced.length + prepared.length,
+        produced: produced.length, prepared: prepared.length,
+        splitY: prodRows > 0 ? top + BAND_TOP + prodRows * ROW - 12 : null
       });
       y = top + height + BAND_GAP;
     });
@@ -696,8 +726,15 @@ pre.raw {
       var question = svgEl("text", { "class": "band-question" });
       question.textContent = band.phase.question;
       var count = svgEl("text", { "class": "band-count" });
-      count.textContent = band.count + " 种制品";
+      count.textContent = band.produced
+        ? "产出 " + band.produced + (band.prepared ? " · 预备 " + band.prepared : "")
+        : "预备 " + band.prepared;
+      var split = svgEl("line", { "class": "band-split" });
+      var splitLabel = svgEl("text", { "class": "band-split-label" });
+      splitLabel.textContent = "可提前准备";
       group.appendChild(rect);
+      group.appendChild(split);
+      group.appendChild(splitLabel);
       group.appendChild(stepBg);
       group.appendChild(step);
       group.appendChild(title);
@@ -707,6 +744,8 @@ pre.raw {
       bandLayer.appendChild(group);
       band.el = group;
       band.rect = rect;
+      band.split = split;
+      band.splitLabel = splitLabel;
       band.stepBg = stepBg;
       band.step = step;
       band.title = title;
@@ -734,6 +773,19 @@ pre.raw {
       band.question.setAttribute("y", band.top + 47);
       band.count.setAttribute("x", 58);
       band.count.setAttribute("y", band.top + 65);
+      if (band.splitY === null) {
+        band.split.setAttribute("visibility", "hidden");
+        band.splitLabel.setAttribute("visibility", "hidden");
+      } else {
+        band.split.setAttribute("visibility", "visible");
+        band.splitLabel.setAttribute("visibility", "visible");
+        band.split.setAttribute("x1", RAIL - 10);
+        band.split.setAttribute("x2", width - 24);
+        band.split.setAttribute("y1", band.splitY);
+        band.split.setAttribute("y2", band.splitY);
+        band.splitLabel.setAttribute("x", width - 28);
+        band.splitLabel.setAttribute("y", band.splitY - 6);
+      }
     });
     var spine = bandLayer.querySelector(".spine");
     if (spine) {
@@ -787,11 +839,13 @@ pre.raw {
     viewport.setAttribute("class", state.view === "mainline" ? "mainline" : "");
 
     graph.nodes.forEach(function (n) {
-      var g = svgEl("g", { "class": "node" + (n.missing ? " missing" : "") });
+      var g = svgEl("g", { "class": "node" + (n.missing ? " missing" : "") + (n.prepared ? " prepared" : "") });
       g.setAttribute("data-id", n.id);
+      var color = domainColor[n.domain] || "#64748b";
+      g.style.setProperty("--domain", color);
       var halo = svgEl("circle", { "class": "halo", r: n.radius + 4 });
       var body = svgEl("circle", { "class": "body", r: n.radius });
-      body.setAttribute("fill", domainColor[n.domain] || "#64748b");
+      body.setAttribute("fill", color);
       var title = svgEl("text", { "class": "title", y: n.radius + 14 });
       title.textContent = n.label;
       var prefix = svgEl("text", { "class": "prefix", y: 4 });
@@ -900,7 +954,7 @@ pre.raw {
     var hasFocus = !!selected || hasQuery;
 
     graph.nodes.forEach(function (n) {
-      var cls = "node" + (n.missing ? " missing" : "");
+      var cls = "node" + (n.missing ? " missing" : "") + (n.prepared ? " prepared" : "");
       var visible = isVisible(n);
       n.el.style.display = visible ? "" : "none";
       if (!visible) return;
@@ -996,6 +1050,11 @@ pre.raw {
       var missingChip = el("span", "chip wip", "引用缺失");
       missing.appendChild(missingChip);
       badges.appendChild(missing);
+    }
+    if (node.prepared) {
+      var prepared = el("span", "badge");
+      prepared.appendChild(el("span", "chip wip", "可提前准备"));
+      badges.appendChild(prepared);
     }
     if (raw.stage) badges.appendChild(el("span", "badge", "Stage " + raw.stage));
     if (raw.priority) badges.appendChild(el("span", "badge", raw.priority));
@@ -1119,25 +1178,32 @@ pre.raw {
       lateral.appendChild(el("span", "chip wip", "横切关注点"));
       badges.appendChild(lateral);
     }
-    badges.appendChild(el("span", "badge", phase.artifacts.length + " 种制品"));
+    badges.appendChild(el("span", "badge", (phase.produces || []).length + " 产出"));
+    badges.appendChild(el("span", "badge", (phase.prepares || []).length + " 可提前准备"));
     badges.appendChild(el("span", "badge", phase.handoff.length + " 次交接"));
     detailEl.appendChild(badges);
 
-    detailEl.appendChild(el("h4", null, "本阶段制品"));
-    var list = el("ul", "rel-list");
-    phase.artifacts.forEach(function (id) {
-      var node = state.graph.byId[id];
-      if (!node) return;
-      var li = el("li");
-      var btn = el("button", "rel-link");
-      btn.type = "button";
-      btn.appendChild(el("span", "rel", node.prefix));
-      btn.appendChild(el("span", "tgt", node.label));
-      btn.addEventListener("click", function () { selectNode(node); });
-      li.appendChild(btn);
-      list.appendChild(li);
-    });
-    detailEl.appendChild(list);
+    function artifactList(ids, title) {
+      if (!ids || !ids.length) return;
+      detailEl.appendChild(el("h4", null, title));
+      var list = el("ul", "rel-list");
+      ids.forEach(function (id) {
+        var node = state.graph.byId[id];
+        if (!node) return;
+        var li = el("li");
+        var btn = el("button", "rel-link");
+        btn.type = "button";
+        btn.appendChild(el("span", "rel", node.prefix));
+        btn.appendChild(el("span", "tgt", node.label));
+        btn.addEventListener("click", function () { selectNode(node); });
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+      detailEl.appendChild(list);
+    }
+
+    artifactList(phase.produces, "本阶段产出");
+    artifactList(phase.prepares, "可提前准备（不由本阶段产出）");
 
     if (phase.handoff.length) {
       detailEl.appendChild(el("h4", null, "交接（上一阶段 → 本阶段）"));

@@ -64,14 +64,26 @@ class Handoff:
 
 @dataclass(frozen=True)
 class Phase:
-    """One phase of the development mainline."""
+    """One phase of the development mainline.
+
+    ``produces`` are the artifacts the phase creates.  ``prepares`` are
+    the artifacts the phase works with but does not create -- they may
+    have been defined long before, or be created right there.  The
+    mainline does not claim ownership of them.
+    """
 
     id: str
     label: str
     question: str
-    artifacts: tuple[str, ...]
+    produces: tuple[str, ...]
+    prepares: tuple[str, ...]
     lateral: bool
     handoff: tuple[Handoff, ...]
+
+    @property
+    def artifacts(self) -> tuple[str, ...]:
+        """Every artifact placed in this phase."""
+        return self.produces + self.prepares
 
 
 @dataclass(frozen=True)
@@ -137,7 +149,8 @@ def _parse_phases(raw: object) -> tuple[Phase, ...]:
                 id=str(entry["id"]),
                 label=str(entry["label"]),
                 question=_one_line(str(entry.get("question", ""))),
-                artifacts=tuple(str(item) for item in entry.get("artifacts") or ()),
+                produces=tuple(str(item) for item in entry.get("produces") or ()),
+                prepares=tuple(str(item) for item in entry.get("prepares") or ()),
                 lateral=bool(entry.get("lateral", False)),
                 handoff=handoff,
             ),

@@ -74,42 +74,42 @@ domains:
 # 与 domains/ 的区别：域是"关注点"的横向切分，主线是"工作顺序"的纵向推进。
 # 同一件制品在主线里只出现一次，所以 35 种制品被串成了一条不重不漏的链。
 #
-# artifacts 列出该阶段产出的制品；
-# handoff 列出"上一阶段的东西怎么交到这一阶段"，每一条都必须是一条真实存在的关系边
-# （tests/registry/ 会核对关系表，改了定义而没改主线就会红）。
+# produces  这一步产出的制品
+# prepares  涉及但不由这一步产出的制品——它可以早就准备好（业务概念、错误目录、
+#           仓库、环境、权限……），也可以就在这一步创建。主线不保证它由这一步产生。
+# handoff   这一阶段与主线其他阶段之间的交接边，每一条都必须是真实存在的关系边
+#           （tests/registry/ 会核对关系表，改了定义而没改主线就会红）。
 #
 # lateral: true 的阶段是横切关注点——它们不推进主线，但贯穿主线全程。
 mainline:
   - id: intent
     label: 意图捕获
     question: 人类原始意图是什么？
-    artifacts: [draft]
+    produces: [draft]
 
   - id: requirement
     label: 结构化需求
     question: 消歧之后的需求是什么？
-    artifacts: [requirement]
+    produces: [requirement]
+    # 业务概念可以预先定义好，也可以在结构化需求时创建——它不是这一步的必然产物
+    prepares: [business-concept]
     handoff:
       - {relation: DISAMBIGUATED_INTO, from: draft, to: requirement}
+      - {relation: ACTED_BY, from: requirement, to: business-concept}
 
   - id: story
     label: 需求分解
     question: 拆成哪些可交付的单元？
-    artifacts: [user-story]
+    produces: [user-story]
     handoff:
       - {relation: DECOMPOSES_INTO, from: requirement, to: user-story}
-
-  - id: concept
-    label: 语义对齐
-    question: 业务概念落到哪些技术制品上？
-    artifacts: [business-concept]
-    handoff:
-      - {relation: ACTED_BY, from: requirement, to: business-concept}
 
   - id: contract
     label: 契约定义
     question: 数据长什么样？模块间怎么通信？
-    artifacts: [interface, entity, error, event]
+    produces: [interface, entity, event]
+    # 错误目录通常是先攒出来的，不是等接口写完才有
+    prepares: [error]
     handoff:
       - {relation: IMPLEMENTED_BY, from: user-story, to: interface}
       - {relation: AS_ACTION, from: business-concept, to: interface}
@@ -120,7 +120,7 @@ mainline:
   - id: behavior
     label: 行为建模
     question: 状态怎么变？多个接口怎么协调？
-    artifacts: [process, orchestration, reaction, schedule]
+    produces: [process, orchestration, reaction, schedule]
     handoff:
       - {relation: IMPLEMENTED_BY, from: user-story, to: orchestration}
       - {relation: IMPLEMENTED_BY, from: user-story, to: reaction}
@@ -132,7 +132,7 @@ mainline:
   - id: organization
     label: 组织归属
     question: 这些制品归哪个模块管？
-    artifacts: [module]
+    produces: [module]
     handoff:
       - {relation: EXPOSES, from: module, to: interface}
       - {relation: GOVERNED_BY, from: module, to: process}
@@ -141,7 +141,9 @@ mainline:
   - id: code
     label: 代码落地
     question: 逻辑制品对应哪些源码？
-    artifacts: [code-ref, repository]
+    produces: [code-ref]
+    # 仓库先建起来，之后才往里面映射
+    prepares: [repository]
     handoff:
       - {relation: MAPPED_TO, from: module, to: code-ref}
       - {relation: LOCATED_IN, from: code-ref, to: repository}
@@ -149,7 +151,7 @@ mainline:
   - id: verification
     label: 验证闭环
     question: 怎么证明这个制品是对的？
-    artifacts:
+    produces:
       - acceptance-test
       - scenario-test
       - contract-test
@@ -167,7 +169,9 @@ mainline:
   - id: delivery
     label: 交付上线
     question: 部署到哪？配置怎么管？
-    artifacts: [pipeline, environment, config-set, configuration, secret]
+    produces: [pipeline]
+    # 环境、配置与密钥通常由运维预先备好，不是写流水线时顺手产生的
+    prepares: [environment, config-set, configuration, secret]
     handoff:
       - {relation: BUILDS, from: pipeline, to: module}
       - {relation: DEPLOYS_TO, from: pipeline, to: environment}
@@ -178,7 +182,7 @@ mainline:
   - id: operation
     label: 运维反馈
     question: 出了什么事？怎么恢复？
-    artifacts: [incident, runbook, playbook]
+    produces: [incident, runbook, playbook]
     handoff:
       - {relation: AFFECTS, from: incident, to: entity}
       - {relation: RESOLVED_BY, from: incident, to: runbook}
@@ -188,7 +192,7 @@ mainline:
     label: 治理约束
     question: 底线是什么？依赖了谁？
     lateral: true
-    artifacts: [constraint, metric, dependency]
+    prepares: [constraint, metric, dependency]
     handoff:
       - {relation: CONSTRAINED_BY, from: module, to: constraint}
       - {relation: MEASURES, from: constraint, to: metric}
@@ -198,7 +202,7 @@ mainline:
     label: 访问控制
     question: 谁能访问什么？
     lateral: true
-    artifacts: [role, permission]
+    prepares: [role, permission]
     handoff:
       - {relation: AUTHORIZED_BY, from: interface, to: role}
       - {relation: HAS_PERMISSION, from: role, to: permission}
@@ -208,7 +212,7 @@ mainline:
     label: 制品结构
     question: 每个制品的结构由谁定义？
     lateral: true
-    artifacts: [type-def]
+    prepares: [type-def]
 
 artifacts:
   # ── 需求域 ────────────────────────────────────────────────────────────
