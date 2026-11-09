@@ -18,7 +18,7 @@ from src.viz.build import build, render_for
 from src.viz.catalog import PROJECT_ROOT, Catalog, load_catalog
 from src.viz.fields import TypeDetails, parse_type_details
 from src.viz.graph import build_payload
-from src.viz.relations import RelationEdge, parse_relation_edges
+from src.viz.relations import RelationEdge, _relation_names, parse_relation_edges
 from src.viz.render import PLACEHOLDER, render_page
 
 if TYPE_CHECKING:
@@ -124,11 +124,16 @@ def test_self_reference_is_bidirectional(edges: tuple[RelationEdge, ...]) -> Non
     assert module_edges[0].kind == "both"
 
 
-def test_multiple_relations_in_one_cell_are_split(edges: tuple[RelationEdge, ...]) -> None:
-    """``READS../../ `WRITES`` yields two separate relations."""
-    pairs = {(edge.source, edge.target, edge.relation) for edge in edges}
-    assert ("module", "entity", "READS") in pairs
-    assert ("module", "entity", "WRITES") in pairs
+def test_multiple_relations_in_one_cell_are_split() -> None:
+    """A cell that holds several relation names yields several relations.
+
+    The definitions used to spell this ``READS../../ `WRITES`` -- the
+    slash corruption of STATUS.md §6.8 -- and the parser still has to
+    cope with it wherever it shows up.
+    """
+    assert _relation_names("`READS../../ `WRITES`") == ["READS", "WRITES"]
+    assert _relation_names("`CONTAINS`") == ["CONTAINS"]
+    assert _relation_names("`A` / `B`") == ["A", "B"]
 
 
 def test_domain_targets_are_expanded(edges: tuple[RelationEdge, ...]) -> None:
@@ -171,17 +176,14 @@ def test_enums_are_parsed(details: dict[str, TypeDetails]) -> None:
 
 
 def test_business_concept_mappings_are_parsed(details: dict[str, TypeDetails]) -> None:
-    """The seven semantic positions of the Business Concept are read."""
-    positions = [mapping.position for mapping in details["business-concept"].mappings]
-    assert positions == [
-        "as_actor",
-        "as_object",
-        "as_action",
-        "as_event",
-        "as_attribute",
-        "as_result",
-        "as_error",
-    ]
+    """The ``as`` mapping of the Business Concept is read."""
+    mappings = details["business-concept"].mappings
+    assert mappings
+    assert {mapping.artifact_type for mapping in mappings} == {
+        "ENTITY",
+        "INTERFACE",
+        "ROLE",
+    }
 
 
 def test_slash_corruption_is_repaired(details: dict[str, TypeDetails]) -> None:
@@ -214,13 +216,15 @@ def test_payload_edges_reference_known_types(payload: dict[str, Any]) -> None:
 
 
 def test_payload_contains_business_concept_mapping_edges(payload: dict[str, Any]) -> None:
-    """The seven semantic positions are drawn as edges."""
+    """The business concept maps onto the internal artifacts."""
     relations = {
         edge["relation"] for edge in payload["edges"] if edge["source"] == "business-concept"
     }
-    assert "AS_ACTOR" in relations
-    assert "AS_OBJECT" in relations
-    assert "AS_ERROR" in relations
+    assert relations == {"AS"}
+    targets = {
+        edge["target"] for edge in payload["edges"] if edge["source"] == "business-concept"
+    }
+    assert {"entity", "interface", "role", "error", "event"} <= targets
 
 
 def test_payload_relation_types_are_counted(payload: dict[str, Any]) -> None:

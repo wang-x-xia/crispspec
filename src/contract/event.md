@@ -99,7 +99,7 @@ payload_fields:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `PUBLISHES` | [Module](../module/module.md) |
+| ← 入 | `CONTAINS` | [Module](../module/module.md) |
 | 出 → | `CONSUMED_BY` | [Module](../module/module.md) |
 | ← 入 | `TRIGGERS` | [Process](../behavior/process.md) Transition |
 | ← 入 | `LISTENS_TO` | [Reaction](../behavior/reaction.md) |

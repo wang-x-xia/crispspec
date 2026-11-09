@@ -38,7 +38,7 @@ def db_path(tmp_path: Path) -> Path:
 
     concepts = BusinessConceptStorage(storage)
     concept = concepts.create(BusinessConcept(name="用户", description="系统用户"))
-    concepts.add_mapping(concept.id, "as_object", "ENTITY", "ENT-3")
+    concepts.add_mapping(concept.id, "ENTITY", "ENT-3")
 
     storage.close()
     return path
@@ -61,8 +61,8 @@ def test_references_become_edges(db_path: Path, catalog: Catalog) -> None:
     """A typed reference becomes an edge."""
     _nodes, edges = load_instances(db_path, catalog)
     pairs = {(edge["source"], edge["target"], edge["relation"]) for edge in edges}
-    assert ("MOD-1", "API-1", "EXPOSES") in pairs
-    assert ("BC-1", "ENT-3", "AS_OBJECT") in pairs
+    assert ("MOD-1", "API-1", "CONTAINS") in pairs
+    assert ("BC-1", "ENT-3", "AS") in pairs
 
 
 def test_dangling_references_become_ghost_nodes(db_path: Path, catalog: Catalog) -> None:

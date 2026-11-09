@@ -115,9 +115,8 @@ def _node_payload(
                 ],
                 "mappings": [
                     {
-                        "position": mapping.position,
-                        "targets": mapping.targets,
-                        "sourceField": mapping.source_field,
+                        "artifactType": mapping.artifact_type,
+                        "artifactId": mapping.artifact_id,
                     }
                     for mapping in detail.mappings
                 ],
@@ -141,28 +140,29 @@ def _edge_payload(edges: tuple[RelationEdge, ...]) -> list[dict[str, Any]]:
 
 
 def _business_concept_edges() -> list[dict[str, Any]]:
-    """Build the seven semantic mapping edges of the Business Concept.
+    """Build the mapping edges of the Business Concept.
 
-    The concepts document describes them in prose; the authoritative
-    mapping lives in :data:`ALLOWED_ARTIFACT_TYPES`.
+    A business concept is mapped onto whatever internal artifact
+    realises it -- an entity, an interface, a role, several at once.
+    The mapping is a list, so the edge is simply "this concept realises
+    that artifact".
     """
     edges: list[dict[str, Any]] = []
-    for position, allowed in ALLOWED_ARTIFACT_TYPES.items():
-        for artifact_type in sorted(allowed, key=lambda item: item.value):
-            if artifact_type in _NON_TYPE_ARTIFACTS:
-                continue
-            target = _ARTIFACT_TYPE_KEYS.get(artifact_type)
-            if target is None:
-                continue
-            edges.append(
-                {
-                    "source": "business-concept",
-                    "target": target,
-                    "relation": position.value.upper(),
-                    "bidirectional": False,
-                    "origin": "src/requirement/common.py",
-                },
-            )
+    for artifact_type in sorted(ALLOWED_ARTIFACT_TYPES, key=lambda item: item.value):
+        if artifact_type in _NON_TYPE_ARTIFACTS:
+            continue
+        target = _ARTIFACT_TYPE_KEYS.get(artifact_type)
+        if target is None:
+            continue
+        edges.append(
+            {
+                "source": "business-concept",
+                "target": target,
+                "relation": "AS",
+                "bidirectional": False,
+                "origin": "src/requirement/common.py",
+            },
+        )
     return edges
 
 

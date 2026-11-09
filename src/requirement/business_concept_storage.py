@@ -7,7 +7,7 @@ business concept domain object.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
@@ -22,9 +22,7 @@ from src.requirement.common import (
     ArtifactType,
     InvalidArtifactTypeError,
     InvalidBusinessConceptError,
-    InvalidMappingTypeError,
     MappingAlreadyExistsError,
-    MappingType,
     NotFoundError,
 )
 
@@ -79,8 +77,8 @@ class BusinessConceptStorage(IBusinessConceptStorage):
                 mappings are known.
 
         Returns:
-            The same concept, with ``id`` set to the canonical ID assigned by
-            the storage layer.
+            The same concept, with ``id`` set to the canonical ID assigned
+            by the storage layer.
 
         Raises:
             InvalidBusinessConceptError: If the concept fails validation.
@@ -99,18 +97,18 @@ class BusinessConceptStorage(IBusinessConceptStorage):
     def add_mapping(
         self,
         record_id: str,
-        mapping_type: str,
         artifact_type: str,
         artifact_id: str,
     ) -> BusinessConcept:
-        """Map a semantic position to a technical artifact.
+        """Map the concept onto another technical artifact.
+
+        A concept may be mapped onto as many artifacts as it needs; only
+        the exact same target twice is rejected.
 
         Args:
             record_id: ID of the business concept.
-            mapping_type: One of the seven semantic positions (e.g.
-                ``"as_actor"``).
-            artifact_type: The kind of artifact being mapped (e.g.
-                ``"ROLE"``).
+            artifact_type: The kind of artifact being mapped, e.g.
+                ``"ENTITY"``.
             artifact_id: The ID of the mapped artifact.
 
         Returns:
@@ -118,32 +116,30 @@ class BusinessConceptStorage(IBusinessConceptStorage):
 
         Raises:
             NotFoundError: If no business concept has the given ID.
-            InvalidMappingTypeError: If *mapping_type* is not a semantic
-                position.
-            InvalidArtifactTypeError: If *artifact_type* is unknown, or is
-                not allowed for the given semantic position.
-            MappingAlreadyExistsError: If the position is already mapped.
+            InvalidArtifactTypeError: If *artifact_type* is not one a
+                business concept may be mapped to.
+            MappingAlreadyExistsError: If the concept already maps to the
+                same artifact.
 
         """
-        position = _parse_mapping_type(mapping_type)
         kind = _parse_artifact_type(artifact_type)
-        if kind not in ALLOWED_ARTIFACT_TYPES[position]:
-            allowed = ", ".join(sorted(a.value for a in ALLOWED_ARTIFACT_TYPES[position]))
-            msg = (
-                f"Artifact type '{kind.value}' is not allowed for "
-                f"'{position.value}' (allowed: {allowed})"
-            )
+        if kind not in ALLOWED_ARTIFACT_TYPES:
+            allowed = ", ".join(sorted(a.value for a in ALLOWED_ARTIFACT_TYPES))
+            msg = f"Artifact type '{kind.value}' cannot be mapped (allowed: {allowed})"
             raise InvalidArtifactTypeError(msg)
 
         record, bc = self._load(record_id)
-        if position in bc.mappings:
+        if any(
+            mapping.artifact_type == kind and mapping.artifact_id == artifact_id
+            for mapping in bc.mappings
+        ):
             msg = (
-                f"'{position.value}' is already mapped "
+                f"'{kind.value} {artifact_id}' is already mapped "
                 f"for business concept '{record_id}'"
             )
             raise MappingAlreadyExistsError(msg)
 
-        bc.mappings[position] = Mapping(artifact_type=kind, artifact_id=artifact_id)
+        bc.mappings.append(Mapping(artifact_type=kind, artifact_id=artifact_id))
         self._save(record, bc)
         return bc
 
@@ -212,31 +208,32 @@ class BusinessConceptStorage(IBusinessConceptStorage):
 # ---------------------------------------------------------------------------
 
 
-def _to_payload(bc: BusinessConcept) -> dict:
+def _to_payload(bc: BusinessConcept) -> dict[str, Any]:
     """Serialize a business concept into a YAML-friendly dict."""
-    mappings: dict[str, dict[str, str]] = {}
-    for position, mapping in bc.mappings.items():
-        mappings[position.value] = {
-            "artifact_type": mapping.artifact_type.value,
-            "artifact_id": mapping.artifact_id,
-        }
     return {
         "id": bc.id,
         "name": bc.name,
         "description": bc.description,
         "defined": bc.defined,
-        "mappings": mappings,
+        "as": [
+            {
+                "artifact_type": mapping.artifact_type.value,
+                "artifact_id": mapping.artifact_id,
+            }
+            for mapping in bc.mappings
+        ],
     }
 
 
-def _to_domain(raw: dict, record_id: str) -> BusinessConcept:
+def _to_domain(raw: dict[str, Any], record_id: str) -> BusinessConcept:
     """Deserialize a stored dict into a :class:`BusinessConcept`."""
-    mappings: dict[MappingType, Mapping] = {}
-    for position, mapping in (raw.get("mappings") or {}).items():
-        mappings[MappingType(position)] = Mapping(
+    mappings = [
+        Mapping(
             artifact_type=ArtifactType(mapping["artifact_type"]),
             artifact_id=mapping["artifact_id"],
         )
+        for mapping in (raw.get("as") or [])
+    ]
     return BusinessConcept(
         id=raw.get("id") or record_id,
         name=raw.get("name", ""),
@@ -267,21 +264,6 @@ def _validate(bc: BusinessConcept) -> None:
     if len(bc.description) > _DESC_MAX_LEN:
         msg = f"description: exceeds {_DESC_MAX_LEN} characters"
         raise InvalidBusinessConceptError(msg)
-
-
-def _parse_mapping_type(value: str) -> MappingType:
-    """Parse a semantic position name.
-
-    Raises:
-        InvalidMappingTypeError: If *value* is not a semantic position.
-
-    """
-    try:
-        return MappingType(value)
-    except ValueError as exc:
-        valid = ", ".join(m.value for m in MappingType)
-        msg = f"Invalid mapping type: '{value}' (valid: {valid})"
-        raise InvalidMappingTypeError(msg) from exc
 
 
 def _parse_artifact_type(value: str) -> ArtifactType:

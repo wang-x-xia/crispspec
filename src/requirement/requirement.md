@@ -34,10 +34,10 @@
 |------|------|------|------|
 | `gwt` | object | - | GWT 模式专用字段容器 |
 | `gwt.user_story_id` | ref | `US-\d+` | 关联的用户故事（引用 [User Story](user-story.md)） |
-| `gwt.actor_concept_id` | ref | `BC-\d+` | 执行者（引用 [Business Concept](business-concept.md)，对应 as_actor） |
-| `gwt.condition_concept_ids` | list\<ref\> | `BC-\d+` | 触发条件（引用 Business Concept，对应 as_attribute，支持多个 AND） |
-| `gwt.action_concept_id` | ref | `BC-\d+` | 执行动作（引用 Business Concept，对应 as_action） |
-| `gwt.result_concept_ids` | list\<ref\> | `BC-\d+` | 执行结果（引用 Business Concept，对应 as_result，支持多个 AND） |
+| `gwt.actor_concept_id` | ref | `BC-\d+` | 执行者（引用 [Business Concept](business-concept.md)，其 as 映射到 Role/Module） |
+| `gwt.condition_concept_ids` | list\<ref\> | `BC-\d+` | 触发条件（引用 Business Concept，其 as 映射到 Entity.field，支持多个 AND） |
+| `gwt.action_concept_id` | ref | `BC-\d+` | 执行动作（引用 Business Concept，其 as 映射到 Interface/Orchestration/Reaction/Schedule） |
+| `gwt.result_concept_ids` | list\<ref\> | `BC-\d+` | 执行结果（引用 Business Concept，其 as 映射到结果类制品，支持多个 AND） |
 
 ### EARS 模式字段（预留）
 

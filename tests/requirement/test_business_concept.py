@@ -15,9 +15,7 @@ from src.requirement.common import (
     ArtifactType,
     InvalidArtifactTypeError,
     InvalidBusinessConceptError,
-    InvalidMappingTypeError,
     MappingAlreadyExistsError,
-    MappingType,
     NotFoundError,
 )
 
@@ -125,8 +123,8 @@ def test_create_assigns_incrementing_id(storage: BusinessConceptStorage) -> None
 def test_create_starts_with_empty_mappings(storage: BusinessConceptStorage) -> None:
     """A newly created concept has no mappings."""
     created = storage.create(concept())
-    assert created.mappings == {}
-    assert storage.get_by_id(created.id).mappings == {}
+    assert created.mappings == []
+    assert storage.get_by_id(created.id).mappings == []
 
 
 def test_create_persists_canonical_id(storage: BusinessConceptStorage) -> None:
@@ -163,71 +161,87 @@ def test_create_rejects_long_description(storage: BusinessConceptStorage) -> Non
 def test_add_mapping(storage: BusinessConceptStorage) -> None:
     """A mapping is added and persisted."""
     created = storage.create(concept())
-    updated = storage.add_mapping(created.id, "as_actor", "ROLE", "ROLE-3")
+    updated = storage.add_mapping(created.id, "ROLE", "ROLE-3")
 
-    assert updated.mappings[MappingType.AS_ACTOR] is not None
-    mapping = updated.mappings[MappingType.AS_ACTOR]
+    assert len(updated.mappings) == 1
+    mapping = updated.mappings[0]
     assert mapping.artifact_type == ArtifactType.ROLE
     assert mapping.artifact_id == "ROLE-3"
 
     stored = storage.get_by_id(created.id)
-    assert stored.mappings[MappingType.AS_ACTOR].artifact_id == "ROLE-3"
+    assert stored.mappings[0].artifact_id == "ROLE-3"
 
 
-def test_add_mapping_accepts_every_semantic_position(
-    storage: BusinessConceptStorage,
-) -> None:
-    """Each semantic position accepts its documented artifact types."""
+def test_add_mapping_accepts_every_allowed_type(storage: BusinessConceptStorage) -> None:
+    """Any allowed artifact type may be mapped."""
     created = storage.create(concept())
     cases = [
-        ("as_actor", "MODULE", "MOD-1"),
-        ("as_object", "ENTITY", "ENT-1"),
-        ("as_action", "INTERFACE", "API-1"),
-        ("as_event", "EVENT", "EVT-1"),
-        ("as_attribute", "ENTITY_FIELD", "ENT-1.expected_completion"),
-        ("as_result", "STATE_CHANGE", "PROC-1"),
-        ("as_error", "ERROR", "ERR-1"),
+        ("MODULE", "MOD-1"),
+        ("ENTITY", "ENT-1"),
+        ("INTERFACE", "API-1"),
+        ("ORCHESTRATION", "ORCH-1"),
+        ("REACTION", "SUB-1"),
+        ("SCHEDULE", "SCH-1"),
+        ("EVENT", "EVT-1"),
+        ("ERROR", "ERR-1"),
+        ("ENTITY_FIELD", "ENT-1.expected_completion"),
+        ("STATE_CHANGE", "PROC-1"),
+        ("INTERFACE_RESPONSE", "API-1"),
+        ("SIDE_EFFECT", "PROC-1"),
     ]
-    for mapping_type, artifact_type, artifact_id in cases:
-        storage.add_mapping(created.id, mapping_type, artifact_type, artifact_id)
+    for artifact_type, artifact_id in cases:
+        storage.add_mapping(created.id, artifact_type, artifact_id)
 
     stored = storage.get_by_id(created.id)
     assert len(stored.mappings) == len(cases)
 
 
+def test_add_mapping_supports_several_targets(storage: BusinessConceptStorage) -> None:
+    """One concept may be realised by several artifacts at once."""
+    created = storage.create(concept())
+    storage.add_mapping(created.id, "ENTITY", "ENT-3")
+    storage.add_mapping(created.id, "INTERFACE", "API-20")
+    storage.add_mapping(created.id, "ROLE", "ROLE-1")
+
+    stored = storage.get_by_id(created.id)
+    assert [(m.artifact_type, m.artifact_id) for m in stored.mappings] == [
+        (ArtifactType.ENTITY, "ENT-3"),
+        (ArtifactType.INTERFACE, "API-20"),
+        (ArtifactType.ROLE, "ROLE-1"),
+    ]
+
+
+def test_add_mapping_supports_several_targets_of_one_type(
+    storage: BusinessConceptStorage,
+) -> None:
+    """The same kind of artifact may be mapped more than once."""
+    created = storage.create(concept())
+    storage.add_mapping(created.id, "INTERFACE", "API-1")
+    storage.add_mapping(created.id, "INTERFACE", "API-2")
+
+    stored = storage.get_by_id(created.id)
+    assert [m.artifact_id for m in stored.mappings] == ["API-1", "API-2"]
+
+
 def test_add_mapping_already_exists(storage: BusinessConceptStorage) -> None:
-    """Mapping the same position twice is rejected."""
+    """Mapping the very same artifact twice is rejected."""
     created = storage.create(concept())
-    storage.add_mapping(created.id, "as_actor", "ROLE", "ROLE-3")
+    storage.add_mapping(created.id, "ROLE", "ROLE-3")
     with pytest.raises(MappingAlreadyExistsError, match="already mapped"):
-        storage.add_mapping(created.id, "as_actor", "MODULE", "MOD-1")
-
-
-def test_add_mapping_invalid_mapping_type(storage: BusinessConceptStorage) -> None:
-    """An unknown semantic position is rejected."""
-    created = storage.create(concept())
-    with pytest.raises(InvalidMappingTypeError, match="Invalid mapping type"):
-        storage.add_mapping(created.id, "as_nonsense", "ROLE", "ROLE-3")
+        storage.add_mapping(created.id, "ROLE", "ROLE-3")
 
 
 def test_add_mapping_invalid_artifact_type(storage: BusinessConceptStorage) -> None:
     """An unknown artifact type is rejected."""
     created = storage.create(concept())
     with pytest.raises(InvalidArtifactTypeError, match="Invalid artifact type"):
-        storage.add_mapping(created.id, "as_actor", "NONSENSE", "ROLE-3")
-
-
-def test_add_mapping_disallowed_artifact_type(storage: BusinessConceptStorage) -> None:
-    """An artifact type that does not fit the position is rejected."""
-    created = storage.create(concept())
-    with pytest.raises(InvalidArtifactTypeError, match="not allowed for 'as_actor'"):
-        storage.add_mapping(created.id, "as_actor", "ENTITY", "ENT-1")
+        storage.add_mapping(created.id, "NONSENSE", "ROLE-3")
 
 
 def test_add_mapping_unknown_concept(storage: BusinessConceptStorage) -> None:
     """Mapping on an unknown concept raises."""
     with pytest.raises(NotFoundError, match="Business concept not found"):
-        storage.add_mapping("BC-999", "as_actor", "ROLE", "ROLE-3")
+        storage.add_mapping("BC-999", "ROLE", "ROLE-3")
 
 
 # ---------------------------------------------------------------------------
@@ -258,10 +272,10 @@ def test_update_changes_non_mapping_fields(storage: BusinessConceptStorage) -> N
 def test_update_keeps_mappings(storage: BusinessConceptStorage) -> None:
     """Updating a concept does not disturb its mappings."""
     created = storage.create(concept())
-    storage.add_mapping(created.id, "as_actor", "ROLE", "ROLE-3")
+    storage.add_mapping(created.id, "ROLE", "ROLE-3")
     updated = storage.update(created.id, name="VIP客户")
     assert updated is not None
-    assert updated.mappings[MappingType.AS_ACTOR].artifact_id == "ROLE-3"
+    assert updated.mappings[0].artifact_id == "ROLE-3"
 
 
 def test_update_unknown_concept(storage: BusinessConceptStorage) -> None:
@@ -273,7 +287,7 @@ def test_update_rejects_mapping_fields(storage: BusinessConceptStorage) -> None:
     """Mapping fields cannot be updated directly."""
     created = storage.create(concept())
     with pytest.raises(InvalidBusinessConceptError, match="Cannot update field"):
-        storage.update(created.id, mappings={})
+        storage.update(created.id, mappings=[])
 
 
 def test_update_rejects_invalid_result(storage: BusinessConceptStorage) -> None:

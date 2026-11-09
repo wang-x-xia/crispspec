@@ -39,7 +39,7 @@
 | [Draft](src/requirement/draft.md) | `DRAFT-\d+` | `src/requirement/draft.md` | 唯一的非结构化入口——人类原始意图 |
 | [Requirement](src/requirement/requirement.md) | `REQ-\d+` | `src/requirement/requirement.md` | 消歧后的结构化需求 |
 | [User Story](src/requirement/user-story.md) | `US-\d+` | `src/requirement/user-story.md` | 面向实现的需求分解单元 |
-| [Business Concept](src/requirement/business-concept.md) | `BC-\d+` | `src/requirement/business-concept.md` | 业务概念——语义位置到技术制品的对齐 |
+| [Business Concept](src/requirement/business-concept.md) | `BC-\d+` | `src/requirement/business-concept.md` | 业务概念——映射到哪些内部制品（`as`） |
 
 ### 契约域
 
@@ -139,7 +139,7 @@
 | 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — | — |
 | 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`ACTED_BY` |
 | 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | — | `DECOMPOSES_INTO` |
-| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS_ACTION`、`AS_OBJECT`、`AS_ERROR`、`AS_EVENT` |
+| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS` |
 | 5 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | — | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
 | 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
 | 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `MAPPED_TO`、`LOCATED_IN` |
@@ -170,7 +170,7 @@
 
 > 下面的静态图是 [`docs/artifact-graph.html`](docs/artifact-graph.html) 的简化版——
 > 网页版由每份制品定义的 `## 关联` 表自动生成，能看到关系类型、出入方向，
-> 以及 Business Concept 的七条语义映射边（本图里没有）。
+> 以及 Business Concept 的映射边（本图里没有）。
 
 ### 跨域总览
 
@@ -199,6 +199,8 @@ graph TD
     end
 
     subgraph module_boundary["Module（组织边界）"]
+        MOD["Module"]
+
         subgraph contract["契约域"]
             ENT["Entity"] -->|PROJECTS_FROM| ENT
             API["Interface"] -->|USES_TYPE| ENT
@@ -222,6 +224,12 @@ graph TD
             PB["Playbook"] -->|HANDLES| INC
             PB -->|EXECUTES| RB
         end
+
+        %% Module 是容器：归属只有一条边
+        MOD -->|CONTAINS| API & ENT & EVT & ERR
+        MOD -->|CONTAINS| PROC & ORCH & SUB & SCH
+        MOD -->|CONTAINS| CREF
+        MOD -->|CONTAINS| INC & RB & PB
     end
 
     subgraph governance["治理域"]
@@ -253,6 +261,10 @@ graph TD
     %% 契约/行为 → 代码
     API -.->|MAPPED_TO| CREF
     PROC -.->|MAPPED_TO| CREF
+
+    %% 业务概念的映射（as）
+    BC -->|AS| API & ENT & EVT & ERR
+    BC -->|AS| ROLE & MOD
 
     %% → 访问控制
     REQ -->|ACTED_BY| ROLE

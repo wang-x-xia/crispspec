@@ -144,6 +144,6 @@ fields:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | 出 → | `PROJECTS_FROM` | [Entity](entity.md)（投影实体 → 主实体） |
-| ← 入 | `READS../../ `WRITES` | [Module](../module/module.md) |
+| ← 入 | `CONTAINS` | [Module](../module/module.md) |
 | ← 入 | `USES_TYPE` | [Interface](interface.md) |
 | ← 入 | `TRANSITIONS` | [Process](../behavior/process.md) |
