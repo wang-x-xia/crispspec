@@ -1,4 +1,13 @@
-# RBAC — 访问控制子系统
+# 访问控制域 — RBAC 子系统
+
+## 领域定位
+
+访问控制域回答"**谁能访问什么**"——它把执行主体（Role）和授权条目（Permission）
+从治理域中拆了出来，与"性能底线 / 第三方依赖"这类约束与依赖的制品分开。
+
+- **域内制品**：[Role](role.md)、[Permission](permission.md)
+- **不归本域**：Constraint / Metric / Dependency（治理域）——约束"必须做到什么"，
+  与"谁被允许做什么"是两件事
 
 ## 设计原则
 
@@ -47,8 +56,8 @@ graph LR
 
 | 主体系制品 | 引用方式 | 说明 |
 |-----------|---------|------|
-| [Requirement](../../requirement/requirement.md) | `actor_role_id: ROLE-\d+` | 需求的执行角色 |
-| [User Story](../../requirement/user-story.md) | `actor_role_id: ROLE-\d+` | 用户故事的执行角色 |
-| [Interface](../../contract/interface.md) | `role_ids: ROLE-\d+` | 接口的授权角色 |
-| [Entity](../../contract/entity.md) | `← Role.entity_id` | 角色身份实体 |
-| [Interface](../../contract/interface.md) | `← Permission.resource_id` | 受控接口 |
+| [Requirement](../requirement/requirement.md) | `actor_role_id: ROLE-\d+` | 需求的执行角色 |
+| [User Story](../requirement/user-story.md) | `actor_role_id: ROLE-\d+` | 用户故事的执行角色 |
+| [Interface](../contract/interface.md) | `role_ids: ROLE-\d+` | 接口的授权角色 |
+| [Entity](../contract/entity.md) | `← Role.entity_id` | 角色身份实体 |
+| [Interface](../contract/interface.md) | `← Permission.resource_id` | 受控接口 |

@@ -15,7 +15,7 @@
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | 角色类别 |
 | `entity_id` | ref | `ENT-\d+` | 该角色对应的主体实体（可选，`SYSTEM` 类型无需） |
-| `qualifiers` | list\<[Condition](../../../concepts.md#condition)\> | ≥ 0 条 | 识别条件——全部满足时属于该角色 |
+| `qualifiers` | list\<[Condition](../../concepts.md#condition)\> | ≥ 0 条 | 识别条件——全部满足时属于该角色 |
 | `permission_ids` | list\<ref\> | `PERM-\d+` | 拥有的权限列表 |
 | `inherits_from_id` | ref | `ROLE-\d+` | 继承的父角色（可选，子角色自动获得父角色全部权限） |
 
@@ -75,5 +75,5 @@ permission_ids: ["PERM-20"]
 |------|--------|---------|
 | 出 → | `HAS_PERMISSION` | [Permission](permission.md) |
 | 出 → | `INHERITS_FROM` | [Role](role.md) |
-| 出 → | `IDENTIFIED_BY` | [Entity](../../contract/entity.md) |
-| ← 入 | `ACTED_BY` | [Requirement](../../requirement/requirement.md)、[User Story](../../requirement/user-story.md) |
+| 出 → | `IDENTIFIED_BY` | [Entity](../contract/entity.md) |
+| ← 入 | `ACTED_BY` | [Requirement](../requirement/requirement.md)、[User Story](../requirement/user-story.md) |

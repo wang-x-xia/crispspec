@@ -20,18 +20,20 @@ if TYPE_CHECKING:
 
     from .catalog import Catalog, DomainInfo
 
-#: Colours used for the domains, in the order the domains are declared.
+#: Colours used for the domains, in the order the domains are declared
+#: in ``artifacts.yaml``.
 DOMAIN_COLORS: tuple[str, ...] = (
-    "#4f9dff",
-    "#22c55e",
-    "#f59e0b",
-    "#a855f7",
-    "#ef4444",
-    "#06b6d4",
-    "#ec4899",
-    "#84cc16",
-    "#f97316",
-    "#64748b",
+    "#4f9dff",  # requirement
+    "#22c55e",  # contract
+    "#f59e0b",  # behavior
+    "#a855f7",  # code
+    "#ef4444",  # incident
+    "#06b6d4",  # governance
+    "#f97316",  # access
+    "#ec4899",  # delivery
+    "#84cc16",  # verification
+    "#eab308",  # organization
+    "#64748b",  # meta
 )
 
 #: ``ArtifactType`` values that do not name an artifact type of their own.

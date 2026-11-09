@@ -16,7 +16,7 @@
 | `type` | enum | 见下方 | 敏感信息类型 |
 | `algorithm` | enum | 见下方 | 加密算法 |
 | `rotation_policy` | RotationPolicy | | 轮换策略（可选） |
-| `access_control_ids` | list\<ref\> | `PERM-\d+` | 访问控制权限（引用 [Permission](../governance/rbac/permission.md)） |
+| `access_control_ids` | list\<ref\> | `PERM-\d+` | 访问控制权限（引用 [Permission](../access/permission.md)） |
 
 ### type 枚举
 
@@ -96,4 +96,4 @@ access_control_ids:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | ← 入 | `REQUIRES` | [Environment](environment.md) / [Module](../module/module.md) |
-| 出 → | `AUTHORIZED_BY` | [Permission](../governance/rbac/permission.md) |
+| 出 → | `AUTHORIZED_BY` | [Permission](../access/permission.md) |

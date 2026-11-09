@@ -360,8 +360,14 @@ pre.raw {
     {
       "key": "governance",
       "label": "治理域",
-      "question": "谁能做什么？性能底线是什么？",
+      "question": "性能底线是什么？用了哪些第三方依赖？",
       "color": "#06b6d4"
+    },
+    {
+      "key": "access",
+      "label": "访问控制域",
+      "question": "谁能访问什么？权限怎么判定？",
+      "color": "#f97316"
     },
     {
       "key": "delivery",
@@ -379,7 +385,7 @@ pre.raw {
       "key": "organization",
       "label": "组织单元",
       "question": "哪些制品归谁管？",
-      "color": "#f97316"
+      "color": "#eab308"
     },
     {
       "key": "meta",
@@ -1801,182 +1807,6 @@ pre.raw {
       "mappings": []
     },
     {
-      "id": "role",
-      "name": "Role",
-      "prefix": "ROLE",
-      "domain": "governance",
-      "domainLabel": "治理域",
-      "definition": "src/governance/rbac/role.md",
-      "manager": null,
-      "tests": null,
-      "status": "not-started",
-      "stage": 2,
-      "priority": "P1",
-      "dependsOn": [],
-      "notes": "BC 的 as_actor 映射目标之一（另一个是 Module）",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "constraint": "ROLE-\\d+",
-          "description": "唯一标识符"
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "constraint": "≤ 80 字符",
-          "description": "描述性 — 角色名称"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "constraint": "≤ 200 字符",
-          "description": "描述性 — 一句话说明"
-        },
-        {
-          "name": "type",
-          "type": "enum",
-          "constraint": "见下方",
-          "description": "角色类别"
-        },
-        {
-          "name": "entity_id",
-          "type": "ref",
-          "constraint": "ENT-\\d+",
-          "description": "该角色对应的主体实体（可选，SYSTEM 类型无需）"
-        },
-        {
-          "name": "qualifiers",
-          "type": "list<Condition>",
-          "constraint": "≥ 0 条",
-          "description": "识别条件——全部满足时属于该角色"
-        },
-        {
-          "name": "permission_ids",
-          "type": "list<ref>",
-          "constraint": "PERM-\\d+",
-          "description": "拥有的权限列表"
-        },
-        {
-          "name": "inherits_from_id",
-          "type": "ref",
-          "constraint": "ROLE-\\d+",
-          "description": "继承的父角色（可选，子角色自动获得父角色全部权限）"
-        }
-      ],
-      "enums": [
-        {
-          "name": "type 枚举",
-          "values": [
-            [
-              "HUMAN",
-              "人类用户（终端消费者、管理员等）"
-            ],
-            [
-              "SYSTEM",
-              "系统内部角色（定时任务、后台服务）"
-            ],
-            [
-              "EXTERNAL_SERVICE",
-              "外部服务（第三方支付、物流 API）"
-            ]
-          ]
-        }
-      ],
-      "mappings": []
-    },
-    {
-      "id": "permission",
-      "name": "Permission",
-      "prefix": "PERM",
-      "domain": "governance",
-      "domainLabel": "治理域",
-      "definition": "src/governance/rbac/permission.md",
-      "manager": null,
-      "tests": null,
-      "status": "not-started",
-      "stage": 2,
-      "priority": "P2",
-      "dependsOn": [
-        "role"
-      ],
-      "notes": "独立访问控制体系；Secret 的访问控制引用它",
-      "fields": [
-        {
-          "name": "id",
-          "type": "string",
-          "constraint": "PERM-\\d+",
-          "description": "唯一标识符"
-        },
-        {
-          "name": "name",
-          "type": "string",
-          "constraint": "≤ 80 字符",
-          "description": "描述性 — 权限名称"
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "constraint": "≤ 200 字符",
-          "description": "描述性 — 一句话说明"
-        },
-        {
-          "name": "action",
-          "type": "enum",
-          "constraint": "见下方",
-          "description": "授权动作"
-        },
-        {
-          "name": "resource_type",
-          "type": "enum",
-          "constraint": "INTERFACE / ENTITY",
-          "description": "资源类型"
-        },
-        {
-          "name": "resource_id",
-          "type": "ref",
-          "constraint": "API-\\d+ / ENT-\\d+",
-          "description": "资源 ID"
-        },
-        {
-          "name": "effect",
-          "type": "enum",
-          "constraint": "ALLOW / DENY",
-          "description": "效果（DENY 优先于 ALLOW）"
-        },
-        {
-          "name": "conditions",
-          "type": "list<Condition>",
-          "constraint": "≥ 0 条",
-          "description": "附加条件（可选，满足时该条目才生效）"
-        }
-      ],
-      "enums": [
-        {
-          "name": "action 枚举",
-          "values": [
-            [
-              "INVOKE",
-              "调用接口（resource_type: INTERFACE）"
-            ],
-            [
-              "READ",
-              "读取数据（resource_type: ENTITY）"
-            ],
-            [
-              "WRITE",
-              "写入数据（resource_type: ENTITY）"
-            ],
-            [
-              "DELETE",
-              "删除数据（resource_type: ENTITY）"
-            ]
-          ]
-        }
-      ],
-      "mappings": []
-    },
-    {
       "id": "constraint",
       "name": "Constraint",
       "prefix": "CON",
@@ -2441,6 +2271,182 @@ pre.raw {
             [
               "UNKNOWN",
               "未知——未进行安全评估"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "role",
+      "name": "Role",
+      "prefix": "ROLE",
+      "domain": "access",
+      "domainLabel": "访问控制域",
+      "definition": "src/access/role.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P1",
+      "dependsOn": [],
+      "notes": "BC 的 as_actor 映射目标之一（另一个是 Module）",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ROLE-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 角色名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "角色类别"
+        },
+        {
+          "name": "entity_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "该角色对应的主体实体（可选，SYSTEM 类型无需）"
+        },
+        {
+          "name": "qualifiers",
+          "type": "list<Condition>",
+          "constraint": "≥ 0 条",
+          "description": "识别条件——全部满足时属于该角色"
+        },
+        {
+          "name": "permission_ids",
+          "type": "list<ref>",
+          "constraint": "PERM-\\d+",
+          "description": "拥有的权限列表"
+        },
+        {
+          "name": "inherits_from_id",
+          "type": "ref",
+          "constraint": "ROLE-\\d+",
+          "description": "继承的父角色（可选，子角色自动获得父角色全部权限）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "HUMAN",
+              "人类用户（终端消费者、管理员等）"
+            ],
+            [
+              "SYSTEM",
+              "系统内部角色（定时任务、后台服务）"
+            ],
+            [
+              "EXTERNAL_SERVICE",
+              "外部服务（第三方支付、物流 API）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "permission",
+      "name": "Permission",
+      "prefix": "PERM",
+      "domain": "access",
+      "domainLabel": "访问控制域",
+      "definition": "src/access/permission.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "role"
+      ],
+      "notes": "独立访问控制体系；Secret 的访问控制引用它",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "PERM-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 权限名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "action",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "授权动作"
+        },
+        {
+          "name": "resource_type",
+          "type": "enum",
+          "constraint": "INTERFACE / ENTITY",
+          "description": "资源类型"
+        },
+        {
+          "name": "resource_id",
+          "type": "ref",
+          "constraint": "API-\\d+ / ENT-\\d+",
+          "description": "资源 ID"
+        },
+        {
+          "name": "effect",
+          "type": "enum",
+          "constraint": "ALLOW / DENY",
+          "description": "效果（DENY 优先于 ALLOW）"
+        },
+        {
+          "name": "conditions",
+          "type": "list<Condition>",
+          "constraint": "≥ 0 条",
+          "description": "附加条件（可选，满足时该条目才生效）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "action 枚举",
+          "values": [
+            [
+              "INVOKE",
+              "调用接口（resource_type: INTERFACE）"
+            ],
+            [
+              "READ",
+              "读取数据（resource_type: ENTITY）"
+            ],
+            [
+              "WRITE",
+              "写入数据（resource_type: ENTITY）"
+            ],
+            [
+              "DELETE",
+              "删除数据（resource_type: ENTITY）"
             ]
           ]
         }
@@ -4323,48 +4329,6 @@ pre.raw {
       "origin": "src/module/module.md"
     },
     {
-      "source": "role",
-      "target": "permission",
-      "relation": "HAS_PERMISSION",
-      "bidirectional": false,
-      "origin": "src/governance/rbac/role.md"
-    },
-    {
-      "source": "role",
-      "target": "role",
-      "relation": "INHERITS_FROM",
-      "bidirectional": false,
-      "origin": "src/governance/rbac/role.md"
-    },
-    {
-      "source": "role",
-      "target": "entity",
-      "relation": "IDENTIFIED_BY",
-      "bidirectional": false,
-      "origin": "src/governance/rbac/role.md"
-    },
-    {
-      "source": "requirement",
-      "target": "role",
-      "relation": "ACTED_BY",
-      "bidirectional": false,
-      "origin": "src/governance/rbac/role.md"
-    },
-    {
-      "source": "permission",
-      "target": "interface",
-      "relation": "ON_RESOURCE",
-      "bidirectional": false,
-      "origin": "src/governance/rbac/permission.md"
-    },
-    {
-      "source": "permission",
-      "target": "entity",
-      "relation": "ON_RESOURCE",
-      "bidirectional": false,
-      "origin": "src/governance/rbac/permission.md"
-    },
-    {
       "source": "module",
       "target": "constraint",
       "relation": "CONSTRAINED_BY",
@@ -4412,6 +4376,48 @@ pre.raw {
       "relation": "DEPENDS_ON",
       "bidirectional": false,
       "origin": "src/governance/dependency.md"
+    },
+    {
+      "source": "role",
+      "target": "permission",
+      "relation": "HAS_PERMISSION",
+      "bidirectional": false,
+      "origin": "src/access/role.md"
+    },
+    {
+      "source": "role",
+      "target": "role",
+      "relation": "INHERITS_FROM",
+      "bidirectional": false,
+      "origin": "src/access/role.md"
+    },
+    {
+      "source": "role",
+      "target": "entity",
+      "relation": "IDENTIFIED_BY",
+      "bidirectional": false,
+      "origin": "src/access/role.md"
+    },
+    {
+      "source": "requirement",
+      "target": "role",
+      "relation": "ACTED_BY",
+      "bidirectional": false,
+      "origin": "src/access/role.md"
+    },
+    {
+      "source": "permission",
+      "target": "interface",
+      "relation": "ON_RESOURCE",
+      "bidirectional": false,
+      "origin": "src/access/permission.md"
+    },
+    {
+      "source": "permission",
+      "target": "entity",
+      "relation": "ON_RESOURCE",
+      "bidirectional": false,
+      "origin": "src/access/permission.md"
     },
     {
       "source": "module",

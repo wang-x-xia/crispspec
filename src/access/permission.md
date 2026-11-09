@@ -17,7 +17,7 @@
 | `resource_type` | enum | `INTERFACE` / `ENTITY` | 资源类型 |
 | `resource_id` | ref | `API-\d+` / `ENT-\d+` | 资源 ID |
 | `effect` | enum | `ALLOW` / `DENY` | 效果（DENY 优先于 ALLOW） |
-| `conditions` | list\<[Condition](../../../concepts.md#condition)\> | ≥ 0 条 | 附加条件（可选，满足时该条目才生效） |
+| `conditions` | list\<[Condition](../../concepts.md#condition)\> | ≥ 0 条 | 附加条件（可选，满足时该条目才生效） |
 
 ### action 枚举
 
@@ -87,4 +87,4 @@ conditions:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | ← 入 | `HAS_PERMISSION` | [Role](role.md) |
-| 出 → | `ON_RESOURCE` | [Interface](../../contract/interface.md) / [Entity](../../contract/entity.md) |
+| 出 → | `ON_RESOURCE` | [Interface](../contract/interface.md) / [Entity](../contract/entity.md) |

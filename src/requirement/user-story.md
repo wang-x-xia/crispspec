@@ -14,7 +14,7 @@
 | `name` | string | ≤ 80 字符 | **描述性** — 简短标题 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话摘要 |
 | `requirement_ids` | list\<ref\> | `REQ-\d+` | 来源需求 |
-| `actor_role_id` | ref | `ROLE-\d+` | 执行角色（引用 [Role](../governance/rbac/role.md)） |
+| `actor_role_id` | ref | `ROLE-\d+` | 执行角色（引用 [Role](../access/role.md)） |
 | `priority` | enum | `CRITICAL / HIGH / MEDIUM / LOW` | 优先级 |
 | `status` | enum | 见下方 | 故事状态 |
 | `story_points` | integer | Fibonacci: `1, 2, 3, 5, 8, 13, 21` | 复杂度估算 |
@@ -86,6 +86,6 @@ acceptance_criteria:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | ← 入 | `DECOMPOSES_INTO` | [Requirement](requirement.md) |
-| 出 → | `ACTED_BY` | [Role](../governance/rbac/role.md) |
+| 出 → | `ACTED_BY` | [Role](../access/role.md) |
 | 出 → | `IMPLEMENTED_BY` | [Interface](../contract/interface.md) / [Orchestration](../behavior/orchestration.md) / [Reaction](../behavior/reaction.md) / [Schedule](../behavior/schedule.md)（从 Criterion.when 派生） |
 | 出 → | `TESTED_BY` | [Scenario Test](../test/scenario-test.md) |

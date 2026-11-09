@@ -23,7 +23,8 @@
 | **行为域** | 状态与编排 | 状态怎么变？多个接口怎么协调？ *(Module 内部域)* |
 | **代码域** | 实现映射 | 代码在哪个仓库？逻辑制品怎么映射到物理代码？ *(Module 内部域)* |
 | **故障域** | 故障与恢复 | 出了什么事？怎么恢复？ *(Module 内部域)* |
-| **治理域** | 约束与依赖 | 谁能做什么？性能底线是什么？用了哪些第三方依赖？ |
+| **治理域** | 约束与依赖 | 性能底线是什么？用了哪些第三方依赖？ |
+| **访问控制域** | 身份与授权 | 谁能访问什么？权限怎么判定？ |
 
 > **Module** 不是一个域，而是组织单元——类似文件夹，将契约域、行为域、代码域和故障域的制品按服务边界分组。由于模块会随项目演进经历拆分与合并，Module 与 Repository 之间存在 M:N 映射——同一 Module 的代码可能散布在多个 Repository 中，同一 Repository 也可能包含多个 Module 的代码。所有非需求、非治理制品通过 `module_id` 字段声明归属。
 
@@ -78,8 +79,17 @@
 |---------|---------|------|------|
 | [Constraint](src/governance/constraint.md) | `CON-\d+` | `src/governance/constraint.md` | 性能、安全、合规等可验证约束 |
 | [Metric](src/governance/metric.md) | `MET-\d+` | `src/governance/metric.md` | 度量指标——单位、聚合方式、优化方向 |
-| [RBAC 子系统](src/governance/rbac/concepts.md) | `ROLE-\d+` / `PERM-\d+` | `src/governance/rbac/` | 角色 + 权限——独立访问控制体系 |
 | [Dependency](src/governance/dependency.md) | `DEP-\d+` | `src/governance/dependency.md` | 第三方依赖——包名、版本范围、许可证 |
+
+### 访问控制域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Role](src/access/role.md) | `ROLE-\d+` | `src/access/role.md` | 参与者角色——身份条件、权限集合、继承关系 |
+| [Permission](src/access/permission.md) | `PERM-\d+` | `src/access/permission.md` | 授权条目——动作 × 资源 × 效果 |
+
+> 访问控制域原为治理域下的 RBAC 子系统，因“身份与授权”和“约束与依赖”关注点不同而独立。
+> 模型设计（RBAC 层级、显式否定优先）见 [RBAC — 访问控制子系统](src/access/concepts.md)。
 
 ### 组织单元
 
@@ -125,8 +135,9 @@ graph LR
     RD["需求域"] -->|IMPLEMENTED_BY| CD["契约域"]
     RD -->|IMPLEMENTED_BY| BD["行为域"]
     BD -->|COMPOSES / TRANSITIONS / LISTENS_TO| CD
-    RD -->|ACTED_BY| GD["治理域"]
-    CD -->|AUTHORIZED_BY| GD
+    RD -->|ACTED_BY| AC["访问控制域"]
+    CD -->|AUTHORIZED_BY| AC
+    GD["治理域"] -->|CONSTRAINED_BY| CD & BD
     DL["环境与配置域"] -->|BUILDS| CD & BD
     DL -->|GATES_ON| GD
 ```
@@ -171,8 +182,11 @@ graph TD
 
     subgraph governance["治理域"]
         CON["Constraint"] -->|MEASURES| MET["Metric"]
-        ROLE["Role"] -->|HAS_PERMISSION| PERM["Permission"]
         DEP["Dependency"]
+    end
+
+    subgraph access["访问控制域"]
+        ROLE["Role"] -->|HAS_PERMISSION| PERM["Permission"]
     end
 
     subgraph delivery["环境与配置域"]
@@ -196,9 +210,11 @@ graph TD
     API -.->|MAPPED_TO| CREF
     PROC -.->|MAPPED_TO| CREF
 
-    %% → 治理
+    %% → 访问控制
     REQ -->|ACTED_BY| ROLE
     API -->|AUTHORIZED_BY| ROLE
+
+    %% → 治理
     module_boundary -->|DEPENDS_ON| DEP
     
     %% → 故障域

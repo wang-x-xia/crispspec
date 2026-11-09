@@ -13,7 +13,7 @@ CrispSpec 试图让软件由**结构化制品（Structured Artifacts）**定义�
 
 > 除了最开始那份反映人类意图的、模糊的"需求初稿"之外，软件生命周期内的一切——从系统架构、API 接口、数据库设计、业务流程、模块依赖到测试用例和代码本身——都必须由严谨的结构化制品来定义和驱动。代码只是这些制品的"执行态副产品"。
 
-制品分 8 个域（需求 / 契约 / 行为 / 代码 / 故障 / 治理 / 交付 / 测试），通过 typed ID 互相引用形成知识图谱。
+制品分 9 个域（需求 / 契约 / 行为 / 代码 / 故障 / 治理 / 访问控制 / 交付 / 测试），通过 typed ID 互相引用形成知识图谱。
 
 ---
 
@@ -87,7 +87,8 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 | 行为域 | Process / Orchestration / Reaction / Schedule | ✅ | ❌ | 4 个管理器 |
 | 代码域 | Repository / Code Ref | ✅ | ❌ | 2 个管理器 |
 | 故障域 | Incident / Runbook / Playbook | ✅ | ❌ | 3 个管理器 |
-| 治理域 | Constraint / Metric / Dependency / Role / Permission | ✅ | ❌ | 5 个管理器 |
+| 治理域 | Constraint / Metric / Dependency | ✅ | ❌ | 3 个管理器 |
+| 访问控制域 | Role / Permission | ✅ | ❌ | 2 个管理器 |
 | 交付域 | Environment / Pipeline / Configuration / Config Set / Secret | ✅ | ❌ | 5 个管理器 |
 | 测试域 | Acceptance / Scenario / Integration / Contract / Transition / Benchmark | ✅ | ❌ | 6 个管理器 |
 | 组织 | **Module** | ✅ | ✅ | — |
@@ -292,6 +293,7 @@ uv run python -m src.viz.build                    # 重新生成制品图谱网�
 | **`pytest pythonpath = ["."]`** | 项目未打包，避免为测试单独安装 | 全项目 |
 | **BC 映射校验制品类型，不校验 ID 存在性** | 目标制品大多还没实现 | 待契约域落地后补 |
 | **不动 `src/db/` 的存储契约** | 存储层是所有制品的地基，改动波及面大 | — |
+| **Role / Permission 从治理域拆到访问控制域** | "谁能访问什么"和"必须做到什么、性能底线在哪"是两件事，混在一个域里既难读也不好扩展 | 全部制品定义、`artifacts.yaml`、图谱网页 |
 
 ---
 
