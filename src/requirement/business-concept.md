@@ -59,17 +59,17 @@ name: string
 description: string         # 一句话说明
 defined: boolean             # 是否已定义
 
-# 七个语义位置的映射（每个概念只配置适用的语义位置）
+# 七个语义位置的映射（每个概念只配置适用的语义位置，可不填）
 as_actor:
-  type: enum                # ROL../../ MODULE
-  artifact_id: string       # "ROLE-3../../ "MOD-010"
+  type: ROLE | MODULE
+  artifact_id: string
 
 as_object:
   type: ENTITY
   artifact_id: string
 
 as_action:
-  type: enum                # INTERFAC../../ ORCHESTRATIO../../ REACTIO../../ SCHEDULE
+  type: INTERFACE | ORCHESTRATION | REACTION | SCHEDULE
   artifact_id: string
 
 as_event:
@@ -81,7 +81,7 @@ as_attribute:
   artifact_id: string       # "ENT-005.expected_completion"
 
 as_result:
-  type: enum                # STATE_CHANG../../ INTERFACE_RESPONS../../ EVEN../../ SIDE_EFFECT
+  type: STATE_CHANGE | INTERFACE_RESPONSE | EVENT | SIDE_EFFECT
   artifact_id: string
 
 as_error:
@@ -97,5 +97,135 @@ as_error:
 | **Structured Draft** | 软引用（自然语言标识） | "Given [actor:VIP会员] When [action:发起退款]" |
 | **Requirement** | 强引用（typed ID） | `actor_role_id: "ROLE-3"` |
 | **User Story** | 强引用 | `when: "API-20"` |
+
+---
+
+## 四、实现计划
+
+### 4.1 支持的操作
+
+| 操作 | 说明 |
+|------|------|
+| `get_by_id` | 根据 ID 获取业务概念 |
+| `get_by_name` | 根据名称获取业务概念 |
+| `list_all` | 列出所有业务概念 |
+| `create` | 创建业务概念（不提交映射） |
+| `add_mapping` | 添加映射（暂不支持修改映射） |
+| `update` | 修改非映射字段（name, description, defined） |
+
+### 4.2 不支持的功能
+
+| 功能 | 阶段 | 说明 |
+|------|------|------|
+| 删除 (delete) | Stage 2 | 暂未实现 |
+| 修改映射 (update_mapping) | Stage 2 | 暂未实现 |
+| artifact_id 校验 | Stage 1 后期 | 其他模块尚未完善 |
+
+### 4.3 文件结构
+
+```
+src/requirement/
+├── __init__.py
+├── common.py              # 新增：共享枚举和异常（MappingType, ArtifactType, 异常类）
+├── business-concept.md   # 本文档
+├── business_concept.py    # BusinessConcept 模型 + IBusinessConceptStorage 接口
+└── business_concept_storage.py  # Storage 实现
+```
+
+### 4.4 接口设计
+
+**模型定义** (`business_concept.py`)：
+```python
+@dataclass(frozen=True)
+class Mapping:
+    artifact_type: ArtifactType   # 映射目标制品类型
+    artifact_id: str              # 制品 ID
+
+@dataclass
+class BusinessConcept:
+    id: str = ""                 # 格式：BC-\d+（由存储层分配）
+    name: str = ""
+    description: str = ""
+    defined: bool = False
+    mappings: dict = field(default_factory=dict)  # 键为 MappingType，值为 Mapping
+
+class MappingType(Enum):       # 枚举类，供所有 artifact 复用
+    AS_ACTOR = "as_actor"
+    AS_OBJECT = "as_object"
+    AS_ACTION = "as_action"
+    AS_EVENT = "as_event"
+    AS_ATTRIBUTE = "as_attribute"
+    AS_RESULT = "as_result"
+    AS_ERROR = "as_error"
+
+class ArtifactType(Enum):      # 映射目标制品类型枚举
+    ROLE = "ROLE"
+    MODULE = "MODULE"
+    ENTITY = "ENTITY"
+    INTERFACE = "INTERFACE"
+    ORCHESTRATION = "ORCHESTRATION"
+    REACTION = "REACTION"
+    SCHEDULE = "SCHEDULE"
+    EVENT = "EVENT"
+    ENTITY_FIELD = "ENTITY_FIELD"
+    STATE_CHANGE = "STATE_CHANGE"
+    INTERFACE_RESPONSE = "INTERFACE_RESPONSE"
+    SIDE_EFFECT = "SIDE_EFFECT"
+    ERROR = "ERROR"
+
+class NotFoundError(Exception):
+    """ID 不存在"""
+
+class MappingAlreadyExistsError(Exception):
+    """映射已存在"""
+
+class InvalidMappingTypeError(Exception):
+    """非法的 mapping type"""
+
+class InvalidArtifactTypeError(Exception):
+    """非法的 artifact type"""
+
+interface IBusinessConceptStorage:
+    def get_by_id(record_id: str) -> BusinessConcept | None
+    def get_by_name(name: str) -> BusinessConcept | None
+    def list_all() -> list[BusinessConcept]
+    def create(bc: BusinessConcept) -> BusinessConcept
+    def add_mapping(record_id: str, mapping_type: str, artifact_type: str, artifact_id: str) -> BusinessConcept
+    def update(record_id: str, **fields: object) -> BusinessConcept | None
+    # delete 暂不支持
+```
+
+> `MappingType`（七个语义位置）与 `ArtifactType`（映射目标制品类型）定义在
+> `src/requirement/common.py`，供所有制品复用。每个语义位置允许的制品类型由
+> `ALLOWED_ARTIFACT_TYPES` 约束，映射时校验。
+
+### 4.5 技术要点
+
+1. **ID 格式**：`BC-\d+`，自增（由存储层分配，制品内的 `id` 字段始终等于存储记录的规范 ID）
+2. **依赖 Storage 接口**：`src.db.Storage` 负责存取与 ID 分配，本层负责领域对象的序列化与业务规则
+3. **映射校验**：不检查 artifact_id 是否真实存在（Stage 1 后期实现），但校验 artifact_type 是否属于该语义位置允许的类型
+4. **create 行为**：创建时 mappings 为空字典
+5. **add_mapping**：只能新增已存在的映射 key，不支持修改
+6. **异常类型**：`NotFoundError`（ID 不存在）、`MappingAlreadyExistsError`（映射已存在）、`InvalidMappingTypeError`（非法语义位置）、`InvalidArtifactTypeError`（非法制品类型）、`InvalidBusinessConceptError`（制品校验失败）
+7. **使用 dataclass 做数据校验**（与 `src/module`、`src/schema` 保持一致，不引入 pydantic 依赖）
+
+### 4.6 测试计划
+
+```
+tests/requirement/
+├── __init__.py
+└── test_business_concept.py   # 新增测试文件
+```
+
+**测试覆盖**：
+- `test_get_by_id_found` - 根据 ID 获取
+- `test_get_by_id_not_found` - ID 不存在返回 None
+- `test_get_by_name_found` - 根据名称获取
+- `test_get_by_name_not_found` - 名称不存在返回 None
+- `test_list_all` - 列出所有
+- `test_create` - 创建业务概念（ID 自增、mappings 为空）
+- `test_add_mapping` - 添加映射
+- `test_add_mapping_already_exists` - 映射已存在则报错
+- `test_update` - 修改非映射字段
 
 
