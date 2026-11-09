@@ -25,7 +25,8 @@
 
 meta:
   updated: "2026-11-09"
-  baseline: "905b278"
+  # 本看板描述的代码状态（PR #1 合并后的 main）。不随无关提交漂移。
+  baseline: "eda734c"
   counts:
     total: 35
     done: 3

@@ -1,6 +1,6 @@
 # CrispSpec 项目现状
 
-> 最后更新：2026-11-09 · 分支 `fix/toolchain-and-consistency` · 基线 `a619395`
+> 最后更新：2026-11-09 · 分支 `main` · 基线 `eda734c`（PR #1 合并后）
 >
 > 本文记录项目当前的实际状态、已解决的问题、遗留问题与后续路线。
 > **它描述的是事实，不是计划**——计划见 [`TODO.md`](TODO.md)，制品体系见 [`concepts.md`](concepts.md)。
@@ -107,7 +107,7 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 
 分支 `fix/toolchain-and-consistency` 共 4 个提交：
 
-### 5.1 工具链（`375e298`）
+### 5.1 工具链（`Fix broken toolchain`）
 
 | 问题 | 症状 | 修复 |
 |------|------|------|
@@ -119,23 +119,23 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 
 > venv 本身也指向了已被卸载的 Windows Store Python，已重建。
 
-### 5.2 `secret` 命名三方漂移（`375e298`）
+### 5.2 `secret` 命名三方漂移（`Fix broken toolchain`）
 
 文档写 `SEC-\d+` / `secret`，代码里却是 `confidential` / `confidential_value` / `CONFIDENTIAL` 三种写法。
 后果：`is_valid_type("confidential")` 返回 `False`，但 `ALL_TYPES` 里仍有它 → `SqliteStorage._ensure_table()`
 直接抛 `ValueError`，**Secret 制品根本存不进库**。已统一为 `secret` / `SEC`。
 
-### 5.3 代码域定义缺失（`568bea8`）
+### 5.3 代码域定义缺失（`Add code domain artifacts`）
 
 `concepts.md` 引用了 `src/code/repository.md` 和 `src/code/code-ref.md`，但两个文件根本不存在；
 且那两行用的是纯反引号路径而非 markdown 链接，所以链接检查器抓不到这个洞。已补齐定义并统一为链接。
 
-### 5.4 制品身份分裂（`568bea8`）
+### 5.4 制品身份分裂（`Add code domain artifacts`）
 
 `ModuleManager.create_module` 存在两个身份：存储层按 rowid 分配 `MOD-1`，但 YAML 里的
 `id: "MOD-001"` 被原样存下。已改为**存储分配的 ID 为准**，并由测试锁定。
 
-### 5.5 Business Concept 实现（`6f4d4ea`）
+### 5.5 Business Concept 实现（`Implement BusinessConcept artifact`）
 
 - `src/requirement/common.py` — `MappingType`（七个语义位置）、`ArtifactType`（映射目标类型）、
   `ALLOWED_ARTIFACT_TYPES` 约束表、异常体系
@@ -143,11 +143,11 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 - `src/requirement/business_concept_storage.py` — SQLite 实现（`get_by_id` / `get_by_name` /
   `list_all` / `create` / `add_mapping` / `update`）
 
-### 5.6 补测试（`568bea8` / `6f4d4ea`）
+### 5.6 补测试（`Add code domain artifacts` / `Implement BusinessConcept artifact`）
 
 `tests/module/`（35 个）+ `tests/requirement/`（24 个）。此前 `src/module` 是唯一没有测试的制品管理器。
 
-### 5.7 CI 一直是红的（`375e298` 之外的发现）
+### 5.7 CI 一直是红的（`Fix EXE001 that kept CI red`）
 
 `main` 上的 **6 次 CI 运行全部失败**，从第一个引入 CI 的提交（`fdab0c3`，2026-05-14）开始。
 原因有两个，都属于“Windows 上看不出来”的类型：
