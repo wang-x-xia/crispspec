@@ -1,0 +1,5778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CrispSpec 制品图谱</title>
+<style>
+:root {
+  --bg: #0a0f1e;
+  --bg-panel: #111a30;
+  --bg-elev: #17223d;
+  --bg-hover: #1e2b4d;
+  --border: #24314f;
+  --border-soft: #1b2540;
+  --text: #e8eeff;
+  --muted: #8fa1c7;
+  --accent: #4f9dff;
+  --accent-soft: rgba(79, 157, 255, 0.16);
+  --danger: #f87171;
+  --ok: #4ade80;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  --radius: 10px;
+}
+body.light {
+  --bg: #f4f7fc;
+  --bg-panel: #ffffff;
+  --bg-elev: #ffffff;
+  --bg-hover: #eef3fb;
+  --border: #d7e0ef;
+  --border-soft: #e6ecf6;
+  --text: #16203a;
+  --muted: #5a6b8c;
+  --accent: #1d6ff2;
+  --accent-soft: rgba(29, 111, 242, 0.12);
+  --shadow: 0 8px 24px rgba(21, 40, 82, 0.12);
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.55 "Inter", "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  overflow: hidden;
+}
+button, input, select { font: inherit; color: inherit; }
+a { color: var(--accent); }
+
+/* ── Layout ─────────────────────────────────────────────────────────── */
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+.topbar {
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px 18px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.logo {
+  width: 34px; height: 34px; flex: 0 0 auto;
+  display: grid; place-items: center;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), #8b5cf6);
+  color: #fff; font-size: 17px; font-weight: 700;
+}
+.brand h1 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: .2px; }
+.brand .subtitle { margin: 0; font-size: 12px; color: var(--muted); }
+
+.views { display: flex; gap: 4px; padding: 3px; background: var(--bg-elev); border-radius: 9px; border: 1px solid var(--border); }
+.view-tab {
+  border: 0; background: transparent; color: var(--muted);
+  padding: 6px 14px; border-radius: 7px; cursor: pointer; font-size: 13px;
+}
+.view-tab.active { background: var(--accent); color: #fff; font-weight: 600; }
+.view-tab:disabled { opacity: .4; cursor: not-allowed; }
+
+.tools { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.search-wrap { position: relative; }
+#search {
+  width: 260px; padding: 7px 11px 7px 30px;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: 8px; outline: none;
+}
+#search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+#search::placeholder { color: var(--muted); }
+.search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+.icon-btn {
+  width: 34px; height: 32px; display: grid; place-items: center;
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: 8px; cursor: pointer;
+}
+.icon-btn:hover { background: var(--bg-hover); }
+
+.main { display: flex; flex: 1 1 auto; min-height: 0; }
+
+/* ── Sidebar ────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 268px; flex: 0 0 auto; overflow-y: auto;
+  background: var(--bg-panel); border-right: 1px solid var(--border);
+  padding: 14px;
+}
+.panel { margin-bottom: 18px; }
+.panel > h2 {
+  margin: 0 0 8px; font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel .count { font-weight: 500; letter-spacing: 0; text-transform: none; }
+.filter-list { list-style: none; margin: 0; padding: 0; }
+.filter-list li { margin: 1px 0; }
+.filter-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 7px; border-radius: 7px; cursor: pointer; user-select: none;
+}
+.filter-row:hover { background: var(--bg-hover); }
+.filter-row input { accent-color: var(--accent); margin: 0; cursor: pointer; }
+.filter-row .swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+.filter-row .label { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-row .num { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.filter-row.off { opacity: .42; }
+.chip {
+  display: inline-block; padding: 1px 6px; border-radius: 5px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
+}
+.chip.done { background: rgba(74, 222, 128, .16); color: #4ade80; }
+.chip.wip { background: rgba(148, 163, 184, .16); color: #94a3b8; }
+
+.control { display: flex; align-items: center; gap: 8px; margin: 7px 0; }
+.control label { color: var(--muted); flex: 1 1 auto; }
+.control select {
+  background: var(--bg-elev); border: 1px solid var(--border);
+  border-radius: 7px; padding: 5px 8px; outline: none;
+}
+.btn {
+  width: 100%; padding: 7px 10px; border-radius: 8px; cursor: pointer;
+  background: var(--bg-elev); border: 1px solid var(--border);
+}
+.btn:hover { background: var(--bg-hover); }
+
+/* ── Canvas ─────────────────────────────────────────────────────────── */
+.canvas { position: relative; flex: 1 1 auto; min-width: 0; background:
+  radial-gradient(circle at 30% 20%, rgba(79,157,255,.07), transparent 55%),
+  radial-gradient(circle at 75% 80%, rgba(139,92,246,.06), transparent 50%),
+  var(--bg); }
+#graph { width: 100%; height: 100%; display: block; cursor: grab; }
+#graph.panning { cursor: grabbing; }
+.overlay {
+  position: absolute; background: color-mix(in srgb, var(--bg-panel) 88%, transparent);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 8px 12px; font-size: 12px; color: var(--muted);
+  backdrop-filter: blur(6px); pointer-events: none;
+}
+.overlay.stats { left: 14px; bottom: 14px; display: flex; gap: 16px; }
+.overlay.stats b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.overlay.hint { right: 14px; bottom: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; max-width: 460px; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+
+/* ── Detail panel ───────────────────────────────────────────────────── */
+.detail {
+  width: 360px; flex: 0 0 auto; overflow-y: auto;
+  background: var(--bg-panel); border-left: 1px solid var(--border);
+  padding: 16px;
+}
+.detail .empty { color: var(--muted); text-align: center; padding-top: 60px; line-height: 1.9; }
+.detail h3 { margin: 0 0 2px; font-size: 17px; }
+.detail .sub { color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+.badge-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 8px; border-radius: 6px; font-size: 11.5px;
+  background: var(--bg-elev); border: 1px solid var(--border);
+}
+.badge .swatch { width: 8px; height: 8px; border-radius: 2px; }
+.detail h4 {
+  margin: 16px 0 7px; font-size: 11px; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+  border-top: 1px solid var(--border-soft); padding-top: 12px;
+}
+.detail h4:first-of-type { border-top: 0; padding-top: 0; }
+table.fields { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.fields th {
+  text-align: left; font-weight: 600; color: var(--muted);
+  font-size: 11px; padding: 4px 6px; border-bottom: 1px solid var(--border-soft);
+}
+table.fields td { padding: 5px 6px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+table.fields td.name { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; color: var(--accent); white-space: nowrap; }
+table.fields td.type { color: var(--muted); font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; }
+table.fields td.constraint { color: #c084fc; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; }
+.rel-list { list-style: none; margin: 0; padding: 0; }
+.rel-list li { margin: 3px 0; }
+.rel-link {
+  display: flex; align-items: baseline; gap: 7px; width: 100%;
+  text-align: left; padding: 6px 8px; border-radius: 7px;
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  cursor: pointer;
+}
+.rel-link:hover { background: var(--bg-hover); border-color: var(--accent); }
+.rel-link .rel { font-size: 10.5px; font-weight: 700; letter-spacing: .04em; color: var(--accent); flex: 0 0 auto; }
+.rel-link .tgt { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rel-link .dir { color: var(--muted); font-size: 11px; flex: 0 0 auto; }
+pre.raw {
+  margin: 0; padding: 10px; border-radius: 8px; overflow-x: auto;
+  background: var(--bg-elev); border: 1px solid var(--border-soft);
+  font: 11.5px/1.5 ui-monospace, Menlo, monospace; color: var(--muted);
+  max-height: 320px;
+}
+.note { color: var(--muted); font-size: 12.5px; margin: 0 0 4px; }
+
+/* ── Graph primitives ───────────────────────────────────────────────── */
+.edge { fill: none; stroke: #6b7fa8; stroke-width: 1.4px; opacity: .55; transition: opacity .15s, stroke .15s; }
+.edge.dim { opacity: .07; }
+.edge.hot { opacity: 1; stroke: var(--accent); stroke-width: 2.2px; }
+.edge.both { stroke-dasharray: 6 4; }
+.edge-label {
+  font: 9.5px ui-monospace, Menlo, monospace; fill: var(--muted);
+  paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round;
+  pointer-events: none; user-select: none;
+}
+.edge-label.dim { opacity: .05; }
+.edge-label.hot { fill: var(--accent); font-weight: 700; }
+.node { cursor: pointer; }
+.node .halo { fill: none; stroke: transparent; stroke-width: 6; }
+.node .body { stroke: var(--bg); stroke-width: 2; transition: stroke .15s; }
+.node .title { font: 600 12px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--text); text-anchor: middle; pointer-events: none; }
+.node .prefix { font: 700 9px ui-monospace, Menlo, monospace; text-anchor: middle; pointer-events: none; }
+.node.dim { opacity: .16; }
+.node.missing .body { fill: color-mix(in srgb, var(--danger) 20%, transparent); stroke: var(--danger); stroke-dasharray: 3 2; }
+.node.missing .prefix { fill: var(--danger); }
+.node.selected .body { stroke: #fff; stroke-width: 2.6; }
+.node.selected .halo { stroke: var(--accent); }
+.node.neighbor .halo { stroke: color-mix(in srgb, var(--accent) 55%, transparent); }
+.node:hover .body { stroke: #fff; }
+.node text { user-select: none; }
+
+.tooltip {
+  position: absolute; pointer-events: none; z-index: 20;
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 7px; padding: 5px 9px; font-size: 12px;
+  box-shadow: var(--shadow); opacity: 0; transition: opacity .12s;
+  white-space: nowrap;
+}
+.tooltip.show { opacity: 1; }
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">◆</div>
+      <div>
+        <h1>CrispSpec 制品图谱</h1>
+        <p class="subtitle" id="subtitle">载入中…</p>
+      </div>
+    </div>
+    <div class="views" role="tablist">
+      <button class="view-tab active" data-view="schema" type="button">体系图</button>
+      <button class="view-tab" data-view="instances" id="instanceTab" type="button" disabled>实例图</button>
+    </div>
+    <div class="tools">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="search" type="search" placeholder="搜索制品名 / ID 前缀 / 关系…" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="icon-btn" id="themeBtn" type="button" title="切换明暗主题">◐</button>
+      <button class="icon-btn" id="fitBtn" type="button" title="适应视图 (F)">⤢</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="sidebar" id="sidebar">
+      <section class="panel">
+        <h2>域 <span class="count" id="domainCount"></span></h2>
+        <ul class="filter-list" id="domainFilters"></ul>
+      </section>
+      <section class="panel" id="relationPanel">
+        <h2>关系类型 <span class="count" id="relationCount"></span></h2>
+        <ul class="filter-list" id="relationFilters"></ul>
+      </section>
+      <section class="panel" id="statusPanel">
+        <h2>实现状态</h2>
+        <ul class="filter-list" id="statusFilters"></ul>
+      </section>
+      <section class="panel">
+        <h2>布局</h2>
+        <div class="control">
+          <label for="layoutSel">算法</label>
+          <select id="layoutSel">
+            <option value="force">力导向</option>
+            <option value="domain">按域聚类</option>
+            <option value="radial">同心圆</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="labelsChk">显示关系标签</label>
+          <input type="checkbox" id="labelsChk" checked>
+        </div>
+        <div class="control">
+          <label for="dimChk">聚焦模式（弱化无关）</label>
+          <input type="checkbox" id="dimChk" checked>
+        </div>
+        <button class="btn" id="resetBtn" type="button">重置筛选与视图</button>
+      </section>
+    </aside>
+
+    <section class="canvas" id="canvas">
+      <svg id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="overlay stats" id="stats"></div>
+      <div class="overlay hint" id="hint">拖拽节点 · 滚轮缩放 · 单击查看详情 · 双击聚焦</div>
+    </section>
+
+    <aside class="detail" id="detail">
+      <div class="empty">
+        点击图中的节点<br>查看制品定义与关系
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script id="crisp-spec-data" type="application/json">{
+  "domains": [
+    {
+      "key": "requirement",
+      "label": "需求域",
+      "question": "用户要什么？怎么拆成可交付的单元？",
+      "color": "#4f9dff"
+    },
+    {
+      "key": "contract",
+      "label": "契约域",
+      "question": "数据长什么样？模块间怎么通信？",
+      "color": "#22c55e"
+    },
+    {
+      "key": "behavior",
+      "label": "行为域",
+      "question": "状态怎么变？多个接口怎么协调？",
+      "color": "#f59e0b"
+    },
+    {
+      "key": "code",
+      "label": "代码域",
+      "question": "代码在哪个仓库？逻辑制品怎么映射到物理代码？",
+      "color": "#a855f7"
+    },
+    {
+      "key": "incident",
+      "label": "故障域",
+      "question": "出了什么事？怎么恢复？",
+      "color": "#ef4444"
+    },
+    {
+      "key": "governance",
+      "label": "治理域",
+      "question": "谁能做什么？性能底线是什么？",
+      "color": "#06b6d4"
+    },
+    {
+      "key": "delivery",
+      "label": "交付域",
+      "question": "部署到哪？配置怎么管？",
+      "color": "#ec4899"
+    },
+    {
+      "key": "verification",
+      "label": "验证域",
+      "question": "怎么证明这个制品是对的？",
+      "color": "#84cc16"
+    },
+    {
+      "key": "organization",
+      "label": "组织单元",
+      "question": "哪些制品归谁管？",
+      "color": "#f97316"
+    },
+    {
+      "key": "meta",
+      "label": "元制品",
+      "question": "制品本身的结构由谁定义？",
+      "color": "#64748b"
+    }
+  ],
+  "types": [
+    {
+      "id": "draft",
+      "name": "Draft",
+      "prefix": "DRAFT",
+      "domain": "requirement",
+      "domainLabel": "需求域",
+      "definition": "src/requirement/draft.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [],
+      "notes": "唯一允许非结构化的输入；其余制品都是它的下游",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "DRAFT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 简短标题"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "自由文本",
+          "description": "描述性 — 原始自然语言输入"
+        },
+        {
+          "name": "author",
+          "type": "string",
+          "constraint": "团队成员 ID",
+          "description": "提交人"
+        },
+        {
+          "name": "created_at",
+          "type": "datetime",
+          "constraint": "ISO 8601",
+          "description": "创建时间"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "生命周期状态"
+        }
+      ],
+      "enums": [
+        {
+          "name": "status 枚举",
+          "values": [
+            [
+              "PENDING",
+              "等待消歧"
+            ],
+            [
+              "DISAMBIGUATING",
+              "正在消歧中"
+            ],
+            [
+              "RESOLVED",
+              "已转化为 Requirement"
+            ],
+            [
+              "REJECTED",
+              "被驳回（不可/ 重复）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "requirement",
+      "name": "Requirement",
+      "prefix": "REQ",
+      "domain": "requirement",
+      "domainLabel": "需求域",
+      "definition": "src/requirement/requirement.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [
+        "draft"
+      ],
+      "notes": "消歧后的结构化需求；actor_role_id 指向 Role",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "REQ-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 简短标题"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话摘要"
+        },
+        {
+          "name": "source_draft_id",
+          "type": "ref",
+          "constraint": "DRAFT-\\d+",
+          "description": "来源初稿"
+        },
+        {
+          "name": "sentence_type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "句子类型"
+        },
+        {
+          "name": "done",
+          "type": "boolean",
+          "constraint": "-",
+          "description": "是否完成"
+        }
+      ],
+      "enums": [
+        {
+          "name": "sentence_type 枚举",
+          "values": [
+            [
+              "GWT",
+              "Given-When-Then-And 模式"
+            ],
+            [
+              "EARS",
+              "EARS 模式（预留）"
+            ],
+            [
+              "SVO",
+              "主谓宾模式（预留）"
+            ],
+            [
+              "CUSTOM",
+              "自定义模式（预留）"
+            ]
+          ]
+        },
+        {
+          "name": "GWT 模式字段",
+          "values": [
+            [
+              "gwt",
+              "object"
+            ],
+            [
+              "gwt.user_story_id",
+              "ref"
+            ],
+            [
+              "gwt.actor_concept_id",
+              "ref"
+            ],
+            [
+              "gwt.condition_concept_ids",
+              "list<ref>"
+            ],
+            [
+              "gwt.action_concept_id",
+              "ref"
+            ],
+            [
+              "gwt.result_concept_ids",
+              "list<ref>"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "user-story",
+      "name": "User Story",
+      "prefix": "US",
+      "domain": "requirement",
+      "domainLabel": "需求域",
+      "definition": "src/requirement/user-story.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [
+        "requirement"
+      ],
+      "notes": "面向实现的需求分解单元；when 指向 Interface",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "US-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 简短标题"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话摘要"
+        },
+        {
+          "name": "requirement_ids",
+          "type": "list<ref>",
+          "constraint": "REQ-\\d+",
+          "description": "来源需求"
+        },
+        {
+          "name": "actor_role_id",
+          "type": "ref",
+          "constraint": "ROLE-\\d+",
+          "description": "执行角色（引用 Role）"
+        },
+        {
+          "name": "priority",
+          "type": "enum",
+          "constraint": "CRITICAL / HIGH / MEDIUM / LOW",
+          "description": "优先级"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "故事状态"
+        },
+        {
+          "name": "story_points",
+          "type": "integer",
+          "constraint": "Fibonacci: 1, 2, 3, 5, 8, 13, 21",
+          "description": "复杂度估算"
+        },
+        {
+          "name": "acceptance_criteria",
+          "type": "list<Criterion>",
+          "constraint": "≥ 1 条",
+          "description": "结构化验收条件"
+        }
+      ],
+      "enums": [
+        {
+          "name": "status 枚举",
+          "values": [
+            [
+              "BACKLOG",
+              "待排期"
+            ],
+            [
+              "READY",
+              "已就绪（所有前置条件满足）"
+            ],
+            [
+              "IN_PROGRESS",
+              "开发中"
+            ],
+            [
+              "DONE",
+              "已完成"
+            ],
+            [
+              "BLOCKED",
+              "被阻塞"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "business-concept",
+      "name": "Business Concept",
+      "prefix": "BC",
+      "domain": "requirement",
+      "domainLabel": "需求域",
+      "definition": "src/requirement/business-concept.md",
+      "manager": "src/requirement/business_concept_storage.py",
+      "tests": "tests/requirement/test_business_concept.py",
+      "status": "done",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [],
+      "notes": "七个语义位置的映射。artifact_id 目前不校验存在性（目标制品多数未实现）， 映射目标类型受 ALLOWED_ARTIFACT_TYPES 约束。领域仓储式接口。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "BC-\\d+",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "defined",
+          "type": "boolean",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_actor",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_object",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_action",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_event",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_attribute",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_result",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "as_error",
+          "type": "",
+          "constraint": "",
+          "description": ""
+        }
+      ],
+      "enums": [],
+      "mappings": [
+        {
+          "position": "as_actor",
+          "targets": "Rol/ Module",
+          "sourceField": "actor_role_id"
+        },
+        {
+          "position": "as_object",
+          "targets": "Entity",
+          "sourceField": "preconditions/ postconditions (field 路径)"
+        },
+        {
+          "position": "as_action",
+          "targets": "Interfac/ Orchestratio/ Reactio/ Schedule",
+          "sourceField": "traces.modules (间接)"
+        },
+        {
+          "position": "as_event",
+          "targets": "Event",
+          "sourceField": "exceptions.trigger_event_id/ side_effects.trigger_event_id"
+        },
+        {
+          "position": "as_attribute",
+          "targets": "Entity.field",
+          "sourceField": "preconditions/ postconditions (field 路径)"
+        },
+        {
+          "position": "as_result",
+          "targets": "StateChang/ Interface Respons/ Even/ SideEffect",
+          "sourceField": "postconditions/ side_effects"
+        },
+        {
+          "position": "as_error",
+          "targets": "Error",
+          "sourceField": "Interface.error_codes"
+        }
+      ]
+    },
+    {
+      "id": "entity",
+      "name": "Entity",
+      "prefix": "ENT",
+      "domain": "contract",
+      "domainLabel": "契约域",
+      "definition": "src/contract/entity.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [
+        "module"
+      ],
+      "notes": "BC 的 as_object / as_attribute 映射目标；owner_module_id 必填",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ENT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 实体名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "DDD 分类"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "权威所有者模块（唯一写入者）"
+        },
+        {
+          "name": "projects_from_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "投影来源（可选，主实体不填）"
+        },
+        {
+          "name": "fields",
+          "type": "list<Field>",
+          "constraint": "≥ 1 条",
+          "description": "字段列表"
+        },
+        {
+          "name": "indexes",
+          "type": "list<Index>",
+          "constraint": "",
+          "description": "索引列表"
+        },
+        {
+          "name": "constraints",
+          "type": "list<TableConstraint>",
+          "constraint": "",
+          "description": "表级约束"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "AGGREGATE_ROOT",
+              "聚合根——事务和一致性的边界"
+            ],
+            [
+              "ENTITY",
+              "普通实体——有独立 ID，从属于聚合根"
+            ],
+            [
+              "VALUE_OBJECT",
+              "值对象——无独立 ID，不可变"
+            ],
+            [
+              "ENUM_TABLE",
+              "枚举表——存储系统级枚举值"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "interface",
+      "name": "Interface",
+      "prefix": "API",
+      "domain": "contract",
+      "domainLabel": "契约域",
+      "definition": "src/contract/interface.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [
+        "module",
+        "entity",
+        "error"
+      ],
+      "notes": "BC 的 as_action 映射目标；CLI 的每个子命令对应一个 Interface",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "API-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 接口名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "所属模块"
+        },
+        {
+          "name": "protocol",
+          "type": "enum",
+          "constraint": "HTTP/ gRPC/ GraphQL/ WebSocket/ EVENT",
+          "description": "通信协议"
+        },
+        {
+          "name": "method",
+          "type": "enum",
+          "constraint": "GET/ POST/ PUT/ DELETE/ PATCH",
+          "description": "HTTP 方法（仅 protocol: HTTP）"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "constraint": "URL 模式（如/a//refunds）",
+          "description": "端点路径"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "constraint": "semver",
+          "description": "接口版本"
+        },
+        {
+          "name": "idempotent",
+          "type": "boolean",
+          "constraint": "",
+          "description": "是否幂等"
+        },
+        {
+          "name": "auth",
+          "type": "Auth",
+          "constraint": "见下方",
+          "description": "认证要求"
+        },
+        {
+          "name": "request_fields",
+          "type": "list<TypedField>",
+          "constraint": "",
+          "description": "请求参数"
+        },
+        {
+          "name": "response_fields",
+          "type": "list<TypedField>",
+          "constraint": "",
+          "description": "响应字段"
+        },
+        {
+          "name": "error_ids",
+          "type": "list<ref>",
+          "constraint": "ERR-\\d+",
+          "description": "可能返回的错误（引用 Error）"
+        },
+        {
+          "name": "role_ids",
+          "type": "list<ref>",
+          "constraint": "ROLE-\\d+",
+          "description": "授权角色——谁可以调用（引用 Role，可选）"
+        },
+        {
+          "name": "rate_limit",
+          "type": "RateLimit",
+          "constraint": "",
+          "description": "限流策略（可选）"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "error",
+      "name": "Error",
+      "prefix": "ERR",
+      "domain": "contract",
+      "domainLabel": "契约域",
+      "definition": "src/contract/error.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [],
+      "notes": "BC 的 as_error 映射目标；统一错误码目录",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ERR-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 错误名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "error_key",
+          "type": "string",
+          "constraint": "UPPER_SNAKE_CASE",
+          "description": "唯一业务错误标识"
+        },
+        {
+          "name": "http_status",
+          "type": "integer",
+          "constraint": "HTTP 状态码",
+          "description": "默认 HTTP 状态码"
+        },
+        {
+          "name": "retryable",
+          "type": "boolean",
+          "constraint": "",
+          "description": "客户端是否应重试"
+        },
+        {
+          "name": "category",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "错误分类"
+        }
+      ],
+      "enums": [
+        {
+          "name": "category 枚举",
+          "values": [
+            [
+              "VALIDATION",
+              "输入校验失败"
+            ],
+            [
+              "AUTHORIZATION",
+              "认/ 授权失败"
+            ],
+            [
+              "RATE_LIMIT",
+              "限流拒绝"
+            ],
+            [
+              "DEPENDENCY",
+              "下游依赖故障"
+            ],
+            [
+              "BUSINESS",
+              "业务规则拒绝"
+            ],
+            [
+              "SYSTEM",
+              "系统内部错误"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "event",
+      "name": "Event",
+      "prefix": "EVT",
+      "domain": "contract",
+      "domainLabel": "契约域",
+      "definition": "src/contract/event.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P1",
+      "dependsOn": [],
+      "notes": "BC 的 as_event 映射目标；异步通信契约",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "EVT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 事件名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "事件类别"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "负责模块（权威发布者，与 Entity.owner_module_id 一致语义）"
+        },
+        {
+          "name": "consumer_module_ids",
+          "type": "list<ref>",
+          "constraint": "MOD-\\d+",
+          "description": "消费者模块列表"
+        },
+        {
+          "name": "source_entity_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "触发源实体（可选）"
+        },
+        {
+          "name": "source_transition",
+          "type": "SourceTransition",
+          "constraint": "见下方",
+          "description": "触发源状态转换（可选，与 Process 关联时填写）"
+        },
+        {
+          "name": "payload_fields",
+          "type": "list<TypedField>",
+          "constraint": "",
+          "description": "事件载荷字段"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "DOMAIN",
+              "业务领域事件（OrderCreated、PaymentConfirmed）"
+            ],
+            [
+              "INTEGRATION",
+              "系统集成事件（ConfigChanged、ServiceRegistered）"
+            ],
+            [
+              "NOTIFICATION",
+              "通知类事件（EmailSent、SmsPushed）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "process",
+      "name": "Process",
+      "prefix": "PROC",
+      "domain": "behavior",
+      "domainLabel": "行为域",
+      "definition": "src/behavior/process.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P1",
+      "dependsOn": [
+        "entity"
+      ],
+      "notes": "单实体状态机；Transition Test 的验证对象",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "PROC-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 流程名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "流程类型"
+        },
+        {
+          "name": "target_entity_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "管理哪个实体的状态"
+        },
+        {
+          "name": "target_field",
+          "type": "string",
+          "constraint": "实体字段名（如 status）",
+          "description": "状态字段"
+        },
+        {
+          "name": "states",
+          "type": "list<State>",
+          "constraint": "≥ 2 个",
+          "description": "状态集合"
+        },
+        {
+          "name": "transitions",
+          "type": "list<Transition>",
+          "constraint": "≥ 1 条",
+          "description": "合法转换规则"
+        },
+        {
+          "name": "forbidden_transitions",
+          "type": "list<Forbidden>",
+          "constraint": "",
+          "description": "显式禁止的转换"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "STATE_MACHINE",
+              "有限状态机——单一状态字段的线性 / 分支流转"
+            ],
+            [
+              "DAG",
+              "有向无环图——多步骤并行 / 汇聚流程"
+            ],
+            [
+              "PIPELINE",
+              "流水线——顺序执行的处理阶段"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "orchestration",
+      "name": "Orchestration",
+      "prefix": "ORCH",
+      "domain": "behavior",
+      "domainLabel": "行为域",
+      "definition": "src/behavior/orchestration.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P1",
+      "dependsOn": [
+        "interface"
+      ],
+      "notes": "跨模块 Interface 编排",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ORCH-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 编排名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "coordinator_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "协调者模块——负责驱动整个编排流程"
+        },
+        {
+          "name": "steps",
+          "type": "list<Step>",
+          "constraint": "≥ 2 步",
+          "description": "有序编排步骤"
+        },
+        {
+          "name": "compensation",
+          "type": "enum",
+          "constraint": "BACKWARD / FORWARD_RETRY",
+          "description": "补偿策略"
+        },
+        {
+          "name": "max_retries",
+          "type": "integer",
+          "constraint": "≥ 0",
+          "description": "单步最大重试次数"
+        },
+        {
+          "name": "global_timeout",
+          "type": "duration",
+          "constraint": "如 30s、5m",
+          "description": "整体超时"
+        }
+      ],
+      "enums": [
+        {
+          "name": "compensation 枚举",
+          "values": [
+            [
+              "BACKWARD",
+              "逆序补偿——失败时按反向顺序依次调用已完成步骤的补偿接口"
+            ],
+            [
+              "FORWARD_RETRY",
+              "前向重试——失败时重试当前步骤（要求步骤幂等）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "reaction",
+      "name": "Reaction",
+      "prefix": "SUB",
+      "domain": "behavior",
+      "domainLabel": "行为域",
+      "definition": "src/behavior/reaction.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "event"
+      ],
+      "notes": "事件反应器",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "SUB-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 反应器名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "负责处理的模块"
+        },
+        {
+          "name": "target_entity_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "操作的目标实体（可选）"
+        },
+        {
+          "name": "event_id",
+          "type": "ref",
+          "constraint": "EVT-\\d+",
+          "description": "监听的事件（引用 Event）"
+        },
+        {
+          "name": "idempotent",
+          "type": "boolean",
+          "constraint": "",
+          "description": "处理是否幂等"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "schedule",
+      "name": "Schedule",
+      "prefix": "SCH",
+      "domain": "behavior",
+      "domainLabel": "行为域",
+      "definition": "src/behavior/schedule.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [],
+      "notes": "定时任务",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "SCH-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 任务名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "负责执行的模块"
+        },
+        {
+          "name": "target_entity_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "操作的目标实体（可选）"
+        },
+        {
+          "name": "cron",
+          "type": "string",
+          "constraint": "UNIX cron 表达式（如 0 2 * * *）",
+          "description": "定时规则（与 interval 互斥）"
+        },
+        {
+          "name": "interval",
+          "type": "duration",
+          "constraint": "如 30m、6h",
+          "description": "固定间隔（与 cron 互斥）"
+        },
+        {
+          "name": "timezone",
+          "type": "string",
+          "constraint": "IANA 时区（如 As/Shanghai）",
+          "description": "执行时区（仅 cron 时需要）"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "repository",
+      "name": "Repository",
+      "prefix": "REPO",
+      "domain": "code",
+      "domainLabel": "代码域",
+      "definition": "src/code/repository.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [],
+      "notes": "本分支刚补齐定义；Code Ref 的所在仓库",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "REPO-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 仓库名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "constraint": "URL",
+          "description": "仓库地址（如 https://github.com/org/repo）"
+        },
+        {
+          "name": "default_branch",
+          "type": "string",
+          "constraint": "",
+          "description": "默认分支（如 main、master）"
+        },
+        {
+          "name": "language",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "主要语言"
+        },
+        {
+          "name": "visibility",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "可见性"
+        },
+        {
+          "name": "module_ids",
+          "type": "list<ref>",
+          "constraint": "MOD-\\d+",
+          "description": "本仓库承载的模块（可为空）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "language 枚举",
+          "values": [
+            [
+              "PYTHON",
+              "Python"
+            ],
+            [
+              "TYPESCRIPT",
+              "TypeScript / JavaScript"
+            ],
+            [
+              "JAVA",
+              "Java / Kotlin"
+            ],
+            [
+              "GO",
+              "Go"
+            ],
+            [
+              "RUST",
+              "Rust"
+            ],
+            [
+              "C_SHARP",
+              "C# / .NET"
+            ],
+            [
+              "CPP",
+              "C / C++"
+            ],
+            [
+              "SHELL",
+              "Shell 脚本"
+            ],
+            [
+              "POLYGLOT",
+              "多语言仓库"
+            ]
+          ]
+        },
+        {
+          "name": "visibility 枚举",
+          "values": [
+            [
+              "PUBLIC",
+              "公开仓库"
+            ],
+            [
+              "PRIVATE",
+              "私有仓库"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "code-ref",
+      "name": "Code Ref",
+      "prefix": "CREF",
+      "domain": "code",
+      "domainLabel": "代码域",
+      "definition": "src/code/code-ref.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [
+        "repository"
+      ],
+      "notes": "制品到源码位置的追溯引用；本分支刚补齐定义",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "CREF-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 引用名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "artifact_id",
+          "type": "ref",
+          "constraint": "契约域或行为域制品 ID（API-\\d+ / ENT-\\d+ / EVT-\\d+ / ERR-\\d+ / PROC-\\d+ / ORCH-\\d+ / SUB-\\d+ / SCH-\\d+）",
+          "description": "被引用的逻辑制品"
+        },
+        {
+          "name": "repository_id",
+          "type": "ref",
+          "constraint": "REPO-\\d+",
+          "description": "所在仓库"
+        },
+        {
+          "name": "path",
+          "type": "string",
+          "constraint": "相对仓库根目录的路径",
+          "description": "源代码文件路径"
+        },
+        {
+          "name": "symbol",
+          "type": "string",
+          "constraint": "",
+          "description": "导出符号名（类名 / 函数名 / 常量名）"
+        },
+        {
+          "name": "module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "该实现所属的模块"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "module",
+      "name": "Module",
+      "prefix": "MOD",
+      "domain": "organization",
+      "domainLabel": "组织单元",
+      "definition": "src/module/module.md",
+      "manager": "src/module/module.py",
+      "tests": "tests/module/test_module.py",
+      "status": "done",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [],
+      "notes": "薄 manager 范式（解析 → 校验 → 落库）。code_refs 为内嵌结构， 与独立的 Code Ref 制品并存，需注意区分。",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "MOD-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "PascalCase，≤ 80 字符",
+          "description": "描述性 — 服务 / 模块名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话职责说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "模块类型"
+        },
+        {
+          "name": "version",
+          "type": "string",
+          "constraint": "semver（如 2.1.0）",
+          "description": "当前版本"
+        },
+        {
+          "name": "owner",
+          "type": "string",
+          "constraint": "团队 / 人员 ID",
+          "description": "负责人"
+        },
+        {
+          "name": "used",
+          "type": "boolean",
+          "constraint": "默认 true",
+          "description": "是否在使用"
+        },
+        {
+          "name": "deprecated",
+          "type": "boolean",
+          "constraint": "默认 false",
+          "description": "是否已废弃"
+        },
+        {
+          "name": "dependencies",
+          "type": "list<Dependency>",
+          "constraint": "",
+          "description": "依赖的其他模块"
+        },
+        {
+          "name": "interface_ids",
+          "type": "list<ref>",
+          "constraint": "API-\\d+",
+          "description": "暴露的接口"
+        },
+        {
+          "name": "process_ids",
+          "type": "list<ref>",
+          "constraint": "PROC-\\d+",
+          "description": "关联的流程"
+        },
+        {
+          "name": "constraint_ids",
+          "type": "list<ref>",
+          "constraint": "CON-\\d+",
+          "description": "关联的约束"
+        },
+        {
+          "name": "code_refs",
+          "type": "list<CodeRef>",
+          "constraint": "",
+          "description": "制品到源码的映射"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "CLI",
+              "命令行模块"
+            ],
+            [
+              "INTERNAL_LIB",
+              "内部功能模块"
+            ],
+            [
+              "EXTERNAL_LIB",
+              "外部功能模块"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "role",
+      "name": "Role",
+      "prefix": "ROLE",
+      "domain": "governance",
+      "domainLabel": "治理域",
+      "definition": "src/governance/rbac/role.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P1",
+      "dependsOn": [],
+      "notes": "BC 的 as_actor 映射目标之一（另一个是 Module）",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ROLE-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 角色名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "角色类别"
+        },
+        {
+          "name": "entity_id",
+          "type": "ref",
+          "constraint": "ENT-\\d+",
+          "description": "该角色对应的主体实体（可选，SYSTEM 类型无需）"
+        },
+        {
+          "name": "qualifiers",
+          "type": "list<Condition>",
+          "constraint": "≥ 0 条",
+          "description": "识别条件——全部满足时属于该角色"
+        },
+        {
+          "name": "permission_ids",
+          "type": "list<ref>",
+          "constraint": "PERM-\\d+",
+          "description": "拥有的权限列表"
+        },
+        {
+          "name": "inherits_from_id",
+          "type": "ref",
+          "constraint": "ROLE-\\d+",
+          "description": "继承的父角色（可选，子角色自动获得父角色全部权限）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "HUMAN",
+              "人类用户（终端消费者、管理员等）"
+            ],
+            [
+              "SYSTEM",
+              "系统内部角色（定时任务、后台服务）"
+            ],
+            [
+              "EXTERNAL_SERVICE",
+              "外部服务（第三方支付、物流 API）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "permission",
+      "name": "Permission",
+      "prefix": "PERM",
+      "domain": "governance",
+      "domainLabel": "治理域",
+      "definition": "src/governance/rbac/permission.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "role"
+      ],
+      "notes": "独立访问控制体系；Secret 的访问控制引用它",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "PERM-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 权限名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "action",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "授权动作"
+        },
+        {
+          "name": "resource_type",
+          "type": "enum",
+          "constraint": "INTERFACE / ENTITY",
+          "description": "资源类型"
+        },
+        {
+          "name": "resource_id",
+          "type": "ref",
+          "constraint": "API-\\d+ / ENT-\\d+",
+          "description": "资源 ID"
+        },
+        {
+          "name": "effect",
+          "type": "enum",
+          "constraint": "ALLOW / DENY",
+          "description": "效果（DENY 优先于 ALLOW）"
+        },
+        {
+          "name": "conditions",
+          "type": "list<Condition>",
+          "constraint": "≥ 0 条",
+          "description": "附加条件（可选，满足时该条目才生效）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "action 枚举",
+          "values": [
+            [
+              "INVOKE",
+              "调用接口（resource_type: INTERFACE）"
+            ],
+            [
+              "READ",
+              "读取数据（resource_type: ENTITY）"
+            ],
+            [
+              "WRITE",
+              "写入数据（resource_type: ENTITY）"
+            ],
+            [
+              "DELETE",
+              "删除数据（resource_type: ENTITY）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "constraint",
+      "name": "Constraint",
+      "prefix": "CON",
+      "domain": "governance",
+      "domainLabel": "治理域",
+      "definition": "src/governance/constraint.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P1",
+      "dependsOn": [
+        "metric"
+      ],
+      "notes": "Module.constraint_ids 在 Stage 1 期间悬空",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "CON-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 约束名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "约束类别"
+        },
+        {
+          "name": "scope",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "作用范围"
+        },
+        {
+          "name": "target_id",
+          "type": "ref",
+          "constraint": "任意制品 ID",
+          "description": "约束对象"
+        },
+        {
+          "name": "metric_id",
+          "type": "ref",
+          "constraint": "MET-\\d+",
+          "description": "度量指标（引用 Metric）"
+        },
+        {
+          "name": "operator",
+          "type": "enum",
+          "constraint": "<=/ >=/ ==/ !=/ IN/ NOT_IN",
+          "description": "比较运算符"
+        },
+        {
+          "name": "threshold",
+          "type": "number",
+          "constraint": "",
+          "description": "阈值"
+        },
+        {
+          "name": "enforcement",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "执行强度"
+        },
+        {
+          "name": "violation_action",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "违反时的处理"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "PERFORMANCE",
+              "性能约束（延迟、吞吐、资源使用）"
+            ],
+            [
+              "SECURITY",
+              "安全约束（认证、加密、访问控制）"
+            ],
+            [
+              "COMPLIANCE",
+              "合规约束（数据保留、审计、隐私）"
+            ],
+            [
+              "ARCHITECTURE",
+              "架构约束（依赖方向、技术选型、部署拓扑）"
+            ],
+            [
+              "BUSINESS",
+              "业务约束（金额上限、操作频率、SLA）"
+            ],
+            [
+              "DATA_INTEGRITY",
+              "数据完整性约束（一致性、唯一性、引用完整性）"
+            ]
+          ]
+        },
+        {
+          "name": "scope 枚举",
+          "values": [
+            [
+              "SYSTEM",
+              "全系统级"
+            ],
+            [
+              "SERVICE",
+              "单个服/ 模块级"
+            ],
+            [
+              "ENDPOINT",
+              "单个接口级"
+            ],
+            [
+              "ENTITY",
+              "单个实体级"
+            ],
+            [
+              "FIELD",
+              "单个字段级"
+            ]
+          ]
+        },
+        {
+          "name": "enforcement 枚举",
+          "values": [
+            [
+              "HARD_BLOCK",
+              "强制阻断——违反时系统拒绝操作"
+            ],
+            [
+              "SOFT_WARN",
+              "软告警——违反时发出警告但不阻断"
+            ],
+            [
+              "AUDIT_LOG",
+              "仅记录——违反时写入审计日志"
+            ]
+          ]
+        },
+        {
+          "name": "violation_action 枚举",
+          "values": [
+            [
+              "REJECT",
+              "拒绝请求"
+            ],
+            [
+              "ALERT",
+              "触发告警通知"
+            ],
+            [
+              "ESCALATE",
+              "升级到人工处理"
+            ],
+            [
+              "LOG",
+              "仅写日志"
+            ],
+            [
+              "CIRCUIT_BREAK",
+              "触发熔断"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "metric",
+      "name": "Metric",
+      "prefix": "MET",
+      "domain": "governance",
+      "domainLabel": "治理域",
+      "definition": "src/governance/metric.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [],
+      "notes": "Constraint 的度量对象；Benchmark 的验证对象",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "MET-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 指标名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "metric_key",
+          "type": "string",
+          "constraint": "snake_case",
+          "description": "唯一度量标识（如 latency_p99）"
+        },
+        {
+          "name": "unit",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "度量单位"
+        },
+        {
+          "name": "direction",
+          "type": "enum",
+          "constraint": "LOWER_IS_BETTER/ HIGHER_IS_BETTER",
+          "description": "优化方向"
+        },
+        {
+          "name": "aggregation",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "默认聚合方式"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "dependency",
+      "name": "Dependency",
+      "prefix": "DEP",
+      "domain": "governance",
+      "domainLabel": "治理域",
+      "definition": "src/governance/dependency.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [],
+      "notes": "第三方依赖",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "DEP-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 依赖名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "依赖类型"
+        },
+        {
+          "name": "package_name",
+          "type": "string",
+          "constraint": "",
+          "description": "/服务名（如 org.springframework:spring-core、com.amazonaws:aws-java-sdk-s3）"
+        },
+        {
+          "name": "version_range",
+          "type": "string",
+          "constraint": "SemVer 版本范围（如 ^2.0.0、>=1.0.0,<2.0.0）",
+          "description": "允许的版本范围"
+        },
+        {
+          "name": "current_version",
+          "type": "string",
+          "constraint": "具体版本号（如 2.7.0）",
+          "description": "当前使用的版本"
+        },
+        {
+          "name": "license",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "许可证类型"
+        },
+        {
+          "name": "license_url",
+          "type": "string",
+          "constraint": "URL",
+          "description": "许可证原文链接"
+        },
+        {
+          "name": "source",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "来源"
+        },
+        {
+          "name": "source_url",
+          "type": "string",
+          "constraint": "URL",
+          "description": "源码仓库链接"
+        },
+        {
+          "name": "security_risk",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "安全风险等级"
+        },
+        {
+          "name": "vulnerabilities",
+          "type": "list<Vulnerability>",
+          "constraint": "",
+          "description": "已知漏洞（可选）"
+        },
+        {
+          "name": "usage_scope",
+          "type": "list<ref>",
+          "constraint": "MOD-\\d+",
+          "description": "使用该依赖的模块列表"
+        },
+        {
+          "name": "introduction_reason",
+          "type": "string",
+          "constraint": "",
+          "description": "引入原因（可选）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "LIBRARY",
+              "程序库（Java Maven、JavaScript npm、Python pip 等）"
+            ],
+            [
+              "FRAMEWORK",
+              "框架（Spring Boot、React、Django 等）"
+            ],
+            [
+              "SERVICE",
+              "外部服务（AWS S3、Stripe API、SendGrid 等）"
+            ],
+            [
+              "TOOL",
+              "构建/开发工具（Webpack、Docker、ESLint 等）"
+            ]
+          ]
+        },
+        {
+          "name": "license 枚举",
+          "values": [
+            [
+              "MIT",
+              "MIT License"
+            ],
+            [
+              "APACHE_2_0",
+              "Apache License 2.0"
+            ],
+            [
+              "GPL_3_0",
+              "GNU General Public License v3.0"
+            ],
+            [
+              "BSD_3_CLAUSE",
+              "BSD 3-Clause License"
+            ],
+            [
+              "LGPL_2_1",
+              "GNU Lesser General Public License v2.1"
+            ],
+            [
+              "MPL_2_0",
+              "Mozilla Public License 2.0"
+            ],
+            [
+              "PROPRIETARY",
+              "/商业许可证"
+            ],
+            [
+              "OTHER",
+              "其他许可证"
+            ]
+          ]
+        },
+        {
+          "name": "source 枚举",
+          "values": [
+            [
+              "MAVEN_CENTRAL",
+              "Maven Central"
+            ],
+            [
+              "NPM",
+              "npm Registry"
+            ],
+            [
+              "PYPI",
+              "PyPI"
+            ],
+            [
+              "GITHUB",
+              "GitHub"
+            ],
+            [
+              "CLOUD_VENDOR",
+              "云厂商（AWS、Azure、GCP）"
+            ],
+            [
+              "PRIVATE_REGISTRY",
+              "私有仓库"
+            ],
+            [
+              "OTHER",
+              "其他来源"
+            ]
+          ]
+        },
+        {
+          "name": "security_risk 枚举",
+          "values": [
+            [
+              "CRITICAL",
+              "严重——已知高危漏洞"
+            ],
+            [
+              "HIGH",
+              "高——存在中高风险漏洞"
+            ],
+            [
+              "MEDIUM",
+              "中——存在低风险漏洞"
+            ],
+            [
+              "LOW",
+              "低——无已知漏洞或风险可控"
+            ],
+            [
+              "UNKNOWN",
+              "未知——未进行安全评估"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "incident",
+      "name": "Incident",
+      "prefix": "INC",
+      "domain": "incident",
+      "domainLabel": "故障域",
+      "definition": "src/incident/incident.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "entity"
+      ],
+      "notes": "故障定义",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "INC-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 故障名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "故障类型"
+        },
+        {
+          "name": "severity",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "严重程度"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "归属模块"
+        },
+        {
+          "name": "affected_entity_ids",
+          "type": "list<ref>",
+          "constraint": "ENT-\\d+",
+          "description": "受影响的实体"
+        },
+        {
+          "name": "symptoms",
+          "type": "list<string>",
+          "constraint": "≥ 1 条",
+          "description": "故障症状（可观测的表现）"
+        },
+        {
+          "name": "detection_method",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "检测方式"
+        },
+        {
+          "name": "runbook_id",
+          "type": "ref",
+          "constraint": "RB-\\d+",
+          "description": "处理手册（引用 Runbook）"
+        },
+        {
+          "name": "playbook_id",
+          "type": "ref",
+          "constraint": "PB-\\d+",
+          "description": "应急预案（引用 Playbook，可选）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "SERVICE_DOWN",
+              "服务不可用"
+            ],
+            [
+              "PERFORMANCE_DEGRADATION",
+              "性能下降"
+            ],
+            [
+              "DATA_INCONSISTENCY",
+              "数据不一致"
+            ],
+            [
+              "RESOURCE_EXHAUSTION",
+              "资源耗尽"
+            ],
+            [
+              "DEPENDENCY_FAILURE",
+              "依赖服务故障"
+            ],
+            [
+              "DATA_LOSS",
+              "数据丢失"
+            ],
+            [
+              "SECURITY_BREACH",
+              "安全漏洞"
+            ]
+          ]
+        },
+        {
+          "name": "severity 枚举",
+          "values": [
+            [
+              "CRITICAL",
+              "严重——核心业务不可用"
+            ],
+            [
+              "HIGH",
+              "高——重要功能受损"
+            ],
+            [
+              "MEDIUM",
+              "中——部分功能受限"
+            ],
+            [
+              "LOW",
+              "低——轻微影响"
+            ]
+          ]
+        },
+        {
+          "name": "detection_method 枚举",
+          "values": [
+            [
+              "ALERT",
+              "告警触发"
+            ],
+            [
+              "USER_REPORT",
+              "用户报告"
+            ],
+            [
+              "MONITORING",
+              "监控发现"
+            ],
+            [
+              "AUDIT",
+              "审计发现"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "runbook",
+      "name": "Runbook",
+      "prefix": "RB",
+      "domain": "incident",
+      "domainLabel": "故障域",
+      "definition": "src/incident/runbook.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "incident"
+      ],
+      "notes": "运维手册",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "RB-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 手册名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "手册类型"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "归属模块"
+        },
+        {
+          "name": "prerequisites",
+          "type": "list<string>",
+          "constraint": "",
+          "description": "前置条件"
+        },
+        {
+          "name": "steps",
+          "type": "list<Step>",
+          "constraint": "≥ 1 条",
+          "description": "操作步骤"
+        },
+        {
+          "name": "rollback_steps",
+          "type": "list<Step>",
+          "constraint": "",
+          "description": "回滚步骤（可选）"
+        },
+        {
+          "name": "verification_steps",
+          "type": "list<Step>",
+          "constraint": "",
+          "description": "验证步骤（可选）"
+        },
+        {
+          "name": "estimated_duration",
+          "type": "string",
+          "constraint": "时长（如 10m、1h）",
+          "description": "预计执行时间"
+        },
+        {
+          "name": "risk_level",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "风险等级"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "TROUBLESHOOTING",
+              "故障排查"
+            ],
+            [
+              "MAINTENANCE",
+              "日常维护"
+            ],
+            [
+              "DEPLOYMENT",
+              "部署操作"
+            ],
+            [
+              "RECOVERY",
+              "恢复操作"
+            ],
+            [
+              "DIAGNOSTIC",
+              "诊断操作"
+            ]
+          ]
+        },
+        {
+          "name": "risk_level 枚举",
+          "values": [
+            [
+              "HIGH",
+              "高风险——可能影响生产"
+            ],
+            [
+              "MEDIUM",
+              "中风险——需要谨慎操作"
+            ],
+            [
+              "LOW",
+              "低风险——常规操作"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "playbook",
+      "name": "Playbook",
+      "prefix": "PB",
+      "domain": "incident",
+      "domainLabel": "故障域",
+      "definition": "src/incident/playbook.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "incident",
+        "runbook"
+      ],
+      "notes": "应急响应预案",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "PB-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 预案名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "incident_id",
+          "type": "ref",
+          "constraint": "INC-\\d+",
+          "description": "关联的故障（引用 Incident）"
+        },
+        {
+          "name": "owner_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "归属模块"
+        },
+        {
+          "name": "trigger_conditions",
+          "type": "list<Condition>",
+          "constraint": "≥ 1 条",
+          "description": "触发条件"
+        },
+        {
+          "name": "response_flow",
+          "type": "ResponseFlow",
+          "constraint": "",
+          "description": "响应流程（决策树）"
+        },
+        {
+          "name": "escalation_policy",
+          "type": "EscalationPolicy",
+          "constraint": "",
+          "description": "升级策略"
+        },
+        {
+          "name": "communication_plan",
+          "type": "list<string>",
+          "constraint": "",
+          "description": "沟通计划（通知对象、内容、渠道）"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "environment",
+      "name": "Environment",
+      "prefix": "ENV",
+      "domain": "delivery",
+      "domainLabel": "交付域",
+      "definition": "src/delivery/environment.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "config-set"
+      ],
+      "notes": "部署目标",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ENV-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 环境名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "环境类型"
+        },
+        {
+          "name": "region",
+          "type": "string",
+          "constraint": "ISO 3166-2 地区代码",
+          "description": "部署地域（如 cn-north-1）"
+        },
+        {
+          "name": "url",
+          "type": "string",
+          "constraint": "URL 格式",
+          "description": "访问端点"
+        },
+        {
+          "name": "config_set_id",
+          "type": "ref",
+          "constraint": "CSET-\\d+",
+          "description": "配置集合（引用 Config Set）"
+        },
+        {
+          "name": "baseline_module_ids",
+          "type": "list<ref>",
+          "constraint": "MOD-\\d+",
+          "description": "基线模块列表（该环境必须部署的模块）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "DEVELOPMENT",
+              "开发环境——本地或共享开发环境"
+            ],
+            [
+              "TESTING",
+              "测试环境——集成测试、QA 验证"
+            ],
+            [
+              "STAGING",
+              "预生产环境——生产环境的镜像"
+            ],
+            [
+              "PRODUCTION",
+              "生产环境——对外服务"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "pipeline",
+      "name": "Pipeline",
+      "prefix": "PIPE",
+      "domain": "delivery",
+      "domainLabel": "交付域",
+      "definition": "src/delivery/pipeline.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "module",
+        "environment"
+      ],
+      "notes": "交付流程；BUILDS 引用 Module，DEPLOYS_TO 引用 Environment",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "PIPE-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 流水线名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "trigger",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "触发方式"
+        },
+        {
+          "name": "stages",
+          "type": "list<Stage>",
+          "constraint": "≥ 1 个",
+          "description": "阶段序列"
+        },
+        {
+          "name": "build_module_ids",
+          "type": "list<ref>",
+          "constraint": "MOD-\\d+",
+          "description": "构建的模块列表"
+        },
+        {
+          "name": "deploy_to_env_id",
+          "type": "ref",
+          "constraint": "ENV-\\d+",
+          "description": "部署目标环境（引用 Environment）"
+        },
+        {
+          "name": "gate_constraint_ids",
+          "type": "list<ref>",
+          "constraint": "CON-\\d+",
+          "description": "质量关卡（引用 Constraint）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "trigger 枚举",
+          "values": [
+            [
+              "ON_COMMIT",
+              "每次提交触发"
+            ],
+            [
+              "ON_PR",
+              "PR /更新时触发"
+            ],
+            [
+              "ON_TAG",
+              "Git tag 推送时触发"
+            ],
+            [
+              "MANUAL",
+              "手动触发"
+            ],
+            [
+              "SCHEDULED",
+              "定时触发（cron）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "configuration",
+      "name": "Configuration",
+      "prefix": "CONF",
+      "domain": "delivery",
+      "domainLabel": "交付域",
+      "definition": "src/delivery/configuration.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [],
+      "notes": "配置项",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "CONF-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "snake_case，≤ 80 字符",
+          "description": "描述性 — 配置键名"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "配置类型"
+        },
+        {
+          "name": "default_value",
+          "type": "any",
+          "constraint": "",
+          "description": "默认值（可选）"
+        },
+        {
+          "name": "required",
+          "type": "boolean",
+          "constraint": "默认 false",
+          "description": "是否必填"
+        },
+        {
+          "name": "sensitive",
+          "type": "boolean",
+          "constraint": "默认 false",
+          "description": "是否敏感（敏感配置应使用 Secret）"
+        },
+        {
+          "name": "validation",
+          "type": "Validation",
+          "constraint": "",
+          "description": "验证规则（可选）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "STRING",
+              "字符串"
+            ],
+            [
+              "INTEGER",
+              "整数"
+            ],
+            [
+              "FLOAT",
+              "浮点数"
+            ],
+            [
+              "BOOLEAN",
+              "布尔值"
+            ],
+            [
+              "JSON",
+              "JSON 对象"
+            ],
+            [
+              "LIST",
+              "列表"
+            ],
+            [
+              "ENUM",
+              "枚举值"
+            ],
+            [
+              "DURATION",
+              "时长（如 30s、5m、1h）"
+            ],
+            [
+              "SIZE",
+              "大小（如 100MB、1GB）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "config-set",
+      "name": "Config Set",
+      "prefix": "CSET",
+      "domain": "delivery",
+      "domainLabel": "交付域",
+      "definition": "src/delivery/config-set.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "configuration"
+      ],
+      "notes": "配置集合；OVERRIDES 引用 Configuration",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "CSET-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 配置集合名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "scope",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "作用范围"
+        },
+        {
+          "name": "target_id",
+          "type": "ref",
+          "constraint": "ENV-\\d+ / MOD-\\d+",
+          "description": "目标环境或模块"
+        },
+        {
+          "name": "config_overrides",
+          "type": "list<ConfigOverride>",
+          "constraint": "≥ 1 条",
+          "description": "配置覆盖列表"
+        }
+      ],
+      "enums": [
+        {
+          "name": "scope 枚举",
+          "values": [
+            [
+              "ENVIRONMENT",
+              "环境级配置（引用 Environment）"
+            ],
+            [
+              "MODULE",
+              "模块级配置（引用 Module）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "secret",
+      "name": "Secret",
+      "prefix": "SEC",
+      "domain": "delivery",
+      "domainLabel": "交付域",
+      "definition": "src/delivery/secret.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "permission"
+      ],
+      "notes": "敏感信息；本分支修好了 secret/confidential 命名漂移",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "SEC-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "snake_case，≤ 80 字符",
+          "description": "描述性 — 敏感信息名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "敏感信息类型"
+        },
+        {
+          "name": "algorithm",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "加密算法"
+        },
+        {
+          "name": "rotation_policy",
+          "type": "RotationPolicy",
+          "constraint": "",
+          "description": "轮换策略（可选）"
+        },
+        {
+          "name": "access_control_ids",
+          "type": "list<ref>",
+          "constraint": "PERM-\\d+",
+          "description": "访问控制权限（引用 Permission）"
+        }
+      ],
+      "enums": [
+        {
+          "name": "type 枚举",
+          "values": [
+            [
+              "PASSWORD",
+              "密码"
+            ],
+            [
+              "API_KEY",
+              "API 密钥"
+            ],
+            [
+              "CERTIFICATE",
+              "证书（公钥+私钥）"
+            ],
+            [
+              "TOKEN",
+              "访问令牌"
+            ],
+            [
+              "DATABASE_URL",
+              "数据库连接字符串"
+            ],
+            [
+              "ENCRYPTION_KEY",
+              "加密密钥"
+            ]
+          ]
+        },
+        {
+          "name": "algorithm 枚举",
+          "values": [
+            [
+              "AES256",
+              "AES-256 加密"
+            ],
+            [
+              "RSA2048",
+              "RSA-2048 非对称加密"
+            ],
+            [
+              "SHA256",
+              "SHA-256 哈希"
+            ],
+            [
+              "PLAINTEXT_BASE64",
+              "Base64 编码（仅用于非生产环境）"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "acceptance-test",
+      "name": "Acceptance Test",
+      "prefix": "AT",
+      "domain": "verification",
+      "domainLabel": "验证域",
+      "definition": "src/test/acceptance-test.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P1",
+      "dependsOn": [
+        "requirement"
+      ],
+      "notes": "验证 Requirement",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "AT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 用例名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "requirement_id",
+          "type": "ref",
+          "constraint": "REQ-\\d+",
+          "description": "验证的需求"
+        },
+        {
+          "name": "scope",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "测试范围"
+        },
+        {
+          "name": "preconditions",
+          "type": "list<Condition>",
+          "constraint": "",
+          "description": "前置条件"
+        },
+        {
+          "name": "steps",
+          "type": "list<TestStep>",
+          "constraint": "≥ 1 步",
+          "description": "有序执行步骤"
+        },
+        {
+          "name": "expected_outcomes",
+          "type": "list<Assertion>",
+          "constraint": "≥ 1 条",
+          "description": "最终预期结果"
+        }
+      ],
+      "enums": [
+        {
+          "name": "scope 枚举",
+          "values": [
+            [
+              "E2E",
+              "端到端——从用户入口到最终副作用"
+            ],
+            [
+              "CROSS_SERVICE",
+              "跨服务——涉及多个模块协作"
+            ],
+            [
+              "SINGLE_SERVICE",
+              "单服务——在单一模块内验收"
+            ]
+          ]
+        },
+        {
+          "name": "TestStep",
+          "values": [
+            [
+              "order",
+              "integer"
+            ],
+            [
+              "trigger_ref",
+              "ref"
+            ],
+            [
+              "input",
+              "list<TypedField>"
+            ],
+            [
+              "checkpoint",
+              "Assertion"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "scenario-test",
+      "name": "Scenario Test",
+      "prefix": "ST",
+      "domain": "verification",
+      "domainLabel": "验证域",
+      "definition": "src/test/scenario-test.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P1",
+      "dependsOn": [
+        "user-story"
+      ],
+      "notes": "验证 User Story",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "ST-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 用例名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "user_story_id",
+          "type": "ref",
+          "constraint": "US-\\d+",
+          "description": "验证的用户故事"
+        },
+        {
+          "name": "criterion_index",
+          "type": "integer",
+          "constraint": "≥ 0",
+          "description": "对应 acceptance_criteria 的索引"
+        },
+        {
+          "name": "tags",
+          "type": "list<enum>",
+          "constraint": "见下方",
+          "description": "分类标签"
+        },
+        {
+          "name": "given",
+          "type": "list<Condition>",
+          "constraint": "",
+          "description": "前置条件"
+        },
+        {
+          "name": "when",
+          "type": "ref",
+          "constraint": "API-\\d+/ SUB-\\d+/ SCH-\\d+（引用 Interface、Reaction 或 Schedule）",
+          "description": "触发动作"
+        },
+        {
+          "name": "then",
+          "type": "list<Assertion>",
+          "constraint": "≥ 1 条",
+          "description": "预期结果"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "contract-test",
+      "name": "Contract Test",
+      "prefix": "CT",
+      "domain": "verification",
+      "domainLabel": "验证域",
+      "definition": "src/test/contract-test.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P1",
+      "dependsOn": [
+        "interface"
+      ],
+      "notes": "验证 Interface 契约",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "CT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 用例名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "interface_id",
+          "type": "ref",
+          "constraint": "API-\\d+",
+          "description": "验证的接口"
+        },
+        {
+          "name": "tags",
+          "type": "list<enum>",
+          "constraint": "见下方",
+          "description": "分类标签"
+        },
+        {
+          "name": "request_input",
+          "type": "list<TypedField>",
+          "constraint": "",
+          "description": "请求参数（带测试值 value）"
+        },
+        {
+          "name": "expected_status",
+          "type": "integer",
+          "constraint": "HTTP 状态码",
+          "description": "预期 HTTP 状态码"
+        },
+        {
+          "name": "expected_response",
+          "type": "list<Assertion>",
+          "constraint": "",
+          "description": "预期响应断言"
+        },
+        {
+          "name": "expected_error_id",
+          "type": "ref",
+          "constraint": "ERR-\\d+",
+          "description": "预期错误（可选，错误场景时，引用 Error）"
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    },
+    {
+      "id": "transition-test",
+      "name": "Transition Test",
+      "prefix": "TT",
+      "domain": "verification",
+      "domainLabel": "验证域",
+      "definition": "src/test/transition-test.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P1",
+      "dependsOn": [
+        "process"
+      ],
+      "notes": "验证 Process 状态转换",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "TT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 用例名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "process_id",
+          "type": "ref",
+          "constraint": "PROC-\\d+",
+          "description": "验证的流程"
+        },
+        {
+          "name": "test_type",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "测试场景类型"
+        },
+        {
+          "name": "initial_state",
+          "type": "string",
+          "constraint": "状态 ID",
+          "description": "起始状态"
+        },
+        {
+          "name": "event_id",
+          "type": "ref",
+          "constraint": "EVT-\\d+",
+          "description": "触发事件（引用 Event）"
+        },
+        {
+          "name": "guard_values",
+          "type": "list<Condition>",
+          "constraint": "",
+          "description": "守卫条件的输入值"
+        },
+        {
+          "name": "expected_state",
+          "type": "string \\",
+          "constraint": "null",
+          "description": "状态 ID 或 null"
+        },
+        {
+          "name": "expected_action_called",
+          "type": "boolean",
+          "constraint": "",
+          "description": "是否预期触发转换动作"
+        }
+      ],
+      "enums": [
+        {
+          "name": "test_type 枚举",
+          "values": [
+            [
+              "VALID_TRANSITION",
+              "合法转换——守卫满足，状态应变更"
+            ],
+            [
+              "GUARD_REJECTION",
+              "守卫拦截——守卫不满足，转换应被拒绝"
+            ],
+            [
+              "FORBIDDEN_TRANSITION",
+              "禁止路径——显式禁止的转换应被阻断"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "integration-test",
+      "name": "Integration Test",
+      "prefix": "IT",
+      "domain": "verification",
+      "domainLabel": "验证域",
+      "definition": "src/test/integration-test.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 1,
+      "priority": "P1",
+      "dependsOn": [
+        "module"
+      ],
+      "notes": "验证 Module 间交互",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "IT-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 用例名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "source_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "发起调用的模块"
+        },
+        {
+          "name": "target_module_id",
+          "type": "ref",
+          "constraint": "MOD-\\d+",
+          "description": "被调用的模块"
+        },
+        {
+          "name": "protocol",
+          "type": "enum",
+          "constraint": "gRPC / HTTP / EVENT / SDK / DB_SHARED",
+          "description": "通信协议"
+        },
+        {
+          "name": "tags",
+          "type": "list<enum>",
+          "constraint": "见下方",
+          "description": "分类标签"
+        },
+        {
+          "name": "request",
+          "type": "list<TypedField>",
+          "constraint": "",
+          "description": "请求参数（带测试值 value）"
+        },
+        {
+          "name": "expected_response",
+          "type": "list<Assertion>",
+          "constraint": "",
+          "description": "预期响应断言"
+        },
+        {
+          "name": "failure_mode",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "注入的故障模式"
+        },
+        {
+          "name": "expected_fallback",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "预期降级行为"
+        }
+      ],
+      "enums": [
+        {
+          "name": "failure_mode 枚举",
+          "values": [
+            [
+              "NONE",
+              "正常路径，不注入故障"
+            ],
+            [
+              "TIMEOUT",
+              "模拟超时"
+            ],
+            [
+              "ERROR_5XX",
+              "模拟服务端错误"
+            ],
+            [
+              "UNAVAILABLE",
+              "模拟服务不可用"
+            ],
+            [
+              "RATE_LIMITED",
+              "模拟被限流"
+            ]
+          ]
+        },
+        {
+          "name": "expected_fallback 枚举",
+          "values": [
+            [
+              "NONE",
+              "正常路径，无降级"
+            ],
+            [
+              "RETRY",
+              "自动重试"
+            ],
+            [
+              "CIRCUIT_BREAK",
+              "触发熔断"
+            ],
+            [
+              "DEGRADE",
+              "降级为默认值"
+            ],
+            [
+              "FAIL_FAST",
+              "快速失败并返回错误"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "benchmark",
+      "name": "Benchmark",
+      "prefix": "BM",
+      "domain": "verification",
+      "domainLabel": "验证域",
+      "definition": "src/test/benchmark.md",
+      "manager": null,
+      "tests": null,
+      "status": "not-started",
+      "stage": 2,
+      "priority": "P2",
+      "dependsOn": [
+        "constraint",
+        "metric"
+      ],
+      "notes": "验证 Constraint 指标达标",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "constraint": "BM-\\d+",
+          "description": "唯一标识符"
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "constraint": "≤ 80 字符",
+          "description": "描述性 — 用例名称"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "constraint": "≤ 200 字符",
+          "description": "描述性 — 一句话说明"
+        },
+        {
+          "name": "constraint_id",
+          "type": "ref",
+          "constraint": "CON-\\d+",
+          "description": "验证的约束"
+        },
+        {
+          "name": "environment",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "测试环境"
+        },
+        {
+          "name": "load_profile",
+          "type": "LoadProfile",
+          "constraint": "见下方",
+          "description": "负载配置"
+        },
+        {
+          "name": "metric_id",
+          "type": "ref",
+          "constraint": "MET-\\d+",
+          "description": "度量指标（引用 Metric，应与 Constraint.metric_id 一致）"
+        },
+        {
+          "name": "operator",
+          "type": "enum",
+          "constraint": "同 Constraint",
+          "description": "比较运算符（应与 Constraint.operator 一致）"
+        },
+        {
+          "name": "threshold",
+          "type": "number",
+          "constraint": "",
+          "description": "阈值（应与 Constraint.threshold 一致）"
+        },
+        {
+          "name": "pass_criteria",
+          "type": "enum",
+          "constraint": "见下方",
+          "description": "通过标准"
+        }
+      ],
+      "enums": [
+        {
+          "name": "pass_criteria 枚举",
+          "values": [
+            [
+              "ALL_SAMPLES",
+              "所有采样值均满足阈值"
+            ],
+            [
+              "P99",
+              "第 99 百分位满足阈值"
+            ],
+            [
+              "P95",
+              "第 95 百分位满足阈值"
+            ],
+            [
+              "AVERAGE",
+              "平均值满足阈值"
+            ]
+          ]
+        },
+        {
+          "name": "LoadProfile",
+          "values": [
+            [
+              "concurrent_users",
+              "integer"
+            ],
+            [
+              "duration_seconds",
+              "integer"
+            ],
+            [
+              "ramp_up_seconds",
+              "integer"
+            ]
+          ]
+        }
+      ],
+      "mappings": []
+    },
+    {
+      "id": "type-def",
+      "name": "Type Def",
+      "prefix": "TYPE",
+      "domain": "meta",
+      "domainLabel": "元制品",
+      "definition": "src/schema/schema.md",
+      "manager": "src/schema/schema.py",
+      "tests": "tests/schema/test_schema.py",
+      "status": "done",
+      "stage": 1,
+      "priority": "P0",
+      "dependsOn": [],
+      "notes": "YAML Schema 引擎；制品类型定义的元制品",
+      "fields": [
+        {
+          "name": "name",
+          "type": "string;@required;用户名称",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "age",
+          "type": "number;;用户年龄",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "enabled",
+          "type": "bool;;",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "port",
+          "type": "number;@min=1,@max=65535;服务端口",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "user",
+          "type": "@.User;@required;用户对象",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "config",
+          "type": "@TYPE-abc123;@required;配置",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "db",
+          "type": "@TYPE-abc123.DatabaseConfig;@required;数据库配置",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "name",
+          "type": "my-app",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "version",
+          "type": "1.0.0",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "enabled",
+          "type": "true",
+          "constraint": "",
+          "description": ""
+        },
+        {
+          "name": "port",
+          "type": "8080",
+          "constraint": "",
+          "description": ""
+        }
+      ],
+      "enums": [],
+      "mappings": []
+    }
+  ],
+  "edges": [
+    {
+      "source": "draft",
+      "target": "requirement",
+      "relation": "DISAMBIGUATED_INTO",
+      "bidirectional": false,
+      "origin": "src/requirement/draft.md"
+    },
+    {
+      "source": "requirement",
+      "target": "business-concept",
+      "relation": "ACTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/requirement.md"
+    },
+    {
+      "source": "requirement",
+      "target": "user-story",
+      "relation": "MAPPED_TO",
+      "bidirectional": false,
+      "origin": "src/requirement/requirement.md"
+    },
+    {
+      "source": "requirement",
+      "target": "user-story",
+      "relation": "DECOMPOSES_INTO",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "user-story",
+      "target": "role",
+      "relation": "ACTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "user-story",
+      "target": "interface",
+      "relation": "IMPLEMENTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "user-story",
+      "target": "orchestration",
+      "relation": "IMPLEMENTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "user-story",
+      "target": "reaction",
+      "relation": "IMPLEMENTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "user-story",
+      "target": "schedule",
+      "relation": "IMPLEMENTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "user-story",
+      "target": "scenario-test",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/requirement/user-story.md"
+    },
+    {
+      "source": "entity",
+      "target": "entity",
+      "relation": "PROJECTS_FROM",
+      "bidirectional": false,
+      "origin": "src/contract/entity.md"
+    },
+    {
+      "source": "module",
+      "target": "entity",
+      "relation": "READS",
+      "bidirectional": false,
+      "origin": "src/contract/entity.md"
+    },
+    {
+      "source": "module",
+      "target": "entity",
+      "relation": "WRITES",
+      "bidirectional": false,
+      "origin": "src/contract/entity.md"
+    },
+    {
+      "source": "interface",
+      "target": "entity",
+      "relation": "USES_TYPE",
+      "bidirectional": false,
+      "origin": "src/contract/entity.md"
+    },
+    {
+      "source": "process",
+      "target": "entity",
+      "relation": "TRANSITIONS",
+      "bidirectional": false,
+      "origin": "src/contract/entity.md"
+    },
+    {
+      "source": "module",
+      "target": "interface",
+      "relation": "EXPOSES",
+      "bidirectional": false,
+      "origin": "src/contract/interface.md"
+    },
+    {
+      "source": "interface",
+      "target": "error",
+      "relation": "RETURNS",
+      "bidirectional": false,
+      "origin": "src/contract/interface.md"
+    },
+    {
+      "source": "interface",
+      "target": "role",
+      "relation": "AUTHORIZED_BY",
+      "bidirectional": false,
+      "origin": "src/contract/interface.md"
+    },
+    {
+      "source": "interface",
+      "target": "contract-test",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/contract/interface.md"
+    },
+    {
+      "source": "module",
+      "target": "event",
+      "relation": "PUBLISHES",
+      "bidirectional": false,
+      "origin": "src/contract/event.md"
+    },
+    {
+      "source": "event",
+      "target": "module",
+      "relation": "CONSUMED_BY",
+      "bidirectional": false,
+      "origin": "src/contract/event.md"
+    },
+    {
+      "source": "process",
+      "target": "event",
+      "relation": "TRIGGERS",
+      "bidirectional": false,
+      "origin": "src/contract/event.md"
+    },
+    {
+      "source": "reaction",
+      "target": "event",
+      "relation": "LISTENS_TO",
+      "bidirectional": false,
+      "origin": "src/contract/event.md"
+    },
+    {
+      "source": "requirement",
+      "target": "event",
+      "relation": "TRIGGERED_BY",
+      "bidirectional": false,
+      "origin": "src/contract/event.md"
+    },
+    {
+      "source": "module",
+      "target": "process",
+      "relation": "GOVERNED_BY",
+      "bidirectional": false,
+      "origin": "src/behavior/process.md"
+    },
+    {
+      "source": "process",
+      "target": "transition-test",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/behavior/process.md"
+    },
+    {
+      "source": "orchestration",
+      "target": "module",
+      "relation": "COORDINATES",
+      "bidirectional": false,
+      "origin": "src/behavior/orchestration.md"
+    },
+    {
+      "source": "orchestration",
+      "target": "interface",
+      "relation": "COMPOSES",
+      "bidirectional": false,
+      "origin": "src/behavior/orchestration.md"
+    },
+    {
+      "source": "orchestration",
+      "target": "integration-test",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/behavior/orchestration.md"
+    },
+    {
+      "source": "module",
+      "target": "reaction",
+      "relation": "OWNS",
+      "bidirectional": false,
+      "origin": "src/behavior/reaction.md"
+    },
+    {
+      "source": "reaction",
+      "target": "entity",
+      "relation": "TARGETS",
+      "bidirectional": false,
+      "origin": "src/behavior/reaction.md"
+    },
+    {
+      "source": "module",
+      "target": "schedule",
+      "relation": "OWNS",
+      "bidirectional": false,
+      "origin": "src/behavior/schedule.md"
+    },
+    {
+      "source": "schedule",
+      "target": "entity",
+      "relation": "TARGETS",
+      "bidirectional": false,
+      "origin": "src/behavior/schedule.md"
+    },
+    {
+      "source": "repository",
+      "target": "module",
+      "relation": "HOSTS",
+      "bidirectional": false,
+      "origin": "src/code/repository.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "repository",
+      "relation": "LOCATED_IN",
+      "bidirectional": false,
+      "origin": "src/code/repository.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "entity",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "interface",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "error",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "event",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "process",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "orchestration",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "reaction",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "code-ref",
+      "target": "schedule",
+      "relation": "IMPLEMENTS",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "module",
+      "target": "code-ref",
+      "relation": "MAPPED_TO",
+      "bidirectional": false,
+      "origin": "src/code/code-ref.md"
+    },
+    {
+      "source": "module",
+      "target": "module",
+      "relation": "DEPENDS_ON",
+      "bidirectional": true,
+      "origin": "src/module/module.md"
+    },
+    {
+      "source": "module",
+      "target": "integration-test",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/module/module.md"
+    },
+    {
+      "source": "role",
+      "target": "permission",
+      "relation": "HAS_PERMISSION",
+      "bidirectional": false,
+      "origin": "src/governance/rbac/role.md"
+    },
+    {
+      "source": "role",
+      "target": "role",
+      "relation": "INHERITS_FROM",
+      "bidirectional": false,
+      "origin": "src/governance/rbac/role.md"
+    },
+    {
+      "source": "role",
+      "target": "entity",
+      "relation": "IDENTIFIED_BY",
+      "bidirectional": false,
+      "origin": "src/governance/rbac/role.md"
+    },
+    {
+      "source": "requirement",
+      "target": "role",
+      "relation": "ACTED_BY",
+      "bidirectional": false,
+      "origin": "src/governance/rbac/role.md"
+    },
+    {
+      "source": "permission",
+      "target": "interface",
+      "relation": "ON_RESOURCE",
+      "bidirectional": false,
+      "origin": "src/governance/rbac/permission.md"
+    },
+    {
+      "source": "permission",
+      "target": "entity",
+      "relation": "ON_RESOURCE",
+      "bidirectional": false,
+      "origin": "src/governance/rbac/permission.md"
+    },
+    {
+      "source": "module",
+      "target": "constraint",
+      "relation": "CONSTRAINED_BY",
+      "bidirectional": false,
+      "origin": "src/governance/constraint.md"
+    },
+    {
+      "source": "interface",
+      "target": "constraint",
+      "relation": "CONSTRAINED_BY",
+      "bidirectional": false,
+      "origin": "src/governance/constraint.md"
+    },
+    {
+      "source": "entity",
+      "target": "constraint",
+      "relation": "CONSTRAINED_BY",
+      "bidirectional": false,
+      "origin": "src/governance/constraint.md"
+    },
+    {
+      "source": "constraint",
+      "target": "metric",
+      "relation": "MEASURES",
+      "bidirectional": false,
+      "origin": "src/governance/constraint.md"
+    },
+    {
+      "source": "constraint",
+      "target": "benchmark",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/governance/constraint.md"
+    },
+    {
+      "source": "benchmark",
+      "target": "metric",
+      "relation": "MEASURES",
+      "bidirectional": false,
+      "origin": "src/governance/metric.md"
+    },
+    {
+      "source": "module",
+      "target": "dependency",
+      "relation": "DEPENDS_ON",
+      "bidirectional": false,
+      "origin": "src/governance/dependency.md"
+    },
+    {
+      "source": "module",
+      "target": "incident",
+      "relation": "MANAGES",
+      "bidirectional": false,
+      "origin": "src/incident/incident.md"
+    },
+    {
+      "source": "incident",
+      "target": "entity",
+      "relation": "AFFECTS",
+      "bidirectional": false,
+      "origin": "src/incident/incident.md"
+    },
+    {
+      "source": "incident",
+      "target": "runbook",
+      "relation": "RESOLVED_BY",
+      "bidirectional": false,
+      "origin": "src/incident/incident.md"
+    },
+    {
+      "source": "incident",
+      "target": "playbook",
+      "relation": "EMERGENCY_PLAN",
+      "bidirectional": false,
+      "origin": "src/incident/incident.md"
+    },
+    {
+      "source": "incident",
+      "target": "runbook",
+      "relation": "RESOLVES",
+      "bidirectional": false,
+      "origin": "src/incident/runbook.md"
+    },
+    {
+      "source": "module",
+      "target": "runbook",
+      "relation": "MANAGES",
+      "bidirectional": false,
+      "origin": "src/incident/runbook.md"
+    },
+    {
+      "source": "playbook",
+      "target": "incident",
+      "relation": "HANDLES",
+      "bidirectional": false,
+      "origin": "src/incident/playbook.md"
+    },
+    {
+      "source": "module",
+      "target": "playbook",
+      "relation": "MANAGES",
+      "bidirectional": false,
+      "origin": "src/incident/playbook.md"
+    },
+    {
+      "source": "playbook",
+      "target": "runbook",
+      "relation": "EXECUTES",
+      "bidirectional": false,
+      "origin": "src/incident/playbook.md"
+    },
+    {
+      "source": "pipeline",
+      "target": "environment",
+      "relation": "DEPLOYS_TO",
+      "bidirectional": false,
+      "origin": "src/delivery/environment.md"
+    },
+    {
+      "source": "environment",
+      "target": "config-set",
+      "relation": "USES_CONFIG",
+      "bidirectional": false,
+      "origin": "src/delivery/environment.md"
+    },
+    {
+      "source": "pipeline",
+      "target": "module",
+      "relation": "BUILDS",
+      "bidirectional": false,
+      "origin": "src/delivery/pipeline.md"
+    },
+    {
+      "source": "pipeline",
+      "target": "constraint",
+      "relation": "GATES_ON",
+      "bidirectional": false,
+      "origin": "src/delivery/pipeline.md"
+    },
+    {
+      "source": "config-set",
+      "target": "configuration",
+      "relation": "CONTAINS",
+      "bidirectional": false,
+      "origin": "src/delivery/configuration.md"
+    },
+    {
+      "source": "config-set",
+      "target": "environment",
+      "relation": "APPLIES_TO",
+      "bidirectional": false,
+      "origin": "src/delivery/config-set.md"
+    },
+    {
+      "source": "config-set",
+      "target": "module",
+      "relation": "APPLIES_TO",
+      "bidirectional": false,
+      "origin": "src/delivery/config-set.md"
+    },
+    {
+      "source": "config-set",
+      "target": "configuration",
+      "relation": "OVERRIDES",
+      "bidirectional": false,
+      "origin": "src/delivery/config-set.md"
+    },
+    {
+      "source": "environment",
+      "target": "secret",
+      "relation": "REQUIRES",
+      "bidirectional": false,
+      "origin": "src/delivery/secret.md"
+    },
+    {
+      "source": "module",
+      "target": "secret",
+      "relation": "REQUIRES",
+      "bidirectional": false,
+      "origin": "src/delivery/secret.md"
+    },
+    {
+      "source": "secret",
+      "target": "permission",
+      "relation": "AUTHORIZED_BY",
+      "bidirectional": false,
+      "origin": "src/delivery/secret.md"
+    },
+    {
+      "source": "requirement",
+      "target": "acceptance-test",
+      "relation": "TESTED_BY",
+      "bidirectional": false,
+      "origin": "src/test/acceptance-test.md"
+    },
+    {
+      "source": "business-concept",
+      "target": "module",
+      "relation": "AS_ACTOR",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "role",
+      "relation": "AS_ACTOR",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "entity",
+      "relation": "AS_OBJECT",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "interface",
+      "relation": "AS_ACTION",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "orchestration",
+      "relation": "AS_ACTION",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "reaction",
+      "relation": "AS_ACTION",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "schedule",
+      "relation": "AS_ACTION",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "event",
+      "relation": "AS_EVENT",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "event",
+      "relation": "AS_RESULT",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    },
+    {
+      "source": "business-concept",
+      "target": "error",
+      "relation": "AS_ERROR",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py"
+    }
+  ],
+  "relationTypes": [
+    {
+      "name": "IMPLEMENTS",
+      "count": 8
+    },
+    {
+      "name": "TESTED_BY",
+      "count": 7
+    },
+    {
+      "name": "AS_ACTION",
+      "count": 4
+    },
+    {
+      "name": "IMPLEMENTED_BY",
+      "count": 4
+    },
+    {
+      "name": "ACTED_BY",
+      "count": 3
+    },
+    {
+      "name": "CONSTRAINED_BY",
+      "count": 3
+    },
+    {
+      "name": "MANAGES",
+      "count": 3
+    },
+    {
+      "name": "APPLIES_TO",
+      "count": 2
+    },
+    {
+      "name": "AS_ACTOR",
+      "count": 2
+    },
+    {
+      "name": "AUTHORIZED_BY",
+      "count": 2
+    },
+    {
+      "name": "DEPENDS_ON",
+      "count": 2
+    },
+    {
+      "name": "MAPPED_TO",
+      "count": 2
+    },
+    {
+      "name": "MEASURES",
+      "count": 2
+    },
+    {
+      "name": "ON_RESOURCE",
+      "count": 2
+    },
+    {
+      "name": "OWNS",
+      "count": 2
+    },
+    {
+      "name": "REQUIRES",
+      "count": 2
+    },
+    {
+      "name": "TARGETS",
+      "count": 2
+    },
+    {
+      "name": "AFFECTS",
+      "count": 1
+    },
+    {
+      "name": "AS_ERROR",
+      "count": 1
+    },
+    {
+      "name": "AS_EVENT",
+      "count": 1
+    },
+    {
+      "name": "AS_OBJECT",
+      "count": 1
+    },
+    {
+      "name": "AS_RESULT",
+      "count": 1
+    },
+    {
+      "name": "BUILDS",
+      "count": 1
+    },
+    {
+      "name": "COMPOSES",
+      "count": 1
+    },
+    {
+      "name": "CONSUMED_BY",
+      "count": 1
+    },
+    {
+      "name": "CONTAINS",
+      "count": 1
+    },
+    {
+      "name": "COORDINATES",
+      "count": 1
+    },
+    {
+      "name": "DECOMPOSES_INTO",
+      "count": 1
+    },
+    {
+      "name": "DEPLOYS_TO",
+      "count": 1
+    },
+    {
+      "name": "DISAMBIGUATED_INTO",
+      "count": 1
+    },
+    {
+      "name": "EMERGENCY_PLAN",
+      "count": 1
+    },
+    {
+      "name": "EXECUTES",
+      "count": 1
+    },
+    {
+      "name": "EXPOSES",
+      "count": 1
+    },
+    {
+      "name": "GATES_ON",
+      "count": 1
+    },
+    {
+      "name": "GOVERNED_BY",
+      "count": 1
+    },
+    {
+      "name": "HANDLES",
+      "count": 1
+    },
+    {
+      "name": "HAS_PERMISSION",
+      "count": 1
+    },
+    {
+      "name": "HOSTS",
+      "count": 1
+    },
+    {
+      "name": "IDENTIFIED_BY",
+      "count": 1
+    },
+    {
+      "name": "INHERITS_FROM",
+      "count": 1
+    },
+    {
+      "name": "LISTENS_TO",
+      "count": 1
+    },
+    {
+      "name": "LOCATED_IN",
+      "count": 1
+    },
+    {
+      "name": "OVERRIDES",
+      "count": 1
+    },
+    {
+      "name": "PROJECTS_FROM",
+      "count": 1
+    },
+    {
+      "name": "PUBLISHES",
+      "count": 1
+    },
+    {
+      "name": "READS",
+      "count": 1
+    },
+    {
+      "name": "RESOLVED_BY",
+      "count": 1
+    },
+    {
+      "name": "RESOLVES",
+      "count": 1
+    },
+    {
+      "name": "RETURNS",
+      "count": 1
+    },
+    {
+      "name": "TRANSITIONS",
+      "count": 1
+    },
+    {
+      "name": "TRIGGERED_BY",
+      "count": 1
+    },
+    {
+      "name": "TRIGGERS",
+      "count": 1
+    },
+    {
+      "name": "USES_CONFIG",
+      "count": 1
+    },
+    {
+      "name": "USES_TYPE",
+      "count": 1
+    },
+    {
+      "name": "WRITES",
+      "count": 1
+    }
+  ],
+  "instances": {
+    "available": false,
+    "dbName": "",
+    "nodes": [],
+    "edges": []
+  },
+  "basePath": "../"
+}</script>
+<script>
+(function () {
+  "use strict";
+
+  var DATA = JSON.parse(document.getElementById("crisp-spec-data").textContent);
+  var SVG_NS = "http://www.w3.org/2000/svg";
+  var BASE = DATA.basePath || "../";
+
+  var domainColor = {};
+  var domainLabel = {};
+  DATA.domains.forEach(function (d) {
+    domainColor[d.key] = d.color;
+    domainLabel[d.key] = d.label;
+  });
+
+  var state = {
+    view: "schema",
+    layout: "force",
+    showLabels: true,
+    dimMode: true,
+    query: "",
+    domains: {},
+    relations: {},
+    statuses: { done: true, "not-started": true },
+    selected: null,
+    transform: { x: 0, y: 0, k: 1 },
+    graph: null
+  };
+  DATA.domains.forEach(function (d) { state.domains[d.key] = true; });
+  DATA.relationTypes.forEach(function (r) { state.relations[r.name] = true; });
+
+  // ── DOM handles ────────────────────────────────────────────────────────
+  var svg = document.getElementById("graph");
+  var viewport = document.createElementNS(SVG_NS, "g");
+  viewport.setAttribute("id", "viewport");
+  var edgeLayer = document.createElementNS(SVG_NS, "g");
+  var labelLayer = document.createElementNS(SVG_NS, "g");
+  var nodeLayer = document.createElementNS(SVG_NS, "g");
+  viewport.appendChild(edgeLayer);
+  viewport.appendChild(labelLayer);
+  viewport.appendChild(nodeLayer);
+  svg.appendChild(viewport);
+
+  var defs = document.createElementNS(SVG_NS, "defs");
+  defs.innerHTML =
+    '<marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
+    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7fa8"/></marker>' +
+    '<marker id="arrow-hot" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
+    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#4f9dff"/></marker>';
+  svg.appendChild(defs);
+
+  var detailEl = document.getElementById("detail");
+  var statsEl = document.getElementById("stats");
+  var tooltipEl = document.getElementById("tooltip");
+
+  // ── Helpers ───────────────────────────────────────────────────────────
+  function el(tag, cls, text) {
+    var node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+  function svgEl(tag, attrs) {
+    var node = document.createElementNS(SVG_NS, tag);
+    for (var key in attrs) {
+      if (Object.prototype.hasOwnProperty.call(attrs, key)) node.setAttribute(key, attrs[key]);
+    }
+    return node;
+  }
+  function clear(node) { while (node.firstChild) node.removeChild(node.firstChild); }
+
+  // ── Graph construction ────────────────────────────────────────────────
+  function buildSchemaGraph() {
+    var nodes = DATA.types.map(function (t) {
+      return {
+        id: t.id,
+        label: t.name,
+        prefix: t.prefix,
+        domain: t.domain,
+        status: t.status,
+        radius: 15 + Math.min(9, (t.fields || []).length * 1.1),
+        raw: t,
+        x: 0, y: 0, vx: 0, vy: 0, fx: null, fy: null
+      };
+    });
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+    var edges = [];
+    DATA.edges.forEach(function (e) {
+      var s = byId[e.source], t = byId[e.target];
+      if (!s || !t) return;
+      edges.push({ source: s, target: t, relation: e.relation, bidirectional: !!e.bidirectional, origin: e.origin });
+    });
+    return { nodes: nodes, edges: edges, byId: byId };
+  }
+
+  function buildInstanceGraph() {
+    var inst = DATA.instances || { nodes: [], edges: [] };
+    var nodes = inst.nodes.map(function (n) {
+      return {
+        id: n.id,
+        label: n.name,
+        prefix: n.id,
+        domain: n.domain,
+        status: "instance",
+        missing: !!n.missing,
+        radius: 13,
+        raw: n,
+        x: 0, y: 0, vx: 0, vy: 0, fx: null, fy: null
+      };
+    });
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+    var edges = [];
+    inst.edges.forEach(function (e) {
+      var s = byId[e.source], t = byId[e.target];
+      if (!s || !t) return;
+      edges.push({ source: s, target: t, relation: e.relation, bidirectional: false, origin: e.field || "" });
+    });
+    return { nodes: nodes, edges: edges, byId: byId };
+  }
+
+  // ── Filtering ─────────────────────────────────────────────────────────
+  function isVisible(node) {
+    if (!state.domains[node.domain]) return false;
+    if (state.view === "schema" && node.status && !state.statuses[node.status]) return false;
+    return true;
+  }
+  function edgeVisible(edge) {
+    if (!state.relations[edge.relation]) return false;
+    return isVisible(edge.source) && isVisible(edge.target);
+  }
+  function matches(node) {
+    if (!state.query) return true;
+    var q = state.query.toLowerCase();
+    if (node.label.toLowerCase().indexOf(q) >= 0) return true;
+    if (node.id.toLowerCase().indexOf(q) >= 0) return true;
+    if ((node.prefix || "").toLowerCase().indexOf(q) >= 0) return true;
+    if ((node.raw.definition || "").toLowerCase().indexOf(q) >= 0) return true;
+    return false;
+  }
+
+  // ── Layout ────────────────────────────────────────────────────────────
+  var REPULSION = 17000;
+  var SPRING = 0.055;
+  var REST = 135;
+  var DAMP = 0.85;
+  var MAXV = 24;
+
+  function seedPositions(graph) {
+    var w = svg.clientWidth || 1200, h = svg.clientHeight || 800;
+    graph.nodes.forEach(function (n, i) {
+      var angle = (i / Math.max(1, graph.nodes.length)) * Math.PI * 2;
+      var radius = Math.min(w, h) * 0.33;
+      n.x = w / 2 + Math.cos(angle) * radius;
+      n.y = h / 2 + Math.sin(angle) * radius;
+      n.vx = 0; n.vy = 0; n.fx = null; n.fy = null;
+    });
+  }
+
+  function stepForce(graph, alpha) {
+    var nodes = graph.nodes, edges = graph.edges;
+    var w = svg.clientWidth || 1200, h = svg.clientHeight || 800;
+    for (var i = 0; i < nodes.length; i++) {
+      for (var j = i + 1; j < nodes.length; j++) {
+        var n1 = nodes[i], n2 = nodes[j];
+        var dx = n2.x - n1.x, dy = n2.y - n1.y;
+        var d2 = dx * dx + dy * dy;
+        if (d2 < 1) { dx = Math.random() - 0.5; dy = Math.random() - 0.5; d2 = 1; }
+        var d = Math.sqrt(d2);
+        var f = REPULSION / d2 * alpha;
+        var ux = dx / d, uy = dy / d;
+        n1.vx -= ux * f; n1.vy -= uy * f;
+        n2.vx += ux * f; n2.vy += uy * f;
+      }
+    }
+    edges.forEach(function (e) {
+      var s = e.source, t = e.target;
+      var dx = t.x - s.x, dy = t.y - s.y;
+      var d = Math.max(0.01, Math.sqrt(dx * dx + dy * dy));
+      var f = (d - REST) * SPRING * alpha;
+      var ux = dx / d, uy = dy / d;
+      s.vx += ux * f; s.vy += uy * f;
+      t.vx -= ux * f; t.vy -= uy * f;
+    });
+    nodes.forEach(function (n) {
+      n.vx += (w / 2 - n.x) * 0.006 * alpha;
+      n.vy += (h / 2 - n.y) * 0.006 * alpha;
+    });
+    nodes.forEach(function (n) {
+      if (n.fx !== null) { n.x = n.fx; n.y = n.fy; n.vx = 0; n.vy = 0; return; }
+      n.vx *= DAMP; n.vy *= DAMP;
+      n.vx = Math.max(-MAXV, Math.min(MAXV, n.vx));
+      n.vy = Math.max(-MAXV, Math.min(MAXV, n.vy));
+      n.x += n.vx; n.y += n.vy;
+    });
+  }
+
+  function layoutDomain(graph) {
+    var w = svg.clientWidth || 1200, h = svg.clientHeight || 800;
+    var groups = {};
+    graph.nodes.forEach(function (n) {
+      (groups[n.domain] = groups[n.domain] || []).push(n);
+    });
+    var keys = Object.keys(groups);
+    var cx = w / 2, cy = h / 2;
+    var ring = Math.min(w, h) * 0.33;
+    keys.forEach(function (key, gi) {
+      var gAngle = (gi / keys.length) * Math.PI * 2 - Math.PI / 2;
+      var gx = cx + Math.cos(gAngle) * ring;
+      var gy = cy + Math.sin(gAngle) * ring;
+      var list = groups[key];
+      var inner = Math.min(w, h) * 0.13;
+      list.forEach(function (n, i) {
+        if (n.fx !== null) return;
+        var a = (i / Math.max(1, list.length)) * Math.PI * 2;
+        n.x = gx + Math.cos(a) * inner;
+        n.y = gy + Math.sin(a) * inner;
+        n.vx = 0; n.vy = 0;
+      });
+    });
+  }
+
+  function layoutRadial(graph) {
+    var w = svg.clientWidth || 1200, h = svg.clientHeight || 800;
+    var cx = w / 2, cy = h / 2;
+    var ring = Math.min(w, h) * 0.38;
+    var n = graph.nodes.length;
+    graph.nodes.forEach(function (node, i) {
+      if (node.fx !== null) return;
+      var a = (i / Math.max(1, n)) * Math.PI * 2;
+      node.x = cx + Math.cos(a) * ring;
+      node.y = cy + Math.sin(a) * ring;
+      node.vx = 0; node.vy = 0;
+    });
+  }
+
+  // ── Rendering ─────────────────────────────────────────────────────────
+  function buildDom() {
+    var graph = state.graph;
+    clear(edgeLayer); clear(labelLayer); clear(nodeLayer);
+
+    graph.nodes.forEach(function (n) {
+      var g = svgEl("g", { "class": "node" + (n.missing ? " missing" : "") });
+      g.setAttribute("data-id", n.id);
+      var halo = svgEl("circle", { "class": "halo", r: n.radius + 4 });
+      var body = svgEl("circle", { "class": "body", r: n.radius });
+      body.setAttribute("fill", domainColor[n.domain] || "#64748b");
+      var title = svgEl("text", { "class": "title", y: n.radius + 14 });
+      title.textContent = n.label;
+      var prefix = svgEl("text", { "class": "prefix", y: 4 });
+      prefix.textContent = n.prefix || "";
+      prefix.setAttribute("fill", "rgba(255,255,255,.82)");
+      g.appendChild(halo);
+      g.appendChild(body);
+      g.appendChild(prefix);
+      g.appendChild(title);
+      nodeLayer.appendChild(g);
+      n.el = g;
+      n.titleEl = title;
+    });
+
+    graph.edges.forEach(function (e) {
+      var path = svgEl("path", { "class": "edge" + (e.bidirectional ? " both" : "") });
+      path.setAttribute("marker-end", "url(#arrow)");
+      edgeLayer.appendChild(path);
+      e.el = path;
+      var label = svgEl("text", { "class": "edge-label" });
+      label.textContent = e.relation;
+      labelLayer.appendChild(label);
+      e.labelEl = label;
+    });
+
+    // Parallel edges between the same pair of nodes would overlap, so
+    // they are spread apart.
+    var pairs = {};
+    graph.edges.forEach(function (e) {
+      var key = e.source.id < e.target.id
+        ? e.source.id + "|" + e.target.id
+        : e.target.id + "|" + e.source.id;
+      pairs[key] = (pairs[key] || 0) + 1;
+    });
+    var taken = {};
+    graph.edges.forEach(function (e) {
+      var key = e.source.id < e.target.id
+        ? e.source.id + "|" + e.target.id
+        : e.target.id + "|" + e.source.id;
+      e.slot = taken[key] || 0;
+      taken[key] = e.slot + 1;
+      e.siblings = pairs[key];
+    });
+  }
+
+  function edgeGeometry(e) {
+    var s = e.source, t = e.target;
+    if (s === t) {
+      var r = s.radius + 14;
+      return {
+        d: "M " + (s.x - r * 0.4) + " " + (s.y - r) +
+           " C " + (s.x - r * 2.4) + " " + (s.y - r * 3.2) + ", " +
+                (s.x + r * 2.4) + " " + (s.y - r * 3.2) + ", " +
+                (s.x + r * 0.4) + " " + (s.y - r),
+        mx: s.x, my: s.y - r * 2.1
+      };
+    }
+    var dx = t.x - s.x, dy = t.y - s.y;
+    var d = Math.max(0.01, Math.sqrt(dx * dx + dy * dy));
+    var ux = dx / d, uy = dy / d;
+    var sx = s.x + ux * (s.radius + 1), sy = s.y + uy * (s.radius + 1);
+    var tx = t.x - ux * (t.radius + 7), ty = t.y - uy * (t.radius + 7);
+    var spread = e.siblings > 1 ? (e.slot - (e.siblings - 1) / 2) : 0;
+    var curve = Math.min(52, d * 0.11) * (1 + spread * 0.55);
+    var cx = (sx + tx) / 2 - uy * curve;
+    var cy = (sy + ty) / 2 + ux * curve;
+    return { d: "M " + sx + " " + sy + " Q " + cx + " " + cy + " " + tx + " " + ty, mx: cx, my: cy };
+  }
+
+  function updatePositions() {
+    var graph = state.graph;
+    graph.nodes.forEach(function (n) {
+      if (!n.el) return;
+      n.el.setAttribute("transform", "translate(" + n.x + "," + n.y + ")");
+    });
+    graph.edges.forEach(function (e) {
+      if (!e.el) return;
+      var g = edgeGeometry(e);
+      e.el.setAttribute("d", g.d);
+      e.labelEl.setAttribute("x", g.mx);
+      e.labelEl.setAttribute("y", g.my);
+    });
+  }
+
+  function applyTransform() {
+    var t = state.transform;
+    viewport.setAttribute("transform", "translate(" + t.x + "," + t.y + ") scale(" + t.k + ")");
+  }
+
+  // ── Highlight ─────────────────────────────────────────────────────────
+  function refreshHighlight() {
+    var graph = state.graph;
+    var selected = state.selected;
+    var neighbors = {};
+    if (selected) {
+      neighbors[selected.id] = true;
+      graph.edges.forEach(function (e) {
+        if (e.source.id === selected.id) neighbors[e.target.id] = true;
+        if (e.target.id === selected.id) neighbors[e.source.id] = true;
+      });
+    }
+    var query = state.query;
+    var hasQuery = !!query;
+    var hasFocus = !!selected || hasQuery;
+
+    graph.nodes.forEach(function (n) {
+      var cls = "node" + (n.missing ? " missing" : "");
+      var visible = isVisible(n);
+      n.el.style.display = visible ? "" : "none";
+      if (!visible) return;
+      var hit = hasQuery ? matches(n) : true;
+      if (state.dimMode && hasFocus && selected && !neighbors[n.id]) cls += " dim";
+      if (state.dimMode && hasQuery && !hit) cls += " dim";
+      if (selected && n.id === selected.id) cls += " selected";
+      else if (selected && neighbors[n.id]) cls += " neighbor";
+      n.el.setAttribute("class", cls);
+      n.hit = hit;
+    });
+
+    graph.edges.forEach(function (e) {
+      var visible = edgeVisible(e);
+      e.el.style.display = visible ? "" : "none";
+      e.labelEl.style.display = visible && state.showLabels ? "" : "none";
+      if (!visible) return;
+      var cls = "edge" + (e.bidirectional ? " both" : "");
+      var touches = selected && (e.source.id === selected.id || e.target.id === selected.id);
+      if (state.dimMode && hasFocus && !touches) cls += " dim";
+      if (touches) cls += " hot";
+      e.el.setAttribute("class", cls);
+      e.el.setAttribute("marker-end", touches ? "url(#arrow-hot)" : "url(#arrow)");
+      e.labelEl.setAttribute("class", "edge-label" + (touches ? " hot" : (state.dimMode && hasFocus ? " dim" : "")));
+    });
+  }
+
+  function updateStats() {
+    var graph = state.graph;
+    var visNodes = graph.nodes.filter(isVisible).length;
+    var visEdges = graph.edges.filter(edgeVisible).length;
+    var visRelations = {};
+    graph.edges.forEach(function (e) {
+      if (edgeVisible(e)) visRelations[e.relation] = true;
+    });
+    clear(statsEl);
+    var items = [
+      ["节点", visNodes + " / " + graph.nodes.length],
+      ["关系", visEdges + " / " + graph.edges.length],
+      ["关系类型", Object.keys(visRelations).length]
+    ];
+    items.forEach(function (pair) {
+      var span = el("span");
+      span.appendChild(document.createTextNode(pair[0] + " "));
+      span.appendChild(el("b", null, pair[1]));
+      statsEl.appendChild(span);
+    });
+  }
+
+  // ── Detail panel ──────────────────────────────────────────────────────
+  function showDetail(node) {
+    clear(detailEl);
+    var raw = node.raw || {};
+    var head = el("h3", null, node.label);
+    detailEl.appendChild(head);
+
+    var sub = el("div", "sub");
+    sub.textContent = node.prefix + (raw.definition ? " · " + raw.definition : "");
+    detailEl.appendChild(sub);
+
+    var badges = el("div", "badge-row");
+    var domainBadge = el("span", "badge");
+    var swatch = el("span", "swatch");
+    swatch.style.background = domainColor[node.domain] || "#64748b";
+    domainBadge.appendChild(swatch);
+    domainBadge.appendChild(document.createTextNode(domainLabel[node.domain] || node.domain));
+    badges.appendChild(domainBadge);
+
+    if (raw.status) {
+      var st = el("span", "badge");
+      var chip = el("span", "chip " + (raw.status === "done" ? "done" : "wip"),
+        raw.status === "done" ? "已实现" : "未实现");
+      st.appendChild(chip);
+      badges.appendChild(st);
+    }
+    if (node.missing) {
+      var missing = el("span", "badge");
+      var missingChip = el("span", "chip wip", "引用缺失");
+      missing.appendChild(missingChip);
+      badges.appendChild(missing);
+    }
+    if (raw.stage) badges.appendChild(el("span", "badge", "Stage " + raw.stage));
+    if (raw.priority) badges.appendChild(el("span", "badge", raw.priority));
+    if (raw.manager) badges.appendChild(el("span", "badge", "✓ 有管理器"));
+    detailEl.appendChild(badges);
+
+    if (raw.description) detailEl.appendChild(el("p", "note", raw.description));
+    if (raw.notes) detailEl.appendChild(el("p", "note", raw.notes));
+
+    if (raw.fields && raw.fields.length) {
+      detailEl.appendChild(el("h4", null, "字段 (" + raw.fields.length + ")"));
+      var table = el("table", "fields");
+      var thead = el("thead");
+      var hr = el("tr");
+      ["字段", "类型", "约束", "说明"].forEach(function (h) { hr.appendChild(el("th", null, h)); });
+      thead.appendChild(hr);
+      table.appendChild(thead);
+      var tbody = el("tbody");
+      raw.fields.forEach(function (f) {
+        var tr = el("tr");
+        tr.appendChild(el("td", "name", f.name));
+        tr.appendChild(el("td", "type", f.type));
+        tr.appendChild(el("td", "constraint", f.constraint));
+        tr.appendChild(el("td", null, f.description));
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      detailEl.appendChild(table);
+    }
+
+    if (raw.enums && raw.enums.length) {
+      raw.enums.forEach(function (en) {
+        detailEl.appendChild(el("h4", null, en.name));
+        var list = el("ul", "rel-list");
+        en.values.forEach(function (pair) {
+          var li = el("li");
+          var link = el("div", "rel-link");
+          link.appendChild(el("span", "rel", pair[0]));
+          link.appendChild(el("span", "tgt", pair[1]));
+          li.appendChild(link);
+          list.appendChild(li);
+        });
+        detailEl.appendChild(list);
+      });
+    }
+
+    if (raw.mappings && raw.mappings.length) {
+      detailEl.appendChild(el("h4", null, "语义位置"));
+      var mlist = el("ul", "rel-list");
+      raw.mappings.forEach(function (m) {
+        var li = el("li");
+        var link = el("div", "rel-link");
+        link.appendChild(el("span", "rel", m.position));
+        link.appendChild(el("span", "tgt", m.targets));
+        li.appendChild(link);
+        mlist.appendChild(li);
+      });
+      detailEl.appendChild(mlist);
+    }
+
+    var outgoing = [], incoming = [];
+    state.graph.edges.forEach(function (e) {
+      if (e.source.id === node.id) outgoing.push(e);
+      if (e.target.id === node.id && e.source.id !== node.id) incoming.push(e);
+    });
+    if (outgoing.length) {
+      detailEl.appendChild(el("h4", null, "出向关系 (" + outgoing.length + ")"));
+      detailEl.appendChild(relationList(outgoing, "out"));
+    }
+    if (incoming.length) {
+      detailEl.appendChild(el("h4", null, "入向关系 (" + incoming.length + ")"));
+      detailEl.appendChild(relationList(incoming, "in"));
+    }
+
+    if (raw.definition) {
+      detailEl.appendChild(el("h4", null, "定义文档"));
+      var link = el("a", null, raw.definition);
+      link.href = BASE + raw.definition;
+      detailEl.appendChild(link);
+    }
+
+    if (raw.raw) {
+      detailEl.appendChild(el("h4", null, "原始数据"));
+      var pre = el("pre", "raw");
+      pre.textContent = JSON.stringify(raw.raw, null, 2);
+      detailEl.appendChild(pre);
+    }
+  }
+
+  function relationList(edges, dir) {
+    var list = el("ul", "rel-list");
+    edges.forEach(function (e) {
+      var other = dir === "out" ? e.target : e.source;
+      var li = el("li");
+      var btn = el("button", "rel-link");
+      btn.type = "button";
+      btn.appendChild(el("span", "rel", e.relation));
+      btn.appendChild(el("span", "tgt", other.label));
+      btn.appendChild(el("span", "dir", dir === "out" ? "→" : "←"));
+      btn.addEventListener("click", function () { selectNode(other); });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    return list;
+  }
+
+  function selectNode(node) {
+    state.selected = node;
+    refreshHighlight();
+    showDetail(node);
+  }
+
+  // ── Sidebar ───────────────────────────────────────────────────────────
+  function buildSidebar() {
+    var domList = document.getElementById("domainFilters");
+    clear(domList);
+    // The implementation status only exists in the type catalogue.
+    document.getElementById("statusPanel").style.display =
+      state.view === "schema" ? "" : "none";
+    DATA.domains.forEach(function (d) {
+      var count = state.graph.nodes.filter(function (n) { return n.domain === d.key; }).length;
+      if (!count) return;
+      var li = el("li");
+      var row = el("label", "filter-row");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!state.domains[d.key];
+      cb.addEventListener("change", function () {
+        state.domains[d.key] = cb.checked;
+        row.classList.toggle("off", !cb.checked);
+        refreshHighlight();
+        updateStats();
+      });
+      var sw = el("span", "swatch");
+      sw.style.background = d.color;
+      row.appendChild(cb);
+      row.appendChild(sw);
+      row.appendChild(el("span", "label", d.label));
+      row.appendChild(el("span", "num", String(count)));
+      li.appendChild(row);
+      domList.appendChild(li);
+    });
+
+    var relList = document.getElementById("relationFilters");
+    clear(relList);
+    var used = {};
+    state.graph.edges.forEach(function (e) { used[e.relation] = (used[e.relation] || 0) + 1; });
+    // A relation that only exists in the current view starts enabled.
+    Object.keys(used).forEach(function (name) {
+      if (!(name in state.relations)) state.relations[name] = true;
+    });
+    Object.keys(state.relations).sort(function (a, b) {
+      return (used[b] || 0) - (used[a] || 0) || a.localeCompare(b);
+    })
+      .forEach(function (name) {
+        var li = el("li");
+        var row = el("label", "filter-row");
+        var cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = !!state.relations[name];
+        cb.addEventListener("change", function () {
+          state.relations[name] = cb.checked;
+          row.classList.toggle("off", !cb.checked);
+          refreshHighlight();
+          updateStats();
+        });
+        row.appendChild(cb);
+        row.appendChild(el("span", "label", name));
+        row.appendChild(el("span", "num", String(used[name])));
+        li.appendChild(row);
+        relList.appendChild(li);
+      });
+    document.getElementById("relationCount").textContent =
+      Object.keys(used).filter(function (k) { return state.relations[k]; }).length + " / " + Object.keys(used).length;
+
+    var stList = document.getElementById("statusFilters");
+    clear(stList);
+    [["done", "已实现"], ["not-started", "未实现"]].forEach(function (pair) {
+      var li = el("li");
+      var row = el("label", "filter-row");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!state.statuses[pair[0]];
+      cb.addEventListener("change", function () {
+        state.statuses[pair[0]] = cb.checked;
+        row.classList.toggle("off", !cb.checked);
+        refreshHighlight();
+        updateStats();
+      });
+      row.appendChild(cb);
+      row.appendChild(el("span", "label", pair[1]));
+      li.appendChild(row);
+      stList.appendChild(li);
+    });
+  }
+
+  // ── Interaction ───────────────────────────────────────────────────────
+  var drag = null;
+  var pan = null;
+
+  svg.addEventListener("mousedown", function (event) {
+    var target = event.target;
+    var nodeEl = target.closest ? target.closest(".node") : null;
+    if (nodeEl && nodeEl.getAttribute("data-id")) {
+      var id = nodeEl.getAttribute("data-id");
+      var node = state.graph.byId[id];
+      if (!node) return;
+      drag = { node: node, moved: false };
+      node.fx = node.x; node.fy = node.y;
+      alpha = Math.max(alpha, 0.35);
+      event.preventDefault();
+      return;
+    }
+    pan = { x: event.clientX, y: event.clientY, tx: state.transform.x, ty: state.transform.y };
+    svg.classList.add("panning");
+  });
+
+  window.addEventListener("mousemove", function (event) {
+    if (drag) {
+      var pt = toGraph(event.clientX, event.clientY);
+      drag.node.fx = pt.x;
+      drag.node.fy = pt.y;
+      drag.moved = true;
+      alpha = Math.max(alpha, 0.3);
+      return;
+    }
+    if (pan) {
+      state.transform.x = pan.tx + (event.clientX - pan.x);
+      state.transform.y = pan.ty + (event.clientY - pan.y);
+      applyTransform();
+    }
+  });
+
+  window.addEventListener("mouseup", function (event) {
+    if (drag) {
+      var node = drag.node;
+      if (!drag.moved) {
+        selectNode(node);
+      }
+      drag = null;
+      return;
+    }
+    pan = null;
+    svg.classList.remove("panning");
+    if (event) { /* keep the signature explicit for readability */ }
+  });
+
+  svg.addEventListener("click", function (event) {
+    if (!event.target.closest || !event.target.closest(".node")) {
+      state.selected = null;
+      refreshHighlight();
+      clear(detailEl);
+      detailEl.appendChild(el("div", "empty", "点击图中的节点查看制品定义与关系"));
+    }
+  });
+
+  svg.addEventListener("dblclick", function (event) {
+    var nodeEl = event.target.closest ? event.target.closest(".node") : null;
+    if (!nodeEl) return;
+    var node = state.graph.byId[nodeEl.getAttribute("data-id")];
+    if (node) focusNode(node);
+  });
+
+  svg.addEventListener("wheel", function (event) {
+    event.preventDefault();
+    var rect = svg.getBoundingClientRect();
+    var mx = event.clientX - rect.left;
+    var my = event.clientY - rect.top;
+    var factor = event.deltaY < 0 ? 1.12 : 1 / 1.12;
+    var k = Math.max(0.15, Math.min(4, state.transform.k * factor));
+    var ratio = k / state.transform.k;
+    state.transform.x = mx - (mx - state.transform.x) * ratio;
+    state.transform.y = my - (my - state.transform.y) * ratio;
+    state.transform.k = k;
+    applyTransform();
+  }, { passive: false });
+
+  svg.addEventListener("mousemove", function (event) {
+    var nodeEl = event.target.closest ? event.target.closest(".node") : null;
+    if (!nodeEl) { tooltipEl.classList.remove("show"); return; }
+    var node = state.graph.byId[nodeEl.getAttribute("data-id")];
+    if (!node) return;
+    var rect = svg.getBoundingClientRect();
+    tooltipEl.textContent = node.label + "  ·  " + (node.prefix || "") +
+      "  ·  " + (domainLabel[node.domain] || node.domain);
+    tooltipEl.style.left = (event.clientX - rect.left + 14) + "px";
+    tooltipEl.style.top = (event.clientY - rect.top + 14) + "px";
+    tooltipEl.classList.add("show");
+  });
+
+  svg.addEventListener("mouseleave", function () { tooltipEl.classList.remove("show"); });
+
+  function toGraph(clientX, clientY) {
+    var rect = svg.getBoundingClientRect();
+    var t = state.transform;
+    return {
+      x: (clientX - rect.left - t.x) / t.k,
+      y: (clientY - rect.top - t.y) / t.k
+    };
+  }
+
+  function focusNode(node) {
+    var rect = svg.getBoundingClientRect();
+    var k = Math.max(state.transform.k, 1.4);
+    state.transform.k = k;
+    state.transform.x = rect.width / 2 - node.x * k;
+    state.transform.y = rect.height / 2 - node.y * k;
+    applyTransform();
+    selectNode(node);
+  }
+
+  function fitToView() {
+    var graph = state.graph;
+    var visible = graph.nodes.filter(isVisible);
+    if (!visible.length) return;
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    visible.forEach(function (n) {
+      minX = Math.min(minX, n.x - n.radius);
+      minY = Math.min(minY, n.y - n.radius);
+      maxX = Math.max(maxX, n.x + n.radius);
+      maxY = Math.max(maxY, n.y + n.radius);
+    });
+    var rect = svg.getBoundingClientRect();
+    var pad = 70;
+    var k = Math.min((rect.width - pad * 2) / Math.max(1, maxX - minX),
+                     (rect.height - pad * 2) / Math.max(1, maxY - minY));
+    k = Math.max(0.15, Math.min(2.2, k));
+    state.transform.k = k;
+    state.transform.x = rect.width / 2 - ((minX + maxX) / 2) * k;
+    state.transform.y = rect.height / 2 - ((minY + maxY) / 2) * k;
+    applyTransform();
+  }
+
+  // ── Controls ──────────────────────────────────────────────────────────
+  document.querySelectorAll(".view-tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      if (tab.disabled) return;
+      document.querySelectorAll(".view-tab").forEach(function (t) { t.classList.remove("active"); });
+      tab.classList.add("active");
+      state.view = tab.getAttribute("data-view");
+      state.selected = null;
+      state.graph = state.view === "schema" ? buildSchemaGraph() : buildInstanceGraph();
+      buildDom();
+      buildSidebar();
+      seedPositions(state.graph);
+      alpha = 1;
+      autoFit = true;
+      refreshHighlight();
+      updateStats();
+      clear(detailEl);
+      detailEl.appendChild(el("div", "empty", "点击图中的节点查看制品定义与关系"));
+    });
+  });
+
+  document.getElementById("layoutSel").addEventListener("change", function (event) {
+    state.layout = event.target.value;
+    state.graph.nodes.forEach(function (n) { n.fx = null; n.fy = null; });
+    alpha = 1;
+    autoFit = true;
+  });
+
+  document.getElementById("labelsChk").addEventListener("change", function (event) {
+    state.showLabels = event.target.checked;
+    refreshHighlight();
+  });
+
+  document.getElementById("dimChk").addEventListener("change", function (event) {
+    state.dimMode = event.target.checked;
+    refreshHighlight();
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    DATA.domains.forEach(function (d) { state.domains[d.key] = true; });
+    Object.keys(state.relations).forEach(function (k) { state.relations[k] = true; });
+    state.statuses = { done: true, "not-started": true };
+    state.query = "";
+    document.getElementById("search").value = "";
+    state.selected = null;
+    buildSidebar();
+    refreshHighlight();
+    updateStats();
+    alpha = 1;
+    autoFit = true;
+  });
+
+  document.getElementById("themeBtn").addEventListener("click", function () {
+    document.body.classList.toggle("light");
+  });
+
+  document.getElementById("fitBtn").addEventListener("click", fitToView);
+
+  var searchTimer = null;
+  document.getElementById("search").addEventListener("input", function (event) {
+    var value = event.target.value;
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(function () {
+      state.query = value.trim();
+      refreshHighlight();
+    }, 120);
+  });
+
+  document.getElementById("search").addEventListener("keydown", function (event) {
+    if (event.key !== "Enter") return;
+    var hit = state.graph.nodes.filter(function (n) { return isVisible(n) && matches(n); })[0];
+    if (hit) focusNode(hit);
+  });
+
+  window.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      state.selected = null;
+      state.query = "";
+      document.getElementById("search").value = "";
+      refreshHighlight();
+      clear(detailEl);
+      detailEl.appendChild(el("div", "empty", "点击图中的节点查看制品定义与关系"));
+    }
+    if (event.key === "f" || event.key === "F") {
+      if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+      fitToView();
+    }
+  });
+
+  window.addEventListener("resize", function () {
+    applyTransform();
+  });
+
+  // ── Simulation loop ───────────────────────────────────────────────────
+  var alpha = 1;
+  var autoFit = true;
+
+  function frame() {
+    var graph = state.graph;
+    if (graph) {
+      if (state.layout === "force") {
+        if (alpha > 0.005) {
+          stepForce(graph, alpha);
+          alpha *= 0.985;
+        }
+      } else if (alpha > 0.02) {
+        if (state.layout === "domain") layoutDomain(graph);
+        else layoutRadial(graph);
+        alpha *= 0.9;
+      }
+      updatePositions();
+      if (autoFit && alpha <= 0.02) {
+        // The layout has settled -- frame it once.
+        autoFit = false;
+        fitToView();
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ── Boot ──────────────────────────────────────────────────────────────
+  function boot() {
+    state.graph = buildSchemaGraph();
+    buildDom();
+    buildSidebar();
+    seedPositions(state.graph);
+    refreshHighlight();
+    updateStats();
+
+    var implemented = DATA.types.filter(function (t) { return t.status === "done"; }).length;
+    document.getElementById("subtitle").textContent =
+      DATA.types.length + " 种制品 · " + DATA.edges.length + " 条关系 · " +
+      implemented + " 种已实现";
+
+    var instanceTab = document.getElementById("instanceTab");
+    if (DATA.instances && DATA.instances.nodes && DATA.instances.nodes.length) {
+      instanceTab.disabled = false;
+      instanceTab.textContent = "实例图 (" + DATA.instances.nodes.length + ")";
+    }
+    requestAnimationFrame(frame);
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

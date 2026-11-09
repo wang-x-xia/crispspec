@@ -1,5 +1,8 @@
 # Structured Artifacts — 制品体系概览
 
+> 📊 **想看图？** [`docs/artifact-graph.html`](docs/artifact-graph.html) 是本文件的交互式版本：
+> 35 种制品 + 90 条关系，可筛选、可搜索、可点开看字段定义，还能叠加显示真实制品实例。
+
 ## 设计原则
 
 1. **两个描述性字段**：每个制品最多包含 `name`（短标题）和 `description`（一句话说明）两个自由文本字段。
@@ -110,6 +113,10 @@
 ---
 
 ## 制品关系图
+
+> 下面的静态图是 [`docs/artifact-graph.html`](docs/artifact-graph.html) 的简化版——
+> 网页版由每份制品定义的 `## 关联` 表自动生成，能看到关系类型、出入方向，
+> 以及 Business Concept 的七条语义映射边（本图里没有）。
 
 ### 跨域总览
 

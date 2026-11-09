@@ -55,10 +55,28 @@
 
 详细的制品定义请参考 [`concepts.md`](concepts.md) 和 `src/` 目录下的各个子模块。
 
+### 制品图谱（交互网页）
+
+[`docs/artifact-graph.html`](docs/artifact-graph.html) 把整个制品体系渲染成一张可交互的关系图：
+
+- **35 种制品类型**，按域着色，标注 ID 前缀、实现状态、Stage
+- **90 条关系边**，来自每份制品定义的 `## 关联` 表（不是另维护一份清单）
+- 点击节点看**完整字段表、枚举、语义位置、出入关系**
+- 按域 / 关系类型 / 实现状态筛选，搜索、缩放、拖拽，三种布局
+- 若传入制品数据库，还会多出一张**实例图**（含悬空引用标记）
+
+> 网页由 `src/viz/` 从仓库自身的数据生成，不手写、不依赖 CDN、不联网。
+> 改了制品定义后重新生成即可：
+
+```bash
+uv run python -m src.viz.build
+```
+
 ### 延伸阅读
 
 | 文档 | 内容 |
 |------|------|
+| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：35 种制品与 90 条关系的交互式关系图 |
 | [`STATUS.md`](STATUS.md) | **项目现状**：当前进度、制品覆盖度、遗留问题与风险 |
 | [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**：35 个制品的定义 / 实现 / Stage / 依赖 |
 | [`TODO.md`](TODO.md) | Stage 1 / Stage 2 的目标与验收标准 |
