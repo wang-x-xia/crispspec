@@ -22,8 +22,8 @@ CrispSpec 试图让软件由**结构化制品（Structured Artifacts）**定义�
 | 检查项 | 命令 | 结果 |
 |--------|------|------|
 | 静态检查 | `uv run ruff check --ignore-noqa` | ✅ All checks passed |
-| 单元测试 | `uv run pytest` | ✅ 149 passed |
-| 链接检查 | `uv run src/checker/main.py` | ✅ 43 文件 / 0 错误 |
+| 单元测试 | `uv run pytest` | ✅ 202 passed |
+| 链接检查 | `uv run src/checker/main.py` | ✅ 44 文件 / 0 错误 |
 | 依赖锁定 | `uv lock --check` | ✅ up-to-date |
 
 已从**全新 venv** 验证过（删掉 `.venv` 后重跑上述三条命令），CI（`.github/workflows/check.yaml`）在 ubuntu 上等价。
@@ -47,6 +47,9 @@ CrispSpec 试图让软件由**结构化制品（Structured Artifacts）**定义�
 ├─────────────────────────────────────────────────────────┤
 │ 工具层      src/checker/                                 │
 │   Markdown 链接检查器（CI 用）                            │
+├─────────────────────────────────────────────────────────┤
+│ 可视化层    src/viz/                                     │
+│   制品图谱网页生成器（体系图 + 实例图）                    │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -220,6 +223,8 @@ Stage 1 要交付的正是命令行工具本身。
 **6.9 `concepts.md` 的 mermaid 关系图没画 BC 的映射边。**
 图里 `BC["Business Concept"]` 是个孤立节点，只有 `DRAFT -.-> USES .-> BC` 两条虚线。
 BC 的七条语义映射（`as_actor → ROLE/MODULE`、`as_object → ENTITY` 等）在图上完全没体现。
+**→ 已解决**：`docs/artifact-graph.html` 把 BC 的七条语义映射画成了真实的边
+（数据源是 `src/requirement/common.py` 的 `ALLOWED_ARTIFACT_TYPES`）。
 
 **6.10 `src/checker/` 没有测试。**
 `tests/` 下有 `db / schema / module / requirement` 四个目录，唯独链接检查器没有。
@@ -265,6 +270,7 @@ uv run pytest                                     # 单元测试
 uv run pytest tests/module -q                     # 单个测试目录
 uv run src/checker/main.py                        # Markdown 链接检查
 uv run src/checker/main.py . -v                   # 带文件清单
+uv run python -m src.viz.build                    # 重新生成制品图谱网页
 ```
 
 项目**没有**打包成发行版，`src` 包不是靠安装引入的——pytest 靠
@@ -294,9 +300,11 @@ uv run src/checker/main.py . -v                   # 带文件清单
 | 文件 | 内容 |
 |------|------|
 | [`README.md`](README.md) | 项目宏大目标与体系总览 |
+| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：35 种制品 + 90 条关系的交互网页（生成物） |
 | [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**（机器可读，含 Stage / 优先级 / 依赖） |
 | [`concepts.md`](concepts.md) | 制品体系全景：域模型、制品总览、关系图、ID 规范 |
 | [`TODO.md`](TODO.md) | Stage 1 / Stage 2 目标与验收标准 |
 | [`AGENTS.md`](AGENTS.md) | 环境准备与工具用法 |
 | [`src/db/plan.md`](src/db/plan.md) | 存储层设计规划（**部分过时，见 6.7**） |
 | `src/<domain>/*.md` | 逐个制品的字段定义、枚举、YAML 格式示例 |
+| `src/viz/` | 制品图谱生成器（`catalog` / `relations` / `fields` / `graph` / `render`） |

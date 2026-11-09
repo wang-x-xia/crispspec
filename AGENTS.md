@@ -21,6 +21,35 @@ uv run src/checker/main.py        # Markdown 链接检查
 > 项目未打包为发行版，因此 `src` 包不是通过安装引入的。`pyproject.toml` 中已配置
 > `[tool.pytest.ini_options] pythonpath = ["."]`，让 pytest 能从仓库根目录导入 `src`。
 
+## 制品图谱网页
+
+`src/viz/` 把制品体系渲染成一个自包含的交互网页（`docs/artifact-graph.html`）。
+
+### 生成
+
+```bash
+uv run python -m src.viz.build                          # 体系图（默认写到 docs/）
+uv run python -m src.viz.build --db crispspec.db        # 额外包含制品实例图
+```
+
+页面数据全部来自仓库自身：
+
+| 来源 | 提供的内容 |
+|------|-----------|
+| `artifacts.yaml` | 35 种制品类型、所属域、ID 前缀、实现状态、Stage |
+| `src/<domain>/*.md` 的 `## 关联` 表 | 关系边（边类型、出入方向） |
+| `src/<domain>/*.md` 的 `## 字段定义` 表 | 字段、约束、枚举、语义位置 |
+| `src/requirement/common.py` | Business Concept 的七个语义映射 |
+| SQLite 数据库（可选） | 制品实例与实例之间的引用 |
+
+### 约定
+
+- **页面是生成物，不是手写文件**。改了制品定义后必须重新生成，
+  `tests/viz/` 里有测试锁定 `docs/artifact-graph.html` 与源文档不漂移。
+- **页面自包含**：不引用 CDN、不联网，双击即可打开。
+- 数据库以**只读**方式打开，可视化器不会修改被查看的库。
+
+
 ## Markdown 链接检查器
 
 项目包含一个 Markdown 链接检查器，用于验证文档中的链接是否正确。
