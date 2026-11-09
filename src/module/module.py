@@ -315,6 +315,12 @@ class ModuleManager:
     def create_module(self, raw: dict) -> str:
         """Parse, validate, and persist a module YAML.
 
+        The storage layer owns ID assignment: the record ID it hands back is
+        the canonical identity of the artifact.  If the YAML declares a
+        different (merely well-formed) ID, the persisted artifact is
+        rewritten to carry the canonical one, so an artifact can never hold
+        two conflicting identities.
+
         Args:
             raw: A dict representing the module definition (as loaded from
                 YAML).
@@ -339,6 +345,13 @@ class ModuleManager:
             module_type,
             yaml.dump(payload, allow_unicode=True, default_flow_style=False),
         )
+        if payload["id"] != record.id:
+            payload["id"] = record.id
+            self._storage.replace(
+                record.id,
+                yaml.dump(payload, allow_unicode=True, default_flow_style=False),
+                record.version,
+            )
         return record.id
 
     def get_module(self, module_id: str) -> dict | None:
