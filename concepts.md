@@ -59,8 +59,8 @@
 
 | 制品类型 | ID 模式 | 文件 | 用途 |
 |---------|---------|------|------|
-| Repository | `REPO-\d+` | `src/code/repository.md` | 代码仓库——URL、默认分支、语言栈 |
-| Code Ref | `CREF-\d+` | `src/code/code-ref.md` | 代码映射——制品到源码位置（仓库、文件路径、符号）的追溯引用 |
+| [Repository](src/code/repository.md) | `REPO-\d+` | `src/code/repository.md` | 代码仓库——URL、默认分支、语言栈 |
+| [Code Ref](src/code/code-ref.md) | `CREF-\d+` | `src/code/code-ref.md` | 代码映射——制品到源码位置（仓库、文件路径、符号）的追溯引用 |
 
 ### 故障域
 
