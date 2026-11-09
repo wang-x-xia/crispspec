@@ -55,4 +55,13 @@
 
 详细的制品定义请参考 [`concepts.md`](concepts.md) 和 `src/` 目录下的各个子模块。
 
+### 延伸阅读
+
+| 文档 | 内容 |
+|------|------|
+| [`STATUS.md`](STATUS.md) | **项目现状**：当前进度、制品覆盖度、遗留问题与风险 |
+| [`TODO.md`](TODO.md) | Stage 1 / Stage 2 的目标与验收标准 |
+| [`concepts.md`](concepts.md) | 制品体系全景：域模型、关系图、ID 规范 |
+| [`AGENTS.md`](AGENTS.md) | 环境准备与工具用法 |
+
 ---
