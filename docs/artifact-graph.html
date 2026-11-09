@@ -221,6 +221,40 @@ pre.raw {
 }
 .edge-label.dim { opacity: .05; }
 .edge-label.hot { fill: var(--accent); font-weight: 700; }
+
+/* ── Mainline bands ─────────────────────────────────────────────────── */
+.band { cursor: pointer; }
+.band-bg { fill: rgba(120, 145, 200, .05); stroke: var(--border-soft); stroke-width: 1; }
+.band.lateral .band-bg { fill: rgba(120, 145, 200, .02); stroke-dasharray: 6 5; }
+.band:hover .band-bg { fill: rgba(120, 145, 200, .1); }
+.band.selected .band-bg { fill: var(--accent-soft); stroke: var(--accent); }
+.band-step-bg { fill: var(--accent); }
+.band.lateral .band-step-bg { fill: transparent; stroke: var(--muted); stroke-dasharray: 3 2; }
+.band-step {
+  font: 700 11px ui-monospace, Menlo, monospace; fill: #fff;
+  text-anchor: middle; dominant-baseline: central; pointer-events: none;
+}
+.band.lateral .band-step { fill: var(--muted); }
+.band-title { font: 600 13.5px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--text); pointer-events: none; }
+.band-question { font: 11.5px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--muted); pointer-events: none; }
+.band-count { font: 10.5px ui-monospace, Menlo, monospace; fill: var(--muted); pointer-events: none; }
+.spine { stroke: var(--border); stroke-width: 2; fill: none; }
+.mainline .edge { opacity: .1; }
+.mainline .edge.main { opacity: 1; stroke: var(--accent); stroke-width: 2.2px; }
+.mainline .edge.main.hot { stroke-width: 3px; }
+.mainline .edge-label { opacity: .12; }
+.mainline .edge-label.main { opacity: 1; fill: var(--accent); font-weight: 700; }
+.mainline .edge-label.main.hot { fill: #fff; }
+.mainline .node { opacity: .45; }
+.mainline .node.on-spine { opacity: 1; }
+.mainline .node.dim { opacity: .08; }
+
+.overlay.mainline-legend { left: 14px; bottom: 52px; display: flex; gap: 14px; }
+.overlay.mainline-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.overlay.mainline-legend i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+.overlay.mainline-legend .dot.main { background: var(--accent); }
+.overlay.mainline-legend .dot.side { background: #6b7fa8; }
+.overlay.mainline-legend .dot.lateral { background: transparent; border: 1px dashed var(--muted); }
 .node { cursor: pointer; }
 .node .halo { fill: none; stroke: transparent; stroke-width: 6; }
 .node .body { stroke: var(--bg); stroke-width: 2; transition: stroke .15s; }
@@ -261,6 +295,7 @@ pre.raw {
     </div>
     <div class="views" role="tablist">
       <button class="view-tab active" data-view="schema" type="button">体系图</button>
+      <button class="view-tab" data-view="mainline" type="button">开发主线</button>
       <button class="view-tab" data-view="instances" id="instanceTab" type="button" disabled>实例图</button>
     </div>
     <div class="tools">
@@ -313,6 +348,11 @@ pre.raw {
       <svg id="graph" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="overlay stats" id="stats"></div>
       <div class="overlay hint" id="hint">拖拽节点 · 滚轮缩放 · 单击查看详情 · 双击聚焦</div>
+      <div class="overlay mainline-legend" id="mainlineLegend" hidden>
+        <span><i class="dot main"></i>主线交接</span>
+        <span><i class="dot side"></i>上下文关系</span>
+        <span><i class="dot lateral"></i>横切关注点</span>
+      </div>
     </section>
 
     <aside class="detail" id="detail">
@@ -392,6 +432,376 @@ pre.raw {
       "label": "元制品",
       "question": "制品本身的结构由谁定义？",
       "color": "#64748b"
+    }
+  ],
+  "phases": [
+    {
+      "id": "intent",
+      "label": "意图捕获",
+      "question": "人类原始意图是什么？",
+      "artifacts": [
+        "draft"
+      ],
+      "lateral": false,
+      "handoff": []
+    },
+    {
+      "id": "requirement",
+      "label": "结构化需求",
+      "question": "消歧之后的需求是什么？",
+      "artifacts": [
+        "requirement"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "DISAMBIGUATED_INTO",
+          "source": "draft",
+          "target": "requirement"
+        }
+      ]
+    },
+    {
+      "id": "story",
+      "label": "需求分解",
+      "question": "拆成哪些可交付的单元？",
+      "artifacts": [
+        "user-story"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "DECOMPOSES_INTO",
+          "source": "requirement",
+          "target": "user-story"
+        }
+      ]
+    },
+    {
+      "id": "concept",
+      "label": "语义对齐",
+      "question": "业务概念落到哪些技术制品上？",
+      "artifacts": [
+        "business-concept"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "ACTED_BY",
+          "source": "requirement",
+          "target": "business-concept"
+        }
+      ]
+    },
+    {
+      "id": "contract",
+      "label": "契约定义",
+      "question": "数据长什么样？模块间怎么通信？",
+      "artifacts": [
+        "interface",
+        "entity",
+        "error",
+        "event"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "IMPLEMENTED_BY",
+          "source": "user-story",
+          "target": "interface"
+        },
+        {
+          "relation": "AS_ACTION",
+          "source": "business-concept",
+          "target": "interface"
+        },
+        {
+          "relation": "AS_OBJECT",
+          "source": "business-concept",
+          "target": "entity"
+        },
+        {
+          "relation": "AS_ERROR",
+          "source": "business-concept",
+          "target": "error"
+        },
+        {
+          "relation": "AS_EVENT",
+          "source": "business-concept",
+          "target": "event"
+        }
+      ]
+    },
+    {
+      "id": "behavior",
+      "label": "行为建模",
+      "question": "状态怎么变？多个接口怎么协调？",
+      "artifacts": [
+        "process",
+        "orchestration",
+        "reaction",
+        "schedule"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "IMPLEMENTED_BY",
+          "source": "user-story",
+          "target": "orchestration"
+        },
+        {
+          "relation": "IMPLEMENTED_BY",
+          "source": "user-story",
+          "target": "reaction"
+        },
+        {
+          "relation": "IMPLEMENTED_BY",
+          "source": "user-story",
+          "target": "schedule"
+        },
+        {
+          "relation": "COMPOSES",
+          "source": "orchestration",
+          "target": "interface"
+        },
+        {
+          "relation": "TRANSITIONS",
+          "source": "process",
+          "target": "entity"
+        },
+        {
+          "relation": "LISTENS_TO",
+          "source": "reaction",
+          "target": "event"
+        }
+      ]
+    },
+    {
+      "id": "organization",
+      "label": "组织归属",
+      "question": "这些制品归哪个模块管？",
+      "artifacts": [
+        "module"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "EXPOSES",
+          "source": "module",
+          "target": "interface"
+        },
+        {
+          "relation": "GOVERNED_BY",
+          "source": "module",
+          "target": "process"
+        },
+        {
+          "relation": "PUBLISHES",
+          "source": "module",
+          "target": "event"
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "label": "代码落地",
+      "question": "逻辑制品对应哪些源码？",
+      "artifacts": [
+        "code-ref",
+        "repository"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "MAPPED_TO",
+          "source": "module",
+          "target": "code-ref"
+        },
+        {
+          "relation": "LOCATED_IN",
+          "source": "code-ref",
+          "target": "repository"
+        }
+      ]
+    },
+    {
+      "id": "verification",
+      "label": "验证闭环",
+      "question": "怎么证明这个制品是对的？",
+      "artifacts": [
+        "acceptance-test",
+        "scenario-test",
+        "contract-test",
+        "transition-test",
+        "integration-test",
+        "benchmark"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "TESTED_BY",
+          "source": "requirement",
+          "target": "acceptance-test"
+        },
+        {
+          "relation": "TESTED_BY",
+          "source": "user-story",
+          "target": "scenario-test"
+        },
+        {
+          "relation": "TESTED_BY",
+          "source": "interface",
+          "target": "contract-test"
+        },
+        {
+          "relation": "TESTED_BY",
+          "source": "process",
+          "target": "transition-test"
+        },
+        {
+          "relation": "TESTED_BY",
+          "source": "module",
+          "target": "integration-test"
+        },
+        {
+          "relation": "TESTED_BY",
+          "source": "constraint",
+          "target": "benchmark"
+        }
+      ]
+    },
+    {
+      "id": "delivery",
+      "label": "交付上线",
+      "question": "部署到哪？配置怎么管？",
+      "artifacts": [
+        "pipeline",
+        "environment",
+        "config-set",
+        "configuration",
+        "secret"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "BUILDS",
+          "source": "pipeline",
+          "target": "module"
+        },
+        {
+          "relation": "DEPLOYS_TO",
+          "source": "pipeline",
+          "target": "environment"
+        },
+        {
+          "relation": "USES_CONFIG",
+          "source": "environment",
+          "target": "config-set"
+        },
+        {
+          "relation": "OVERRIDES",
+          "source": "config-set",
+          "target": "configuration"
+        },
+        {
+          "relation": "REQUIRES",
+          "source": "environment",
+          "target": "secret"
+        }
+      ]
+    },
+    {
+      "id": "operation",
+      "label": "运维反馈",
+      "question": "出了什么事？怎么恢复？",
+      "artifacts": [
+        "incident",
+        "runbook",
+        "playbook"
+      ],
+      "lateral": false,
+      "handoff": [
+        {
+          "relation": "AFFECTS",
+          "source": "incident",
+          "target": "entity"
+        },
+        {
+          "relation": "RESOLVED_BY",
+          "source": "incident",
+          "target": "runbook"
+        },
+        {
+          "relation": "HANDLES",
+          "source": "playbook",
+          "target": "incident"
+        }
+      ]
+    },
+    {
+      "id": "governance",
+      "label": "治理约束",
+      "question": "底线是什么？依赖了谁？",
+      "artifacts": [
+        "constraint",
+        "metric",
+        "dependency"
+      ],
+      "lateral": true,
+      "handoff": [
+        {
+          "relation": "CONSTRAINED_BY",
+          "source": "module",
+          "target": "constraint"
+        },
+        {
+          "relation": "MEASURES",
+          "source": "constraint",
+          "target": "metric"
+        },
+        {
+          "relation": "DEPENDS_ON",
+          "source": "module",
+          "target": "dependency"
+        }
+      ]
+    },
+    {
+      "id": "access",
+      "label": "访问控制",
+      "question": "谁能访问什么？",
+      "artifacts": [
+        "role",
+        "permission"
+      ],
+      "lateral": true,
+      "handoff": [
+        {
+          "relation": "AUTHORIZED_BY",
+          "source": "interface",
+          "target": "role"
+        },
+        {
+          "relation": "HAS_PERMISSION",
+          "source": "role",
+          "target": "permission"
+        },
+        {
+          "relation": "AUTHORIZED_BY",
+          "source": "secret",
+          "target": "permission"
+        }
+      ]
+    },
+    {
+      "id": "meta",
+      "label": "制品结构",
+      "question": "每个制品的结构由谁定义？",
+      "artifacts": [
+        "type-def"
+      ],
+      "lateral": true,
+      "handoff": []
     }
   ],
   "types": [
@@ -4011,630 +4421,720 @@ pre.raw {
       "target": "requirement",
       "relation": "DISAMBIGUATED_INTO",
       "bidirectional": false,
-      "origin": "src/requirement/draft.md"
+      "origin": "src/requirement/draft.md",
+      "mainline": true
     },
     {
       "source": "requirement",
       "target": "business-concept",
       "relation": "ACTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/requirement.md"
+      "origin": "src/requirement/requirement.md",
+      "mainline": true
     },
     {
       "source": "requirement",
       "target": "user-story",
       "relation": "MAPPED_TO",
       "bidirectional": false,
-      "origin": "src/requirement/requirement.md"
+      "origin": "src/requirement/requirement.md",
+      "mainline": false
     },
     {
       "source": "requirement",
       "target": "user-story",
       "relation": "DECOMPOSES_INTO",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": true
     },
     {
       "source": "user-story",
       "target": "role",
       "relation": "ACTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": false
     },
     {
       "source": "user-story",
       "target": "interface",
       "relation": "IMPLEMENTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": true
     },
     {
       "source": "user-story",
       "target": "orchestration",
       "relation": "IMPLEMENTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": true
     },
     {
       "source": "user-story",
       "target": "reaction",
       "relation": "IMPLEMENTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": true
     },
     {
       "source": "user-story",
       "target": "schedule",
       "relation": "IMPLEMENTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": true
     },
     {
       "source": "user-story",
       "target": "scenario-test",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/requirement/user-story.md"
+      "origin": "src/requirement/user-story.md",
+      "mainline": true
     },
     {
       "source": "entity",
       "target": "entity",
       "relation": "PROJECTS_FROM",
       "bidirectional": false,
-      "origin": "src/contract/entity.md"
+      "origin": "src/contract/entity.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "entity",
       "relation": "READS",
       "bidirectional": false,
-      "origin": "src/contract/entity.md"
+      "origin": "src/contract/entity.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "entity",
       "relation": "WRITES",
       "bidirectional": false,
-      "origin": "src/contract/entity.md"
+      "origin": "src/contract/entity.md",
+      "mainline": false
     },
     {
       "source": "interface",
       "target": "entity",
       "relation": "USES_TYPE",
       "bidirectional": false,
-      "origin": "src/contract/entity.md"
+      "origin": "src/contract/entity.md",
+      "mainline": false
     },
     {
       "source": "process",
       "target": "entity",
       "relation": "TRANSITIONS",
       "bidirectional": false,
-      "origin": "src/contract/entity.md"
+      "origin": "src/contract/entity.md",
+      "mainline": true
     },
     {
       "source": "module",
       "target": "interface",
       "relation": "EXPOSES",
       "bidirectional": false,
-      "origin": "src/contract/interface.md"
+      "origin": "src/contract/interface.md",
+      "mainline": true
     },
     {
       "source": "interface",
       "target": "error",
       "relation": "RETURNS",
       "bidirectional": false,
-      "origin": "src/contract/interface.md"
+      "origin": "src/contract/interface.md",
+      "mainline": false
     },
     {
       "source": "interface",
       "target": "role",
       "relation": "AUTHORIZED_BY",
       "bidirectional": false,
-      "origin": "src/contract/interface.md"
+      "origin": "src/contract/interface.md",
+      "mainline": true
     },
     {
       "source": "interface",
       "target": "contract-test",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/contract/interface.md"
+      "origin": "src/contract/interface.md",
+      "mainline": true
     },
     {
       "source": "module",
       "target": "event",
       "relation": "PUBLISHES",
       "bidirectional": false,
-      "origin": "src/contract/event.md"
+      "origin": "src/contract/event.md",
+      "mainline": true
     },
     {
       "source": "event",
       "target": "module",
       "relation": "CONSUMED_BY",
       "bidirectional": false,
-      "origin": "src/contract/event.md"
+      "origin": "src/contract/event.md",
+      "mainline": false
     },
     {
       "source": "process",
       "target": "event",
       "relation": "TRIGGERS",
       "bidirectional": false,
-      "origin": "src/contract/event.md"
+      "origin": "src/contract/event.md",
+      "mainline": false
     },
     {
       "source": "reaction",
       "target": "event",
       "relation": "LISTENS_TO",
       "bidirectional": false,
-      "origin": "src/contract/event.md"
+      "origin": "src/contract/event.md",
+      "mainline": true
     },
     {
       "source": "requirement",
       "target": "event",
       "relation": "TRIGGERED_BY",
       "bidirectional": false,
-      "origin": "src/contract/event.md"
+      "origin": "src/contract/event.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "process",
       "relation": "GOVERNED_BY",
       "bidirectional": false,
-      "origin": "src/behavior/process.md"
+      "origin": "src/behavior/process.md",
+      "mainline": true
     },
     {
       "source": "process",
       "target": "transition-test",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/behavior/process.md"
+      "origin": "src/behavior/process.md",
+      "mainline": true
     },
     {
       "source": "orchestration",
       "target": "module",
       "relation": "COORDINATES",
       "bidirectional": false,
-      "origin": "src/behavior/orchestration.md"
+      "origin": "src/behavior/orchestration.md",
+      "mainline": false
     },
     {
       "source": "orchestration",
       "target": "interface",
       "relation": "COMPOSES",
       "bidirectional": false,
-      "origin": "src/behavior/orchestration.md"
+      "origin": "src/behavior/orchestration.md",
+      "mainline": true
     },
     {
       "source": "orchestration",
       "target": "integration-test",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/behavior/orchestration.md"
+      "origin": "src/behavior/orchestration.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "reaction",
       "relation": "OWNS",
       "bidirectional": false,
-      "origin": "src/behavior/reaction.md"
+      "origin": "src/behavior/reaction.md",
+      "mainline": false
     },
     {
       "source": "reaction",
       "target": "entity",
       "relation": "TARGETS",
       "bidirectional": false,
-      "origin": "src/behavior/reaction.md"
+      "origin": "src/behavior/reaction.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "schedule",
       "relation": "OWNS",
       "bidirectional": false,
-      "origin": "src/behavior/schedule.md"
+      "origin": "src/behavior/schedule.md",
+      "mainline": false
     },
     {
       "source": "schedule",
       "target": "entity",
       "relation": "TARGETS",
       "bidirectional": false,
-      "origin": "src/behavior/schedule.md"
+      "origin": "src/behavior/schedule.md",
+      "mainline": false
     },
     {
       "source": "repository",
       "target": "module",
       "relation": "HOSTS",
       "bidirectional": false,
-      "origin": "src/code/repository.md"
+      "origin": "src/code/repository.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "repository",
       "relation": "LOCATED_IN",
       "bidirectional": false,
-      "origin": "src/code/repository.md"
+      "origin": "src/code/repository.md",
+      "mainline": true
     },
     {
       "source": "code-ref",
       "target": "entity",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "interface",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "error",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "event",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "process",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "orchestration",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "reaction",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "code-ref",
       "target": "schedule",
       "relation": "IMPLEMENTS",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "code-ref",
       "relation": "MAPPED_TO",
       "bidirectional": false,
-      "origin": "src/code/code-ref.md"
+      "origin": "src/code/code-ref.md",
+      "mainline": true
     },
     {
       "source": "module",
       "target": "module",
       "relation": "DEPENDS_ON",
       "bidirectional": true,
-      "origin": "src/module/module.md"
+      "origin": "src/module/module.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "integration-test",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/module/module.md"
+      "origin": "src/module/module.md",
+      "mainline": true
     },
     {
       "source": "module",
       "target": "constraint",
       "relation": "CONSTRAINED_BY",
       "bidirectional": false,
-      "origin": "src/governance/constraint.md"
+      "origin": "src/governance/constraint.md",
+      "mainline": true
     },
     {
       "source": "interface",
       "target": "constraint",
       "relation": "CONSTRAINED_BY",
       "bidirectional": false,
-      "origin": "src/governance/constraint.md"
+      "origin": "src/governance/constraint.md",
+      "mainline": false
     },
     {
       "source": "entity",
       "target": "constraint",
       "relation": "CONSTRAINED_BY",
       "bidirectional": false,
-      "origin": "src/governance/constraint.md"
+      "origin": "src/governance/constraint.md",
+      "mainline": false
     },
     {
       "source": "constraint",
       "target": "metric",
       "relation": "MEASURES",
       "bidirectional": false,
-      "origin": "src/governance/constraint.md"
+      "origin": "src/governance/constraint.md",
+      "mainline": true
     },
     {
       "source": "constraint",
       "target": "benchmark",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/governance/constraint.md"
+      "origin": "src/governance/constraint.md",
+      "mainline": true
     },
     {
       "source": "benchmark",
       "target": "metric",
       "relation": "MEASURES",
       "bidirectional": false,
-      "origin": "src/governance/metric.md"
+      "origin": "src/governance/metric.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "dependency",
       "relation": "DEPENDS_ON",
       "bidirectional": false,
-      "origin": "src/governance/dependency.md"
+      "origin": "src/governance/dependency.md",
+      "mainline": true
     },
     {
       "source": "role",
       "target": "permission",
       "relation": "HAS_PERMISSION",
       "bidirectional": false,
-      "origin": "src/access/role.md"
+      "origin": "src/access/role.md",
+      "mainline": true
     },
     {
       "source": "role",
       "target": "role",
       "relation": "INHERITS_FROM",
       "bidirectional": false,
-      "origin": "src/access/role.md"
+      "origin": "src/access/role.md",
+      "mainline": false
     },
     {
       "source": "role",
       "target": "entity",
       "relation": "IDENTIFIED_BY",
       "bidirectional": false,
-      "origin": "src/access/role.md"
+      "origin": "src/access/role.md",
+      "mainline": false
     },
     {
       "source": "requirement",
       "target": "role",
       "relation": "ACTED_BY",
       "bidirectional": false,
-      "origin": "src/access/role.md"
+      "origin": "src/access/role.md",
+      "mainline": false
     },
     {
       "source": "permission",
       "target": "interface",
       "relation": "ON_RESOURCE",
       "bidirectional": false,
-      "origin": "src/access/permission.md"
+      "origin": "src/access/permission.md",
+      "mainline": false
     },
     {
       "source": "permission",
       "target": "entity",
       "relation": "ON_RESOURCE",
       "bidirectional": false,
-      "origin": "src/access/permission.md"
+      "origin": "src/access/permission.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "incident",
       "relation": "MANAGES",
       "bidirectional": false,
-      "origin": "src/incident/incident.md"
+      "origin": "src/incident/incident.md",
+      "mainline": false
     },
     {
       "source": "incident",
       "target": "entity",
       "relation": "AFFECTS",
       "bidirectional": false,
-      "origin": "src/incident/incident.md"
+      "origin": "src/incident/incident.md",
+      "mainline": true
     },
     {
       "source": "incident",
       "target": "runbook",
       "relation": "RESOLVED_BY",
       "bidirectional": false,
-      "origin": "src/incident/incident.md"
+      "origin": "src/incident/incident.md",
+      "mainline": true
     },
     {
       "source": "incident",
       "target": "playbook",
       "relation": "EMERGENCY_PLAN",
       "bidirectional": false,
-      "origin": "src/incident/incident.md"
+      "origin": "src/incident/incident.md",
+      "mainline": false
     },
     {
       "source": "incident",
       "target": "runbook",
       "relation": "RESOLVES",
       "bidirectional": false,
-      "origin": "src/incident/runbook.md"
+      "origin": "src/incident/runbook.md",
+      "mainline": false
     },
     {
       "source": "module",
       "target": "runbook",
       "relation": "MANAGES",
       "bidirectional": false,
-      "origin": "src/incident/runbook.md"
+      "origin": "src/incident/runbook.md",
+      "mainline": false
     },
     {
       "source": "playbook",
       "target": "incident",
       "relation": "HANDLES",
       "bidirectional": false,
-      "origin": "src/incident/playbook.md"
+      "origin": "src/incident/playbook.md",
+      "mainline": true
     },
     {
       "source": "module",
       "target": "playbook",
       "relation": "MANAGES",
       "bidirectional": false,
-      "origin": "src/incident/playbook.md"
+      "origin": "src/incident/playbook.md",
+      "mainline": false
     },
     {
       "source": "playbook",
       "target": "runbook",
       "relation": "EXECUTES",
       "bidirectional": false,
-      "origin": "src/incident/playbook.md"
+      "origin": "src/incident/playbook.md",
+      "mainline": false
     },
     {
       "source": "pipeline",
       "target": "environment",
       "relation": "DEPLOYS_TO",
       "bidirectional": false,
-      "origin": "src/delivery/environment.md"
+      "origin": "src/delivery/environment.md",
+      "mainline": true
     },
     {
       "source": "environment",
       "target": "config-set",
       "relation": "USES_CONFIG",
       "bidirectional": false,
-      "origin": "src/delivery/environment.md"
+      "origin": "src/delivery/environment.md",
+      "mainline": true
     },
     {
       "source": "pipeline",
       "target": "module",
       "relation": "BUILDS",
       "bidirectional": false,
-      "origin": "src/delivery/pipeline.md"
+      "origin": "src/delivery/pipeline.md",
+      "mainline": true
     },
     {
       "source": "pipeline",
       "target": "constraint",
       "relation": "GATES_ON",
       "bidirectional": false,
-      "origin": "src/delivery/pipeline.md"
+      "origin": "src/delivery/pipeline.md",
+      "mainline": false
     },
     {
       "source": "config-set",
       "target": "configuration",
       "relation": "CONTAINS",
       "bidirectional": false,
-      "origin": "src/delivery/configuration.md"
+      "origin": "src/delivery/configuration.md",
+      "mainline": false
     },
     {
       "source": "config-set",
       "target": "environment",
       "relation": "APPLIES_TO",
       "bidirectional": false,
-      "origin": "src/delivery/config-set.md"
+      "origin": "src/delivery/config-set.md",
+      "mainline": false
     },
     {
       "source": "config-set",
       "target": "module",
       "relation": "APPLIES_TO",
       "bidirectional": false,
-      "origin": "src/delivery/config-set.md"
+      "origin": "src/delivery/config-set.md",
+      "mainline": false
     },
     {
       "source": "config-set",
       "target": "configuration",
       "relation": "OVERRIDES",
       "bidirectional": false,
-      "origin": "src/delivery/config-set.md"
+      "origin": "src/delivery/config-set.md",
+      "mainline": true
     },
     {
       "source": "environment",
       "target": "secret",
       "relation": "REQUIRES",
       "bidirectional": false,
-      "origin": "src/delivery/secret.md"
+      "origin": "src/delivery/secret.md",
+      "mainline": true
     },
     {
       "source": "module",
       "target": "secret",
       "relation": "REQUIRES",
       "bidirectional": false,
-      "origin": "src/delivery/secret.md"
+      "origin": "src/delivery/secret.md",
+      "mainline": false
     },
     {
       "source": "secret",
       "target": "permission",
       "relation": "AUTHORIZED_BY",
       "bidirectional": false,
-      "origin": "src/delivery/secret.md"
+      "origin": "src/delivery/secret.md",
+      "mainline": true
     },
     {
       "source": "requirement",
       "target": "acceptance-test",
       "relation": "TESTED_BY",
       "bidirectional": false,
-      "origin": "src/test/acceptance-test.md"
+      "origin": "src/test/acceptance-test.md",
+      "mainline": true
     },
     {
       "source": "business-concept",
       "target": "module",
       "relation": "AS_ACTOR",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": false
     },
     {
       "source": "business-concept",
       "target": "role",
       "relation": "AS_ACTOR",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": false
     },
     {
       "source": "business-concept",
       "target": "entity",
       "relation": "AS_OBJECT",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": true
     },
     {
       "source": "business-concept",
       "target": "interface",
       "relation": "AS_ACTION",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": true
     },
     {
       "source": "business-concept",
       "target": "orchestration",
       "relation": "AS_ACTION",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": false
     },
     {
       "source": "business-concept",
       "target": "reaction",
       "relation": "AS_ACTION",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": false
     },
     {
       "source": "business-concept",
       "target": "schedule",
       "relation": "AS_ACTION",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": false
     },
     {
       "source": "business-concept",
       "target": "event",
       "relation": "AS_EVENT",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": true
     },
     {
       "source": "business-concept",
       "target": "event",
       "relation": "AS_RESULT",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": false
     },
     {
       "source": "business-concept",
       "target": "error",
       "relation": "AS_ERROR",
       "bidirectional": false,
-      "origin": "src/requirement/common.py"
+      "origin": "src/requirement/common.py",
+      "mainline": true
     }
   ],
   "relationTypes": [
@@ -4902,9 +5402,11 @@ pre.raw {
   var svg = document.getElementById("graph");
   var viewport = document.createElementNS(SVG_NS, "g");
   viewport.setAttribute("id", "viewport");
+  var bandLayer = document.createElementNS(SVG_NS, "g");
   var edgeLayer = document.createElementNS(SVG_NS, "g");
   var labelLayer = document.createElementNS(SVG_NS, "g");
   var nodeLayer = document.createElementNS(SVG_NS, "g");
+  viewport.appendChild(bandLayer);
   viewport.appendChild(edgeLayer);
   viewport.appendChild(labelLayer);
   viewport.appendChild(nodeLayer);
@@ -4915,6 +5417,8 @@ pre.raw {
     '<marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
     '<path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7fa8"/></marker>' +
     '<marker id="arrow-hot" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
+    '<path d="M 0 0 L 10 5 L 0 10 z" fill="#4f9dff"/></marker>' +
+    '<marker id="arrow-main" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">' +
     '<path d="M 0 0 L 10 5 L 0 10 z" fill="#4f9dff"/></marker>';
   svg.appendChild(defs);
 
@@ -4961,6 +5465,46 @@ pre.raw {
       edges.push({ source: s, target: t, relation: e.relation, bidirectional: !!e.bidirectional, origin: e.origin });
     });
     return { nodes: nodes, edges: edges, byId: byId };
+  }
+
+  function buildMainlineGraph() {
+    var phaseOf = {};
+    DATA.phases.forEach(function (phase) {
+      phase.artifacts.forEach(function (id) { phaseOf[id] = phase; });
+    });
+    var nodes = DATA.types.map(function (t) {
+      var phase = phaseOf[t.id];
+      return {
+        id: t.id,
+        label: t.name,
+        prefix: t.prefix,
+        domain: t.domain,
+        status: t.status,
+        phase: phase ? phase.id : null,
+        lateral: phase ? !!phase.lateral : false,
+        radius: 15 + Math.min(9, (t.fields || []).length * 1.1),
+        raw: t,
+        x: 0, y: 0, vx: 0, vy: 0, fx: null, fy: null
+      };
+    });
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+    var edges = [];
+    DATA.edges.forEach(function (e) {
+      var s = byId[e.source], t = byId[e.target];
+      if (!s || !t) return;
+      edges.push({
+        source: s, target: t, relation: e.relation,
+        bidirectional: !!e.bidirectional, origin: e.origin,
+        mainline: !!e.mainline
+      });
+    });
+    edges.forEach(function (e) {
+      if (!e.mainline) return;
+      e.source.onSpine = true;
+      e.target.onSpine = true;
+    });
+    return { nodes: nodes, edges: edges, byId: byId, bands: [], size: { width: 0, height: 0 } };
   }
 
   function buildInstanceGraph() {
@@ -5090,6 +5634,139 @@ pre.raw {
     });
   }
 
+  // ── Mainline layout ──────────────────────────────────────────────────
+  var RAIL = 208;      // 左侧阶段栏的宽度
+  var CARD = 148;      // 卡片间距
+  var ROW = 104;       // 行高
+  var BAND_TOP = 72;   // 阶段栏（标题 + 问题）占用的高度
+  var BAND_PAD = 30;   // 阶段带的下边距
+  var BAND_GAP = 22;   // 阶段带之间的间距
+
+  function layoutMainline(graph) {
+    var width = (svg.clientWidth || 1200) - 40;
+    var usable = Math.max(CARD, width - RAIL - 40);
+    var perRow = Math.max(1, Math.floor(usable / CARD));
+    var y = 24;
+
+    graph.bands = [];
+    DATA.phases.forEach(function (phase, index) {
+      var nodes = graph.nodes.filter(function (n) { return n.phase === phase.id; });
+      var rows = Math.max(1, Math.ceil(nodes.length / perRow));
+      var top = y;
+      var height = BAND_TOP + rows * ROW + BAND_PAD;
+      nodes.forEach(function (n, i) {
+        if (n.fx !== null) return;
+        var col = i % perRow;
+        var row = Math.floor(i / perRow);
+        n.x = RAIL + col * CARD + CARD / 2;
+        n.y = top + BAND_TOP + row * ROW + ROW / 2;
+        n.vx = 0; n.vy = 0;
+      });
+      graph.bands.push({
+        phase: phase, index: index, top: top, height: height, count: nodes.length
+      });
+      y = top + height + BAND_GAP;
+    });
+    graph.size = { width: width, height: y };
+    // 向后的边（反馈回路）各占一条车道，避免叠在一起
+    var lane = 0;
+    graph.edges.forEach(function (e) {
+      if (e.target.y > e.source.y + 1) {
+        e.lane = 0;
+        return;
+      }
+      e.lane = lane;
+      lane += 1;
+    });
+  }
+
+  function buildBands() {
+    var graph = state.graph;
+    clear(bandLayer);
+    var spine = svgEl("path", { "class": "spine" });
+    bandLayer.appendChild(spine);
+    graph.bands.forEach(function (band) {
+      var group = svgEl("g", { "class": "band" + (band.phase.lateral ? " lateral" : "") });
+      group.setAttribute("data-phase", band.phase.id);
+      var rect = svgEl("rect", { "class": "band-bg", rx: 14 });
+      var stepBg = svgEl("circle", { "class": "band-step-bg", r: 12 });
+      var step = svgEl("text", { "class": "band-step" });
+      step.textContent = band.phase.lateral ? "横切" : String(band.index + 1);
+      var title = svgEl("text", { "class": "band-title" });
+      title.textContent = band.phase.label;
+      var question = svgEl("text", { "class": "band-question" });
+      question.textContent = band.phase.question;
+      var count = svgEl("text", { "class": "band-count" });
+      count.textContent = band.count + " 种制品";
+      group.appendChild(rect);
+      group.appendChild(stepBg);
+      group.appendChild(step);
+      group.appendChild(title);
+      group.appendChild(question);
+      group.appendChild(count);
+      group.addEventListener("click", function () { selectPhase(band.phase); });
+      bandLayer.appendChild(group);
+      band.el = group;
+      band.rect = rect;
+      band.stepBg = stepBg;
+      band.step = step;
+      band.title = title;
+      band.question = question;
+      band.count = count;
+    });
+  }
+
+  function updateBands() {
+    var graph = state.graph;
+    if (!graph.bands.length) return;
+    graph.bands.forEach(function (band) {
+      var width = graph.size.width;
+      band.rect.setAttribute("x", 0);
+      band.rect.setAttribute("y", band.top);
+      band.rect.setAttribute("width", width);
+      band.rect.setAttribute("height", band.height);
+      band.stepBg.setAttribute("cx", 34);
+      band.stepBg.setAttribute("cy", band.top + 30);
+      band.step.setAttribute("x", 34);
+      band.step.setAttribute("y", band.top + 31);
+      band.title.setAttribute("x", 58);
+      band.title.setAttribute("y", band.top + 27);
+      band.question.setAttribute("x", 58);
+      band.question.setAttribute("y", band.top + 47);
+      band.count.setAttribute("x", 58);
+      band.count.setAttribute("y", band.top + 65);
+    });
+    var spine = bandLayer.querySelector(".spine");
+    if (spine) {
+      var first = graph.bands[0];
+      var last = graph.bands[graph.bands.length - 1];
+      spine.setAttribute("d",
+        "M 34 " + (first.top + 30) + " L 34 " + (last.top + 30));
+    }
+  }
+
+  function mainlineEdgeGeometry(e) {
+    var s = e.source, t = e.target;
+    if (t.y > s.y + 1) {
+      // 向前：自上而下穿过阶段带
+      var sx = s.x, sy = s.y + s.radius + 2;
+      var tx = t.x, ty = t.y - t.radius - 9;
+      var midY = (sy + ty) / 2;
+      return {
+        d: "M " + sx + " " + sy + " C " + sx + " " + midY + ", " + tx + " " + midY + ", " + tx + " " + ty,
+        mx: (sx + tx) / 2, my: midY
+      };
+    }
+    // 向后（反馈回路）：绕到右侧
+    var lane = Math.max(s.x, t.x) + 70 + (e.lane || 0) * 26;
+    var bsx = s.x + s.radius, bsy = s.y;
+    var btx = t.x + t.radius, bty = t.y;
+    return {
+      d: "M " + bsx + " " + bsy + " C " + lane + " " + bsy + ", " + lane + " " + bty + ", " + btx + " " + bty,
+      mx: lane, my: (bsy + bty) / 2
+    };
+  }
+
   function layoutRadial(graph) {
     var w = svg.clientWidth || 1200, h = svg.clientHeight || 800;
     var cx = w / 2, cy = h / 2;
@@ -5107,7 +5784,8 @@ pre.raw {
   // ── Rendering ─────────────────────────────────────────────────────────
   function buildDom() {
     var graph = state.graph;
-    clear(edgeLayer); clear(labelLayer); clear(nodeLayer);
+    clear(edgeLayer); clear(labelLayer); clear(nodeLayer); clear(bandLayer);
+    viewport.setAttribute("class", state.view === "mainline" ? "mainline" : "");
 
     graph.nodes.forEach(function (n) {
       var g = svgEl("g", { "class": "node" + (n.missing ? " missing" : "") });
@@ -5130,11 +5808,12 @@ pre.raw {
     });
 
     graph.edges.forEach(function (e) {
-      var path = svgEl("path", { "class": "edge" + (e.bidirectional ? " both" : "") });
-      path.setAttribute("marker-end", "url(#arrow)");
+      var cls = "edge" + (e.bidirectional ? " both" : "") + (e.mainline ? " main" : "");
+      var path = svgEl("path", { "class": cls });
+      path.setAttribute("marker-end", e.mainline ? "url(#arrow-main)" : "url(#arrow)");
       edgeLayer.appendChild(path);
       e.el = path;
-      var label = svgEl("text", { "class": "edge-label" });
+      var label = svgEl("text", { "class": "edge-label" + (e.mainline ? " main" : "") });
       label.textContent = e.relation;
       labelLayer.appendChild(label);
       e.labelEl = label;
@@ -5192,11 +5871,12 @@ pre.raw {
     });
     graph.edges.forEach(function (e) {
       if (!e.el) return;
-      var g = edgeGeometry(e);
+      var g = state.view === "mainline" ? mainlineEdgeGeometry(e) : edgeGeometry(e);
       e.el.setAttribute("d", g.d);
       e.labelEl.setAttribute("x", g.mx);
       e.labelEl.setAttribute("y", g.my);
     });
+    if (state.view === "mainline") updateBands();
   }
 
   function applyTransform() {
@@ -5230,6 +5910,7 @@ pre.raw {
       if (state.dimMode && hasQuery && !hit) cls += " dim";
       if (selected && n.id === selected.id) cls += " selected";
       else if (selected && neighbors[n.id]) cls += " neighbor";
+      if (state.view === "mainline" && n.onSpine) cls += " on-spine";
       n.el.setAttribute("class", cls);
       n.hit = hit;
     });
@@ -5239,13 +5920,17 @@ pre.raw {
       e.el.style.display = visible ? "" : "none";
       e.labelEl.style.display = visible && state.showLabels ? "" : "none";
       if (!visible) return;
-      var cls = "edge" + (e.bidirectional ? " both" : "");
+      var cls = "edge" + (e.bidirectional ? " both" : "") + (e.mainline ? " main" : "");
       var touches = selected && (e.source.id === selected.id || e.target.id === selected.id);
       if (state.dimMode && hasFocus && !touches) cls += " dim";
       if (touches) cls += " hot";
       e.el.setAttribute("class", cls);
-      e.el.setAttribute("marker-end", touches ? "url(#arrow-hot)" : "url(#arrow)");
-      e.labelEl.setAttribute("class", "edge-label" + (touches ? " hot" : (state.dimMode && hasFocus ? " dim" : "")));
+      e.el.setAttribute("marker-end", touches ? "url(#arrow-hot)"
+        : (e.mainline ? "url(#arrow-main)" : "url(#arrow)"));
+      var lbl = "edge-label" + (e.mainline ? " main" : "");
+      if (touches) lbl += " hot";
+      else if (state.dimMode && hasFocus) lbl += " dim";
+      e.labelEl.setAttribute("class", lbl);
     });
   }
 
@@ -5258,11 +5943,21 @@ pre.raw {
       if (edgeVisible(e)) visRelations[e.relation] = true;
     });
     clear(statsEl);
-    var items = [
-      ["节点", visNodes + " / " + graph.nodes.length],
-      ["关系", visEdges + " / " + graph.edges.length],
-      ["关系类型", Object.keys(visRelations).length]
-    ];
+    var items;
+    if (state.view === "mainline") {
+      var spine = graph.edges.filter(function (e) { return e.mainline && edgeVisible(e); }).length;
+      items = [
+        ["阶段", DATA.phases.length],
+        ["制品", visNodes + " / " + graph.nodes.length],
+        ["主线交接", spine]
+      ];
+    } else {
+      items = [
+        ["节点", visNodes + " / " + graph.nodes.length],
+        ["关系", visEdges + " / " + graph.edges.length],
+        ["关系类型", Object.keys(visRelations).length]
+      ];
+    }
     items.forEach(function (pair) {
       var span = el("span");
       span.appendChild(document.createTextNode(pair[0] + " "));
@@ -5414,6 +6109,57 @@ pre.raw {
     showDetail(node);
   }
 
+  function selectPhase(phase) {
+    clear(detailEl);
+    detailEl.appendChild(el("h3", null, phase.label));
+    detailEl.appendChild(el("div", "sub", phase.question));
+
+    var badges = el("div", "badge-row");
+    if (phase.lateral) {
+      var lateral = el("span", "badge");
+      lateral.appendChild(el("span", "chip wip", "横切关注点"));
+      badges.appendChild(lateral);
+    }
+    badges.appendChild(el("span", "badge", phase.artifacts.length + " 种制品"));
+    badges.appendChild(el("span", "badge", phase.handoff.length + " 次交接"));
+    detailEl.appendChild(badges);
+
+    detailEl.appendChild(el("h4", null, "本阶段制品"));
+    var list = el("ul", "rel-list");
+    phase.artifacts.forEach(function (id) {
+      var node = state.graph.byId[id];
+      if (!node) return;
+      var li = el("li");
+      var btn = el("button", "rel-link");
+      btn.type = "button";
+      btn.appendChild(el("span", "rel", node.prefix));
+      btn.appendChild(el("span", "tgt", node.label));
+      btn.addEventListener("click", function () { selectNode(node); });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    detailEl.appendChild(list);
+
+    if (phase.handoff.length) {
+      detailEl.appendChild(el("h4", null, "交接（上一阶段 → 本阶段）"));
+      var hlist = el("ul", "rel-list");
+      phase.handoff.forEach(function (handoff) {
+        var source = state.graph.byId[handoff.source];
+        var target = state.graph.byId[handoff.target];
+        if (!source || !target) return;
+        var li = el("li");
+        var btn = el("button", "rel-link");
+        btn.type = "button";
+        btn.appendChild(el("span", "rel", handoff.relation));
+        btn.appendChild(el("span", "tgt", source.label + " → " + target.label));
+        btn.addEventListener("click", function () { selectNode(target); });
+        li.appendChild(btn);
+        hlist.appendChild(li);
+      });
+      detailEl.appendChild(hlist);
+    }
+  }
+
   // ── Sidebar ───────────────────────────────────────────────────────────
   function buildSidebar() {
     var domList = document.getElementById("domainFilters");
@@ -5550,7 +6296,9 @@ pre.raw {
   });
 
   svg.addEventListener("click", function (event) {
-    if (!event.target.closest || !event.target.closest(".node")) {
+    var hit = event.target.closest ? event.target.closest(".node, .band") : null;
+    if (hit && hit.classList.contains("band")) return;
+    if (!hit) {
       state.selected = null;
       refreshHighlight();
       clear(detailEl);
@@ -5614,6 +6362,10 @@ pre.raw {
   }
 
   function fitToView() {
+    if (state.view === "mainline") {
+      fitMainline();
+      return;
+    }
     var graph = state.graph;
     var visible = graph.nodes.filter(isVisible);
     if (!visible.length) return;
@@ -5635,6 +6387,14 @@ pre.raw {
     applyTransform();
   }
 
+  function fitMainline() {
+    // 主线比视口高：按宽度对齐到顶部，靠滚动/拖拽看下面的阶段
+    state.transform.k = 1;
+    state.transform.x = 20;
+    state.transform.y = 10;
+    applyTransform();
+  }
+
   // ── Controls ──────────────────────────────────────────────────────────
   document.querySelectorAll(".view-tab").forEach(function (tab) {
     tab.addEventListener("click", function () {
@@ -5643,7 +6403,9 @@ pre.raw {
       tab.classList.add("active");
       state.view = tab.getAttribute("data-view");
       state.selected = null;
-      state.graph = state.view === "schema" ? buildSchemaGraph() : buildInstanceGraph();
+      state.graph = state.view === "schema" ? buildSchemaGraph()
+        : state.view === "mainline" ? buildMainlineGraph()
+          : buildInstanceGraph();
       buildDom();
       buildSidebar();
       seedPositions(state.graph);
@@ -5653,6 +6415,16 @@ pre.raw {
       updateStats();
       clear(detailEl);
       detailEl.appendChild(el("div", "empty", "点击图中的节点查看制品定义与关系"));
+
+      var isMainline = state.view === "mainline";
+      document.getElementById("mainlineLegend").hidden = !isMainline;
+      document.getElementById("layoutSel").disabled = isMainline;
+      if (isMainline) {
+        layoutMainline(state.graph);
+        buildBands();
+        updatePositions();
+        fitMainline();
+      }
     });
   });
 
@@ -5725,6 +6497,10 @@ pre.raw {
   });
 
   window.addEventListener("resize", function () {
+    if (state.view === "mainline") {
+      layoutMainline(state.graph);
+      updatePositions();
+    }
     applyTransform();
   });
 
@@ -5735,7 +6511,9 @@ pre.raw {
   function frame() {
     var graph = state.graph;
     if (graph) {
-      if (state.layout === "force") {
+      if (state.view === "mainline") {
+        // 主线是确定性的布局，不跑力学模拟
+      } else if (state.layout === "force") {
         if (alpha > 0.005) {
           stepForce(graph, alpha);
           alpha *= 0.985;
@@ -5746,7 +6524,7 @@ pre.raw {
         alpha *= 0.9;
       }
       updatePositions();
-      if (autoFit && alpha <= 0.02) {
+      if (autoFit && alpha <= 0.02 && state.view !== "mainline") {
         // The layout has settled -- frame it once.
         autoFit = false;
         fitToView();
@@ -5765,9 +6543,10 @@ pre.raw {
     updateStats();
 
     var implemented = DATA.types.filter(function (t) { return t.status === "done"; }).length;
+    var spine = DATA.edges.filter(function (e) { return e.mainline; }).length;
     document.getElementById("subtitle").textContent =
       DATA.types.length + " 种制品 · " + DATA.edges.length + " 条关系 · " +
-      implemented + " 种已实现";
+      implemented + " 种已实现 · 主线 " + DATA.phases.length + " 阶段 / " + spine + " 次交接";
 
     var instanceTab = document.getElementById("instanceTab");
     if (DATA.instances && DATA.instances.nodes && DATA.instances.nodes.length) {

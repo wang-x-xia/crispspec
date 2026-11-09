@@ -236,6 +236,48 @@ def test_payload_is_json_serialisable(payload: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Development mainline
+# ---------------------------------------------------------------------------
+
+
+def test_payload_contains_the_mainline(payload: dict[str, Any]) -> None:
+    """The payload carries the development mainline."""
+    assert payload["phases"]
+    covered = [name for phase in payload["phases"] for name in phase["artifacts"]]
+    assert sorted(covered) == sorted(ALL_TYPES), "the mainline misses an artifact"
+
+
+def test_mainline_handoffs_and_marked_edges_agree(payload: dict[str, Any]) -> None:
+    """The declared hand-offs are exactly the edges flagged as mainline."""
+    declared = {
+        (handoff["source"], handoff["target"], handoff["relation"])
+        for phase in payload["phases"]
+        for handoff in phase["handoff"]
+    }
+    marked = {
+        (edge["source"], edge["target"], edge["relation"])
+        for edge in payload["edges"]
+        if edge["mainline"]
+    }
+    assert declared == marked
+
+
+def test_mainline_phases_keep_their_order(payload: dict[str, Any]) -> None:
+    """The mainline runs from intent to operation, then the lateral phases."""
+    ids = [phase["id"] for phase in payload["phases"]]
+    assert ids[0] == "intent"
+    assert ids.index("code") < ids.index("verification") < ids.index("delivery")
+
+
+def test_lateral_phases_come_last(payload: dict[str, Any]) -> None:
+    """The cross-cutting phases trail the spine."""
+    lateral = [phase["id"] for phase in payload["phases"] if phase["lateral"]]
+    assert lateral == ["governance", "access", "meta"]
+    spine = [phase for phase in payload["phases"] if not phase["lateral"]]
+    assert all(phase["handoff"] for phase in spine[1:]), "a spine phase has no hand-off"
+
+
+# ---------------------------------------------------------------------------
 # Page
 # ---------------------------------------------------------------------------
 

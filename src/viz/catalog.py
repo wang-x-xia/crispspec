@@ -49,11 +49,38 @@ class ArtifactTypeInfo:
 
 
 @dataclass(frozen=True)
+class Handoff:
+    """One hand-off on the development mainline.
+
+    It names a relation edge that carries the work from one phase into
+    the next.  The edge has to exist in the relation tables of the
+    artifact definitions -- ``tests/registry/`` checks that.
+    """
+
+    relation: str
+    source: str
+    target: str
+
+
+@dataclass(frozen=True)
+class Phase:
+    """One phase of the development mainline."""
+
+    id: str
+    label: str
+    question: str
+    artifacts: tuple[str, ...]
+    lateral: bool
+    handoff: tuple[Handoff, ...]
+
+
+@dataclass(frozen=True)
 class Catalog:
-    """Every artifact type and domain the project knows about."""
+    """Every artifact type, domain and mainline phase the project knows."""
 
     types: tuple[ArtifactTypeInfo, ...]
     domains: tuple[DomainInfo, ...]
+    phases: tuple[Phase, ...] = ()
 
     def type_map(self) -> dict[str, ArtifactTypeInfo]:
         """Return the artifact types keyed by their type key."""
@@ -80,6 +107,42 @@ class Catalog:
 def _one_line(text: str) -> str:
     """Flatten *text* into a single line, keeping the words readable."""
     return " ".join(text.split())
+
+
+def _parse_handoff(raw: object) -> Handoff:
+    """Parse one hand-off entry of a mainline phase."""
+    if not isinstance(raw, dict):
+        msg = f"Mainline hand-off must be a mapping, got {type(raw).__name__}"
+        raise TypeError(msg)
+    return Handoff(
+        relation=str(raw["relation"]),
+        source=str(raw["from"]),
+        target=str(raw["to"]),
+    )
+
+
+def _parse_phases(raw: object) -> tuple[Phase, ...]:
+    """Parse the mainline phases of the registry."""
+    if not isinstance(raw, list):
+        msg = f"Mainline must be a list, got {type(raw).__name__}"
+        raise TypeError(msg)
+    phases: list[Phase] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            msg = f"Mainline phase must be a mapping, got {type(entry).__name__}"
+            raise TypeError(msg)
+        handoff = tuple(_parse_handoff(item) for item in entry.get("handoff") or ())
+        phases.append(
+            Phase(
+                id=str(entry["id"]),
+                label=str(entry["label"]),
+                question=_one_line(str(entry.get("question", ""))),
+                artifacts=tuple(str(item) for item in entry.get("artifacts") or ()),
+                lateral=bool(entry.get("lateral", False)),
+                handoff=handoff,
+            ),
+        )
+    return tuple(phases)
 
 
 def load_catalog(registry_path: Path | None = None) -> Catalog:
@@ -134,4 +197,8 @@ def load_catalog(registry_path: Path | None = None) -> Catalog:
         for entry in raw.get("artifacts") or []
     ]
 
-    return Catalog(types=tuple(types), domains=tuple(domains))
+    return Catalog(
+        types=tuple(types),
+        domains=tuple(domains),
+        phases=_parse_phases(raw.get("mainline") or []),
+    )

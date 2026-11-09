@@ -177,6 +177,35 @@ def _relation_summary(edges: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
+def _phase_payload(catalog: Catalog) -> list[dict[str, Any]]:
+    """Describe every phase of the development mainline."""
+    return [
+        {
+            "id": phase.id,
+            "label": phase.label,
+            "question": phase.question,
+            "artifacts": list(phase.artifacts),
+            "lateral": phase.lateral,
+            "handoff": [
+                {"relation": handoff.relation, "source": handoff.source, "target": handoff.target}
+                for handoff in phase.handoff
+            ],
+        }
+        for phase in catalog.phases
+    ]
+
+
+def _mark_mainline(edges: list[dict[str, Any]], catalog: Catalog) -> None:
+    """Flag the edges that carry the development mainline."""
+    spine = {
+        (handoff.source, handoff.target, handoff.relation)
+        for phase in catalog.phases
+        for handoff in phase.handoff
+    }
+    for edge in edges:
+        edge["mainline"] = (edge["source"], edge["target"], edge["relation"]) in spine
+
+
 def build_payload(
     catalog: Catalog,
     db_path: Path | None = None,
@@ -199,6 +228,7 @@ def build_payload(
     nodes = _node_payload(catalog, details)
     known = {node["id"] for node in nodes}
     edges = [edge for edge in edges if edge["source"] in known and edge["target"] in known]
+    _mark_mainline(edges, catalog)
 
     instance_nodes: list[dict[str, Any]] = []
     instance_edges: list[dict[str, Any]] = []
@@ -209,6 +239,7 @@ def build_payload(
 
     return {
         "domains": _domain_payload(catalog.domains),
+        "phases": _phase_payload(catalog),
         "types": nodes,
         "edges": edges,
         "relationTypes": _relation_summary(edges),

@@ -122,6 +122,40 @@
 
 ---
 
+## 开发主线
+
+域是"关注点"的横向切分，主线是"工作顺序"的纵向推进——两者正交。
+35 种制品被 11 个主线阶段串成一条不重不漏的链，每一步都由一条**真实存在的关系边**交接：
+
+| # | 阶段 | 回答什么 | 制品 | 交接 |
+|---|------|---------|------|------|
+| 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — |
+| 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | `DISAMBIGUATED_INTO` |
+| 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | `DECOMPOSES_INTO` |
+| 4 | 语义对齐 | 业务概念落到哪些技术制品上？ | Business Concept | `ACTED_BY` |
+| 5 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Error / Event | `IMPLEMENTED_BY`、`AS_ACTION`、`AS_OBJECT`、`AS_ERROR`、`AS_EVENT` |
+| 6 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
+| 7 | 组织归属 | 这些制品归哪个模块管？ | Module | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
+| 8 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref / Repository | `MAPPED_TO`、`LOCATED_IN` |
+| 9 | 验证闭环 | 怎么证明这个制品是对的？ | Acceptance / Scenario / Contract / Transition / Integration Test、Benchmark | `TESTED_BY` |
+| 10 | 交付上线 | 部署到哪？配置怎么管？ | Pipeline / Environment / Config Set / Configuration / Secret | `BUILDS`、`DEPLOYS_TO`、`USES_CONFIG`、`OVERRIDES`、`REQUIRES` |
+| 11 | 运维反馈 | 出了什么事？怎么恢复？ | Incident / Runbook / Playbook | `AFFECTS`、`RESOLVED_BY`、`HANDLES` |
+
+横切关注点——它们不推进主线，但贯穿主线全程：
+
+| 阶段 | 回答什么 | 制品 | 交接 |
+|------|---------|------|------|
+| 治理约束 | 底线是什么？依赖了谁？ | Constraint / Metric / Dependency | `CONSTRAINED_BY`、`MEASURES`、`DEPENDS_ON` |
+| 访问控制 | 谁能访问什么？ | Role / Permission | `AUTHORIZED_BY`、`HAS_PERMISSION` |
+| 制品结构 | 每个制品的结构由谁定义？ | Type Def | — |
+
+> 主线声明在 [`artifacts.yaml`](artifacts.yaml) 的 `mainline:` 段，
+> 可视化页面里的「开发主线」视图就是它。
+> 两条约束由 `tests/registry/` 保证：**每种制品恰好属于一个阶段**，
+> **每条交接都是真实存在的关系边**——改了关系却忘了改主线，测试会报红。
+
+---
+
 ## 制品关系图
 
 > 下面的静态图是 [`docs/artifact-graph.html`](docs/artifact-graph.html) 的简化版——

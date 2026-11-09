@@ -15,6 +15,8 @@ import yaml
 
 from src.db.mapping import _TYPE_TO_PREFIX
 from src.db.types import ALL_TYPES
+from src.viz.catalog import load_catalog
+from src.viz.graph import build_payload
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 REGISTRY_PATH = PROJECT_ROOT / "artifacts.yaml"
@@ -129,3 +131,55 @@ def test_meta_counts_are_accurate(registry: dict, artifacts: list[dict]) -> None
     assert counts["not_started"] == sum(1 for a in artifacts if a["status"] == "not-started")
     assert counts["stage_1"] == sum(1 for a in artifacts if a["stage"] == STAGE_ONE)
     assert counts["stage_2"] == sum(1 for a in artifacts if a["stage"] == STAGE_TWO)
+
+
+# ---------------------------------------------------------------------------
+# Development mainline
+# ---------------------------------------------------------------------------
+
+
+def test_mainline_covers_every_artifact_exactly_once(registry: dict, artifacts: list[dict]) -> None:
+    """Every artifact type belongs to exactly one phase of the mainline."""
+    phases = registry["mainline"]
+    covered = [name for phase in phases for name in phase["artifacts"]]
+    assert len(covered) == len(set(covered)), "an artifact appears in two phases"
+    assert sorted(covered) == sorted(a["type"] for a in artifacts)
+
+
+def test_mainline_phase_ids_are_unique(registry: dict) -> None:
+    """Two phases do not share an id."""
+    ids = [phase["id"] for phase in registry["mainline"]]
+    assert len(ids) == len(set(ids))
+
+
+def test_mainline_phases_are_known_artifacts(registry: dict, artifacts: list[dict]) -> None:
+    """A phase only names artifact types that exist."""
+    known = {a["type"] for a in artifacts}
+    for phase in registry["mainline"]:
+        for name in phase["artifacts"]:
+            assert name in known, f"{phase['id']}: {name}"
+
+
+def test_mainline_handoffs_are_real_relations(registry: dict) -> None:
+    """Every hand-off names a relation edge that the definitions declare.
+
+    The mainline is a curated path through the artifact graph; if it
+    cites an edge that does not exist, the mainline is a fiction.
+    """
+    edges = build_payload(load_catalog())["edges"]
+    known = {(edge["source"], edge["target"], edge["relation"]) for edge in edges}
+    for phase in registry["mainline"]:
+        for handoff in phase.get("handoff", []):
+            key = (handoff["from"], handoff["to"], handoff["relation"])
+            assert key in known, f"{phase['id']}: {key}"
+
+
+def test_mainline_handoffs_stay_inside_the_mainline(registry: dict) -> None:
+    """A hand-off only moves between artifacts that are on the mainline."""
+    on_mainline = {
+        name for phase in registry["mainline"] for name in phase["artifacts"]
+    }
+    for phase in registry["mainline"]:
+        for handoff in phase.get("handoff", []):
+            assert handoff["from"] in on_mainline
+            assert handoff["to"] in on_mainline

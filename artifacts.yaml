@@ -69,6 +69,147 @@ domains:
     label: 元制品
     question: 制品本身的结构由谁定义？
 
+# 开发主线：从意图到运维的完整链路。
+#
+# 与 domains/ 的区别：域是"关注点"的横向切分，主线是"工作顺序"的纵向推进。
+# 同一件制品在主线里只出现一次，所以 35 种制品被串成了一条不重不漏的链。
+#
+# artifacts 列出该阶段产出的制品；
+# handoff 列出"上一阶段的东西怎么交到这一阶段"，每一条都必须是一条真实存在的关系边
+# （tests/registry/ 会核对关系表，改了定义而没改主线就会红）。
+#
+# lateral: true 的阶段是横切关注点——它们不推进主线，但贯穿主线全程。
+mainline:
+  - id: intent
+    label: 意图捕获
+    question: 人类原始意图是什么？
+    artifacts: [draft]
+
+  - id: requirement
+    label: 结构化需求
+    question: 消歧之后的需求是什么？
+    artifacts: [requirement]
+    handoff:
+      - {relation: DISAMBIGUATED_INTO, from: draft, to: requirement}
+
+  - id: story
+    label: 需求分解
+    question: 拆成哪些可交付的单元？
+    artifacts: [user-story]
+    handoff:
+      - {relation: DECOMPOSES_INTO, from: requirement, to: user-story}
+
+  - id: concept
+    label: 语义对齐
+    question: 业务概念落到哪些技术制品上？
+    artifacts: [business-concept]
+    handoff:
+      - {relation: ACTED_BY, from: requirement, to: business-concept}
+
+  - id: contract
+    label: 契约定义
+    question: 数据长什么样？模块间怎么通信？
+    artifacts: [interface, entity, error, event]
+    handoff:
+      - {relation: IMPLEMENTED_BY, from: user-story, to: interface}
+      - {relation: AS_ACTION, from: business-concept, to: interface}
+      - {relation: AS_OBJECT, from: business-concept, to: entity}
+      - {relation: AS_ERROR, from: business-concept, to: error}
+      - {relation: AS_EVENT, from: business-concept, to: event}
+
+  - id: behavior
+    label: 行为建模
+    question: 状态怎么变？多个接口怎么协调？
+    artifacts: [process, orchestration, reaction, schedule]
+    handoff:
+      - {relation: IMPLEMENTED_BY, from: user-story, to: orchestration}
+      - {relation: IMPLEMENTED_BY, from: user-story, to: reaction}
+      - {relation: IMPLEMENTED_BY, from: user-story, to: schedule}
+      - {relation: COMPOSES, from: orchestration, to: interface}
+      - {relation: TRANSITIONS, from: process, to: entity}
+      - {relation: LISTENS_TO, from: reaction, to: event}
+
+  - id: organization
+    label: 组织归属
+    question: 这些制品归哪个模块管？
+    artifacts: [module]
+    handoff:
+      - {relation: EXPOSES, from: module, to: interface}
+      - {relation: GOVERNED_BY, from: module, to: process}
+      - {relation: PUBLISHES, from: module, to: event}
+
+  - id: code
+    label: 代码落地
+    question: 逻辑制品对应哪些源码？
+    artifacts: [code-ref, repository]
+    handoff:
+      - {relation: MAPPED_TO, from: module, to: code-ref}
+      - {relation: LOCATED_IN, from: code-ref, to: repository}
+
+  - id: verification
+    label: 验证闭环
+    question: 怎么证明这个制品是对的？
+    artifacts:
+      - acceptance-test
+      - scenario-test
+      - contract-test
+      - transition-test
+      - integration-test
+      - benchmark
+    handoff:
+      - {relation: TESTED_BY, from: requirement, to: acceptance-test}
+      - {relation: TESTED_BY, from: user-story, to: scenario-test}
+      - {relation: TESTED_BY, from: interface, to: contract-test}
+      - {relation: TESTED_BY, from: process, to: transition-test}
+      - {relation: TESTED_BY, from: module, to: integration-test}
+      - {relation: TESTED_BY, from: constraint, to: benchmark}
+
+  - id: delivery
+    label: 交付上线
+    question: 部署到哪？配置怎么管？
+    artifacts: [pipeline, environment, config-set, configuration, secret]
+    handoff:
+      - {relation: BUILDS, from: pipeline, to: module}
+      - {relation: DEPLOYS_TO, from: pipeline, to: environment}
+      - {relation: USES_CONFIG, from: environment, to: config-set}
+      - {relation: OVERRIDES, from: config-set, to: configuration}
+      - {relation: REQUIRES, from: environment, to: secret}
+
+  - id: operation
+    label: 运维反馈
+    question: 出了什么事？怎么恢复？
+    artifacts: [incident, runbook, playbook]
+    handoff:
+      - {relation: AFFECTS, from: incident, to: entity}
+      - {relation: RESOLVED_BY, from: incident, to: runbook}
+      - {relation: HANDLES, from: playbook, to: incident}
+
+  - id: governance
+    label: 治理约束
+    question: 底线是什么？依赖了谁？
+    lateral: true
+    artifacts: [constraint, metric, dependency]
+    handoff:
+      - {relation: CONSTRAINED_BY, from: module, to: constraint}
+      - {relation: MEASURES, from: constraint, to: metric}
+      - {relation: DEPENDS_ON, from: module, to: dependency}
+
+  - id: access
+    label: 访问控制
+    question: 谁能访问什么？
+    lateral: true
+    artifacts: [role, permission]
+    handoff:
+      - {relation: AUTHORIZED_BY, from: interface, to: role}
+      - {relation: HAS_PERMISSION, from: role, to: permission}
+      - {relation: AUTHORIZED_BY, from: secret, to: permission}
+
+  - id: meta
+    label: 制品结构
+    question: 每个制品的结构由谁定义？
+    lateral: true
+    artifacts: [type-def]
+
 artifacts:
   # ── 需求域 ────────────────────────────────────────────────────────────
   - type: draft
