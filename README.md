@@ -58,13 +58,17 @@
 
 ### 制品图谱（交互网页）
 
-[`docs/artifact-graph.html`](docs/artifact-graph.html) 把整个制品体系渲染成一张可交互的关系图：
+[`docs/artifact-graph.html`](docs/artifact-graph.html) 把整个制品体系渲染成一张可交互的关系图，
+提供三种视图：
 
-- **35 种制品类型**，按域着色，标注 ID 前缀、实现状态、Stage
-- **90 条关系边**，来自每份制品定义的 `## 关联` 表（不是另维护一份清单）
-- 点击节点看**完整字段表、枚举、语义位置、出入关系**
-- 按域 / 关系类型 / 实现状态筛选，搜索、缩放、拖拽，三种布局
-- 若传入制品数据库，还会多出一张**实例图**（含悬空引用标记）
+- **体系图** —— 35 种制品类型的全景网络：按域着色，标注 ID 前缀、实现状态、Stage；
+  90 条关系边来自每份制品定义的 `## 关联` 表（不是另维护一份清单）
+- **开发主线** —— 从意图到运维的**纵向链路**：11 个阶段把 35 种制品串成一条不重不漏的链，
+  39 次交接全部是真实存在的关系边；横切关注点（治理 / 访问控制 / 制品结构）单独标出
+- **实例图** —— 传入制品数据库后，真实制品与它们之间的引用（含悬空引用标记）
+
+点击节点看**完整字段表、枚举、语义位置、出入关系**；点击主线阶段看**该阶段的制品与交接**。
+按域 / 关系类型 / 实现状态筛选，搜索、缩放、拖拽。
 
 > 网页由 `src/viz/` 从仓库自身的数据生成，不手写、不依赖 CDN、不联网。
 > 改了制品定义后重新生成即可：
@@ -73,13 +77,36 @@
 uv run python -m src.viz.build
 ```
 
+### 开发主线
+
+主线是"工作顺序"，域是"关注点"——两者是正交的。主线声明在 `artifacts.yaml` 的 `mainline:` 段：
+
+```yaml
+mainline:
+  - id: intent
+    label: 意图捕获
+    question: 人类原始意图是什么？
+    artifacts: [draft]
+  - id: requirement
+    label: 结构化需求
+    question: 消歧之后的需求是什么？
+    artifacts: [requirement]
+    handoff:
+      - {relation: DISAMBIGUATED_INTO, from: draft, to: requirement}
+```
+
+两条约束由 `tests/registry/` 保证：
+
+- 每种制品**恰好**出现在一个阶段里——主线不重不漏地串起全部 35 种制品
+- 每条 `handoff` 都必须是制品定义里**真实存在**的关系边——主线不是编出来的
+
 ### 延伸阅读
 
 | 文档 | 内容 |
 |------|------|
-| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：35 种制品与 90 条关系的交互式关系图 |
+| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：体系图 / 开发主线 / 实例图 |
 | [`STATUS.md`](STATUS.md) | **项目现状**：当前进度、制品覆盖度、遗留问题与风险 |
-| [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**：35 个制品的定义 / 实现 / Stage / 依赖 |
+| [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**：35 个制品的定义 / 实现 / Stage / 依赖 / 主线阶段 |
 | [`TODO.md`](TODO.md) | Stage 1 / Stage 2 的目标与验收标准 |
 | [`concepts.md`](concepts.md) | 制品体系全景：域模型、关系图、ID 规范 |
 | [`AGENTS.md`](AGENTS.md) | 环境准备与工具用法 |

@@ -22,7 +22,7 @@ CrispSpec 试图让软件由**结构化制品（Structured Artifacts）**定义�
 | 检查项 | 命令 | 结果 |
 |--------|------|------|
 | 静态检查 | `uv run ruff check --ignore-noqa` | ✅ All checks passed |
-| 单元测试 | `uv run pytest` | ✅ 202 passed |
+| 单元测试 | `uv run pytest` | ✅ 211 passed |
 | 链接检查 | `uv run src/checker/main.py` | ✅ 44 文件 / 0 错误 |
 | 依赖锁定 | `uv lock --check` | ✅ up-to-date |
 
@@ -294,6 +294,7 @@ uv run python -m src.viz.build                    # 重新生成制品图谱网�
 | **BC 映射校验制品类型，不校验 ID 存在性** | 目标制品大多还没实现 | 待契约域落地后补 |
 | **不动 `src/db/` 的存储契约** | 存储层是所有制品的地基，改动波及面大 | — |
 | **Role / Permission 从治理域拆到访问控制域** | "谁能访问什么"和"必须做到什么、性能底线在哪"是两件事，混在一个域里既难读也不好扩展 | 全部制品定义、`artifacts.yaml`、图谱网页 |
+| **开发主线声明在 `artifacts.yaml` 的 `mainline:` 段** | 域是关注点的横向切分，主线是工作顺序的纵向推进，两者正交；主线必须可校验，否则会变成一份好看但失真的文档 | `artifacts.yaml`、图谱网页、`tests/registry/` |
 
 ---
 
@@ -302,8 +303,8 @@ uv run python -m src.viz.build                    # 重新生成制品图谱网�
 | 文件 | 内容 |
 |------|------|
 | [`README.md`](README.md) | 项目宏大目标与体系总览 |
-| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：35 种制品 + 90 条关系的交互网页（生成物） |
-| [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**（机器可读，含 Stage / 优先级 / 依赖） |
+| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：体系图 / 开发主线 / 实例图（生成物） |
+| [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**（机器可读，含 Stage / 优先级 / 依赖 / 主线阶段） |
 | [`concepts.md`](concepts.md) | 制品体系全景：域模型、制品总览、关系图、ID 规范 |
 | [`TODO.md`](TODO.md) | Stage 1 / Stage 2 目标与验收标准 |
 | [`AGENTS.md`](AGENTS.md) | 环境准备与工具用法 |
