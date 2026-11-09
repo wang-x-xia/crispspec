@@ -30,6 +30,9 @@ allowed-confusables = ["（", "）"]
 "tests/**" = ["S101"]
 # Dynamic table name cause S608 issue, use a separated file.
 "src/db/sql.py" = ["S608"]
+# The visualiser reads the artifact tables; the table name is built from
+# the constant artifact type list, never from user input.
+"src/viz/instances.py" = ["S608"]
 # `secret` is an artifact type name (SEC-\d+), not a hardcoded credential.
 "src/db/types.py" = ["S105"]
 
