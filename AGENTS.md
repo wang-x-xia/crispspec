@@ -39,7 +39,7 @@ uv run python -m src.viz.build --db crispspec.db        # 额外包含制品实�
 | `artifacts.yaml` | 35 种制品类型、所属域、ID 前缀、实现状态、Stage、**开发主线阶段** |
 | `src/<domain>/*.md` 的 `## 关联` 表 | 关系边（边类型、出入方向） |
 | `src/<domain>/*.md` 的 `## 字段定义` 表 | 字段、约束、枚举、语义位置 |
-| `src/requirement/common.py` | Business Concept 的七个语义映射 |
+| `src/requirement/common.py` | Business Concept 的映射目标类型 |
 | SQLite 数据库（可选） | 制品实例与实例之间的引用 |
 
 ### 开发主线

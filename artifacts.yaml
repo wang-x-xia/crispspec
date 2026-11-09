@@ -112,10 +112,10 @@ mainline:
     prepares: [error]
     handoff:
       - {relation: IMPLEMENTED_BY, from: user-story, to: interface}
-      - {relation: AS_ACTION, from: business-concept, to: interface}
-      - {relation: AS_OBJECT, from: business-concept, to: entity}
-      - {relation: AS_ERROR, from: business-concept, to: error}
-      - {relation: AS_EVENT, from: business-concept, to: event}
+      - {relation: AS, from: business-concept, to: interface}
+      - {relation: AS, from: business-concept, to: entity}
+      - {relation: AS, from: business-concept, to: error}
+      - {relation: AS, from: business-concept, to: event}
 
   - id: behavior
     label: 行为建模
@@ -134,9 +134,9 @@ mainline:
     question: 这些制品归哪个模块管？
     produces: [module]
     handoff:
-      - {relation: EXPOSES, from: module, to: interface}
-      - {relation: GOVERNED_BY, from: module, to: process}
-      - {relation: PUBLISHES, from: module, to: event}
+      - {relation: CONTAINS, from: module, to: interface}
+      - {relation: CONTAINS, from: module, to: process}
+      - {relation: CONTAINS, from: module, to: event}
 
   - id: code
     label: 代码落地
@@ -145,7 +145,7 @@ mainline:
     # 仓库先建起来，之后才往里面映射
     prepares: [repository]
     handoff:
-      - {relation: MAPPED_TO, from: module, to: code-ref}
+      - {relation: CONTAINS, from: module, to: code-ref}
       - {relation: LOCATED_IN, from: code-ref, to: repository}
 
   - id: verification
@@ -267,8 +267,8 @@ artifacts:
     priority: P0
     depends_on: []
     notes: >
-      七个语义位置的映射。artifact_id 目前不校验存在性（目标制品多数未实现），
-      映射目标类型受 ALLOWED_ARTIFACT_TYPES 约束。领域仓储式接口。
+      as 映射：它被映射为哪些内部制品，可多个。artifact_id 目前不校验存在性
+      （目标制品多数未实现），映射目标类型受 ALLOWED_ARTIFACT_TYPES 约束。领域仓储式接口。
 
   # ── 契约域 ────────────────────────────────────────────────────────────
   - type: entity
@@ -282,7 +282,7 @@ artifacts:
     stage: 1
     priority: P0
     depends_on: [module]
-    notes: BC 的 as_object / as_attribute 映射目标；owner_module_id 必填
+    notes: BC 的 as 映射目标之一；owner_module_id 必填
 
   - type: interface
     name: Interface
@@ -295,7 +295,7 @@ artifacts:
     stage: 1
     priority: P0
     depends_on: [module, entity, error]
-    notes: BC 的 as_action 映射目标；CLI 的每个子命令对应一个 Interface
+    notes: BC 的 as 映射目标之一；CLI 的每个子命令对应一个 Interface
 
   - type: error
     name: Error
@@ -308,7 +308,7 @@ artifacts:
     stage: 1
     priority: P0
     depends_on: []
-    notes: BC 的 as_error 映射目标；统一错误码目录
+    notes: BC 的 as 映射目标之一；统一错误码目录
 
   - type: event
     name: Event
@@ -321,7 +321,7 @@ artifacts:
     stage: 2
     priority: P1
     depends_on: []
-    notes: BC 的 as_event 映射目标；异步通信契约
+    notes: BC 的 as 映射目标之一；异步通信契约
 
   # ── 行为域 ────────────────────────────────────────────────────────────
   - type: process
@@ -471,7 +471,7 @@ artifacts:
     stage: 2
     priority: P1
     depends_on: []
-    notes: BC 的 as_actor 映射目标之一（另一个是 Module）
+    notes: BC 的 as 映射目标之一（另一个是 Module）
 
   - type: permission
     name: Permission

@@ -17,8 +17,13 @@ from .catalog import PROJECT_ROOT, Catalog
 #: Heading that introduces the field table of a definition document.
 FIELD_HEADING = "字段定义"
 
-#: Heading of the table that maps the seven semantic positions.
-MAPPING_HEADING = "七个核心映射位置"
+#: Heading of the section that documents the ``as`` mapping.
+MAPPING_HEADING = "映射关系"
+
+#: One entry of the ``as`` list in the definition document.
+_AS_ENTRY = re.compile(
+    r"-\s*\{\s*artifact_type:\s*([A-Z_]+)\s*,\s*artifact_id:\s*\"([^\"]+)\"\s*\}",
+)
 
 _FIELD_NAME = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
 
@@ -27,9 +32,6 @@ FIELD_COLUMNS = 4
 
 #: Number of columns of an enum table.
 ENUM_COLUMNS = 2
-
-#: Number of columns of the semantic position table.
-MAPPING_COLUMNS = 3
 
 #: ``key: type`` line of an inline YAML schema block.
 _SCHEMA_LINE = re.compile(r"^([a-z][a-z0-9_]*):\s*(\S*)")
@@ -65,11 +67,10 @@ class EnumInfo:
 
 @dataclass(frozen=True)
 class MappingInfo:
-    """One semantic position of the Business Concept artifact."""
+    """One entry of a business concept's ``as`` mapping."""
 
-    position: str
-    targets: str
-    source_field: str
+    artifact_type: str
+    artifact_id: str
 
 
 @dataclass(frozen=True)
@@ -165,21 +166,13 @@ def _parse_enum(heading: str, rows: list[list[str]]) -> EnumInfo | None:
     return EnumInfo(name=heading, values=tuple(values))
 
 
-def _parse_mappings(rows: list[list[str]]) -> tuple[MappingInfo, ...]:
-    """Parse the seven semantic positions of the Business Concept."""
+def _parse_mappings(text: str) -> tuple[MappingInfo, ...]:
+    """Parse the ``as`` mapping of the Business Concept."""
+    section = _section(text, MAPPING_HEADING)
     mappings: list[MappingInfo] = []
-    for row in rows[1:]:
-        if len(row) < MAPPING_COLUMNS or _is_separator(row):
-            continue
-        position = _clean(row[0])
-        if not position.startswith("as_"):
-            continue
+    for artifact_type, artifact_id in _AS_ENTRY.findall(section):
         mappings.append(
-            MappingInfo(
-                position=position,
-                targets=_clean(row[1]),
-                source_field=_clean(row[2]),
-            ),
+            MappingInfo(artifact_type=artifact_type, artifact_id=artifact_id),
         )
     return tuple(mappings)
 
@@ -204,6 +197,15 @@ def _section(text: str, keyword: str) -> str:
     return ""
 
 
+def _next_is_list(lines: list[str], index: int) -> bool:
+    """Tell whether the key at *index* is followed by a list of values."""
+    for line in lines[index + 1 :]:
+        if not line.strip():
+            continue
+        return line[0].isspace() and line.strip().startswith("-")
+    return False
+
+
 def _schema_block_fields(text: str) -> tuple[FieldInfo, ...]:
     """Parse the fields of an inline YAML schema block.
 
@@ -212,8 +214,10 @@ def _schema_block_fields(text: str) -> tuple[FieldInfo, ...]:
     the block are fields -- nested keys belong to a sub-structure.
     """
     fields: list[FieldInfo] = []
+    seen: set[str] = set()
     in_block = False
-    for line in text.splitlines():
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
         stripped = line.strip()
         if stripped.startswith("```"):
             in_block = not in_block
@@ -223,9 +227,15 @@ def _schema_block_fields(text: str) -> tuple[FieldInfo, ...]:
         match = _SCHEMA_LINE.match(stripped)
         if match is None:
             continue
+        name = match.group(1)
+        if name in seen:
+            continue
         type_name = (match.group(2) or "").strip('"\'')
+        if not type_name and _next_is_list(lines, index):
+            type_name = "list"
+        seen.add(name)
         fields.append(
-            FieldInfo(name=match.group(1), type=type_name, constraint="", description=""),
+            FieldInfo(name=name, type=type_name, constraint="", description=""),
         )
     return tuple(fields)
 
@@ -263,9 +273,8 @@ def parse_type_details(catalog: Catalog) -> dict[str, TypeDetails]:
             fields = _schema_block_fields(text)
 
         mappings: tuple[MappingInfo, ...] = ()
-        for _heading, rows in _tables(_section(text, MAPPING_HEADING)):
-            mappings = _parse_mappings(rows)
-            break
+        if info.type == "business-concept":
+            mappings = _parse_mappings(text)
 
         details[info.type] = TypeDetails(
             fields=fields,

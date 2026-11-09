@@ -57,4 +57,4 @@ module_id: "MOD-2"
 |------|--------|---------|
 | 出 → | `LOCATED_IN` | [Repository](repository.md) |
 | 出 → | `IMPLEMENTS` | 契约域 / 行为域制品 |
-| ← 入 | `MAPPED_TO` | [Module](../module/module.md) |
+| ← 入 | `CONTAINS` | [Module](../module/module.md) |

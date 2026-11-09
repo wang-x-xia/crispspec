@@ -1,7 +1,10 @@
 """Shared enums and exceptions for artifact managers.
 
-The semantic positions and artifact types defined here are reused by every
-artifact that aligns business meaning with technical artifacts.
+A business concept is mapped onto the technical artifacts that realise
+it.  The mapping is a list, not a set of fixed slots: one concept may be
+realised by an entity, an interface and a role at the same time, and it
+may be realised by a role that was defined long before the concept
+existed.
 """
 
 from __future__ import annotations
@@ -14,23 +17,9 @@ __all__ = [
     "CrispSpecError",
     "InvalidArtifactTypeError",
     "InvalidBusinessConceptError",
-    "InvalidMappingTypeError",
     "MappingAlreadyExistsError",
-    "MappingType",
     "NotFoundError",
 ]
-
-
-class MappingType(Enum):
-    """The seven semantic positions a business concept can occupy."""
-
-    AS_ACTOR = "as_actor"
-    AS_OBJECT = "as_object"
-    AS_ACTION = "as_action"
-    AS_EVENT = "as_event"
-    AS_ATTRIBUTE = "as_attribute"
-    AS_RESULT = "as_result"
-    AS_ERROR = "as_error"
 
 
 class ArtifactType(Enum):
@@ -51,26 +40,24 @@ class ArtifactType(Enum):
     ERROR = "ERROR"
 
 
-#: The artifact types each semantic position accepts.
-ALLOWED_ARTIFACT_TYPES: dict[MappingType, frozenset[ArtifactType]] = {
-    MappingType.AS_ACTOR: frozenset({ArtifactType.ROLE, ArtifactType.MODULE}),
-    MappingType.AS_OBJECT: frozenset({ArtifactType.ENTITY}),
-    MappingType.AS_ACTION: frozenset({
+#: The artifact types a business concept may be mapped to.
+ALLOWED_ARTIFACT_TYPES: frozenset[ArtifactType] = frozenset(
+    {
+        ArtifactType.ROLE,
+        ArtifactType.MODULE,
+        ArtifactType.ENTITY,
         ArtifactType.INTERFACE,
         ArtifactType.ORCHESTRATION,
         ArtifactType.REACTION,
         ArtifactType.SCHEDULE,
-    }),
-    MappingType.AS_EVENT: frozenset({ArtifactType.EVENT}),
-    MappingType.AS_ATTRIBUTE: frozenset({ArtifactType.ENTITY_FIELD}),
-    MappingType.AS_RESULT: frozenset({
+        ArtifactType.EVENT,
+        ArtifactType.ERROR,
+        ArtifactType.ENTITY_FIELD,
         ArtifactType.STATE_CHANGE,
         ArtifactType.INTERFACE_RESPONSE,
-        ArtifactType.EVENT,
         ArtifactType.SIDE_EFFECT,
-    }),
-    MappingType.AS_ERROR: frozenset({ArtifactType.ERROR}),
-}
+    },
+)
 
 
 class CrispSpecError(Exception):
@@ -82,15 +69,11 @@ class NotFoundError(CrispSpecError):
 
 
 class MappingAlreadyExistsError(CrispSpecError):
-    """Raised when a semantic position is mapped more than once."""
-
-
-class InvalidMappingTypeError(CrispSpecError):
-    """Raised when the mapping type is not one of the seven semantic positions."""
+    """Raised when a business concept already maps to the same artifact."""
 
 
 class InvalidArtifactTypeError(CrispSpecError):
-    """Raised when the artifact type is not allowed for the given mapping type."""
+    """Raised when the artifact type is not allowed for a mapping."""
 
 
 class InvalidBusinessConceptError(CrispSpecError):

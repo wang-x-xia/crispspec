@@ -94,8 +94,8 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 | 组织 | **Module** | ✅ | ✅ | — |
 | 元制品 | **Type Def（Schema）** | ✅ | ✅ | — |
 
-> 契约域是当前的最大瓶颈：Business Concept 的七个语义位置里，`as_object` / `as_attribute` / `as_error`
-> 直接指向 Entity / Error，`as_action` 指向 Interface / Orchestration / Reaction / Schedule。
+> 契约域是当前的最大瓶颈：Business Concept 的 `as` 映射里，Entity / Error /
+> Interface / Orchestration / Reaction / Schedule 都是候选目标。
 > **这些制品不落地，BC 的映射就没有真实 ID 可挂。**
 
 **Stage 归属**（依据 [`TODO.md`](TODO.md) 的验收标准倒推）：
@@ -141,7 +141,7 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 
 ### 5.5 Business Concept 实现（`Implement BusinessConcept artifact`）
 
-- `src/requirement/common.py` — `MappingType`（七个语义位置）、`ArtifactType`（映射目标类型）、
+- `src/requirement/common.py` — `ArtifactType`（映射目标类型）、
   `ALLOWED_ARTIFACT_TYPES` 约束表、异常体系
 - `src/requirement/business_concept.py` — `Mapping` / `BusinessConcept` 模型 + `IBusinessConceptStorage`
 - `src/requirement/business_concept_storage.py` — SQLite 实现（`get_by_id` / `get_by_name` /
@@ -223,7 +223,7 @@ Stage 1 要交付的正是命令行工具本身。
 
 **6.9 `concepts.md` 的 mermaid 关系图没画 BC 的映射边。**
 图里 `BC["Business Concept"]` 是个孤立节点，只有 `DRAFT -.-> USES .-> BC` 两条虚线。
-BC 的七条语义映射（`as_actor → ROLE/MODULE`、`as_object → ENTITY` 等）在图上完全没体现。
+BC 的映射（`as → ROLE/MODULE/ENTITY/INTERFACE/...`）在图上完全没体现。
 **→ 已解决**：`docs/artifact-graph.html` 把 BC 的七条语义映射画成了真实的边
 （数据源是 `src/requirement/common.py` 的 `ALLOWED_ARTIFACT_TYPES`）。
 

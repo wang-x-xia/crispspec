@@ -49,5 +49,5 @@ interval: "30s"
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `OWNS` | [Module](../module/module.md) |
+| ← 入 | `CONTAINS` | [Module](../module/module.md) |
 | 出 → | `TARGETS` | [Entity](../contract/entity.md) |

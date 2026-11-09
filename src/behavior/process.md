@@ -139,7 +139,7 @@ forbidden_transitions:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `GOVERNED_BY` | [Module](../module/module.md) |
+| ← 入 | `CONTAINS` | [Module](../module/module.md) |
 | 出 → | `TRANSITIONS` | [Entity](../contract/entity.md) |
 | 出 → | `TRIGGERS` | [Event](../contract/event.md) |
 | 出 → | `TESTED_BY` | [Transition Test](../test/transition-test.md) |

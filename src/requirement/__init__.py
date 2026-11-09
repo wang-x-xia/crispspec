@@ -10,9 +10,7 @@ from .common import (
     CrispSpecError,
     InvalidArtifactTypeError,
     InvalidBusinessConceptError,
-    InvalidMappingTypeError,
     MappingAlreadyExistsError,
-    MappingType,
     NotFoundError,
 )
 
@@ -25,9 +23,7 @@ __all__ = [
     "IBusinessConceptStorage",
     "InvalidArtifactTypeError",
     "InvalidBusinessConceptError",
-    "InvalidMappingTypeError",
     "Mapping",
     "MappingAlreadyExistsError",
-    "MappingType",
     "NotFoundError",
 ]

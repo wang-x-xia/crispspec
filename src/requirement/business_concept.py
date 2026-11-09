@@ -2,7 +2,9 @@
 
 A business concept is the bridge between product language and technical
 artifacts: it names a concept the business talks about and records which
-technical artifact realises it in each semantic position.
+technical artifacts realise it.  A concept may be realised by several
+artifacts at once -- an entity, an interface and a role, say -- and the
+mapping says nothing about *when* those artifacts came into being.
 """
 
 from __future__ import annotations
@@ -12,7 +14,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from src.requirement.common import ArtifactType, MappingType
+    from src.requirement.common import ArtifactType
 
 __all__ = [
     "BusinessConcept",
@@ -23,7 +25,7 @@ __all__ = [
 
 @dataclass(frozen=True)
 class Mapping:
-    """A mapping from one semantic position to a technical artifact."""
+    """A business concept mapped onto one technical artifact."""
 
     artifact_type: ArtifactType
     artifact_id: str
@@ -41,7 +43,7 @@ class BusinessConcept:
     name: str = ""
     description: str = ""
     defined: bool = False
-    mappings: dict[MappingType, Mapping] = field(default_factory=dict)
+    mappings: list[Mapping] = field(default_factory=list)
 
 
 class IBusinessConceptStorage(ABC):
@@ -71,11 +73,10 @@ class IBusinessConceptStorage(ABC):
     def add_mapping(
         self,
         record_id: str,
-        mapping_type: str,
         artifact_type: str,
         artifact_id: str,
     ) -> BusinessConcept:
-        """Map a semantic position to a technical artifact."""
+        """Map the concept onto another technical artifact."""
         raise NotImplementedError
 
     @abstractmethod

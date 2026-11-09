@@ -40,17 +40,23 @@ FIELD_RELATIONS: dict[str, str] = {
     "actor_role_id": "ACTED_BY",
     "constraint_id": "CONSTRAINED_BY",
     "constraint_ids": "CONSTRAINED_BY",
-    "interface_ids": "EXPOSES",
+    "interface_ids": "CONTAINS",
     "metric_id": "MEASURES",
-    "module_id": "DEPENDS_ON",
-    "owner_module_id": "OWNED_BY",
+    "module_id": "CONTAINS",
+    "owner_module_id": "CONTAINS",
     "parent_id": "PARENT_OF",
     "permission_ids": "HAS_PERMISSION",
-    "process_ids": "GOVERNED_BY",
+    "process_ids": "CONTAINS",
     "projects_from_id": "PROJECTS_FROM",
     "repository_id": "LOCATED_IN",
     "role_ids": "HAS_PERMISSION",
 }
+
+#: Fields that point *at* the owning module.
+#:
+#: The type-level graph draws containment from the module to the
+#: artifact, so these edges are reversed to match.
+_REVERSED_FIELDS = frozenset({"module_id", "owner_module_id"})
 
 
 def _relation_for(path: tuple[str, ...]) -> str:
@@ -173,13 +179,17 @@ def _reference_edges(
                 info = type_map.get(target_type)
                 records[target_id] = {"type": target_type, "data": {}}
                 nodes.append(_node(target_id, target_type, {}, info, missing=True))
+            field = ".".join(part for part in path if not part.isdigit())
+            source_id, destination_id = record_id, target_id
+            if path and path[-1] in _REVERSED_FIELDS:
+                source_id, destination_id = target_id, record_id
             edges.append(
                 {
-                    "source": record_id,
-                    "target": target_id,
+                    "source": source_id,
+                    "target": destination_id,
                     "relation": _relation_for(path),
                     "bidirectional": False,
-                    "field": ".".join(part for part in path if not part.isdigit()),
+                    "field": field,
                 },
             )
     return edges

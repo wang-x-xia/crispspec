@@ -214,6 +214,9 @@ pre.raw {
 .edge.dim { opacity: .07; }
 .edge.hot { opacity: 1; stroke: var(--accent); stroke-width: 2.2px; }
 .edge.both { stroke-dasharray: 6 4; }
+/* 归属（包含）不是流向：细虚线，不带箭头 */
+.edge.contain { stroke-dasharray: 3 4; stroke-width: 1.1px; opacity: .4; }
+.edge.contain.hot { stroke: var(--accent); stroke-width: 2.2px; opacity: 1; }
 .edge-label {
   font: 9.5px ui-monospace, Menlo, monospace; fill: var(--muted);
   paint-order: stroke; stroke: var(--bg); stroke-width: 3px; stroke-linejoin: round;
@@ -261,6 +264,15 @@ pre.raw {
 .node { cursor: pointer; }
 .node .halo { fill: none; stroke: transparent; stroke-width: 6; }
 .node .body { stroke: var(--bg); stroke-width: 2; transition: stroke .15s; }
+/* Module 是容器：画成框，不画成点 */
+.node.container .body {
+  fill: color-mix(in srgb, var(--domain) 22%, transparent);
+  stroke: var(--domain); stroke-width: 2.5;
+}
+.node.container .halo { stroke: color-mix(in srgb, var(--domain) 45%, transparent); }
+.node.container .title { font-weight: 700; fill: var(--text); }
+.node.container .prefix { fill: color-mix(in srgb, var(--domain) 75%, var(--muted)); }
+.node.container .kind { font: 10px "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--muted); text-anchor: middle; }
 .node .title { font: 600 12px "Inter", "PingFang SC", "Microsoft YaHei", sans-serif; fill: var(--text); text-anchor: middle; pointer-events: none; }
 .node .prefix { font: 700 9px ui-monospace, Menlo, monospace; text-anchor: middle; pointer-events: none; }
 .node.dim { opacity: .16; }
@@ -534,22 +546,22 @@ pre.raw {
           "target": "interface"
         },
         {
-          "relation": "AS_ACTION",
+          "relation": "AS",
           "source": "business-concept",
           "target": "interface"
         },
         {
-          "relation": "AS_OBJECT",
+          "relation": "AS",
           "source": "business-concept",
           "target": "entity"
         },
         {
-          "relation": "AS_ERROR",
+          "relation": "AS",
           "source": "business-concept",
           "target": "error"
         },
         {
-          "relation": "AS_EVENT",
+          "relation": "AS",
           "source": "business-concept",
           "target": "event"
         }
@@ -620,17 +632,17 @@ pre.raw {
       "lateral": false,
       "handoff": [
         {
-          "relation": "EXPOSES",
+          "relation": "CONTAINS",
           "source": "module",
           "target": "interface"
         },
         {
-          "relation": "GOVERNED_BY",
+          "relation": "CONTAINS",
           "source": "module",
           "target": "process"
         },
         {
-          "relation": "PUBLISHES",
+          "relation": "CONTAINS",
           "source": "module",
           "target": "event"
         }
@@ -653,7 +665,7 @@ pre.raw {
       "lateral": false,
       "handoff": [
         {
-          "relation": "MAPPED_TO",
+          "relation": "CONTAINS",
           "source": "module",
           "target": "code-ref"
         },
@@ -1183,8 +1195,14 @@ pre.raw {
       "stage": 1,
       "priority": "P0",
       "dependsOn": [],
-      "notes": "七个语义位置的映射。artifact_id 目前不校验存在性（目标制品多数未实现）， 映射目标类型受 ALLOWED_ARTIFACT_TYPES 约束。领域仓储式接口。",
+      "notes": "as 映射：它被映射为哪些内部制品，可多个。artifact_id 目前不校验存在性 （目标制品多数未实现），映射目标类型受 ALLOWED_ARTIFACT_TYPES 约束。领域仓储式接口。",
       "fields": [
+        {
+          "name": "as",
+          "type": "list",
+          "constraint": "",
+          "description": ""
+        },
         {
           "name": "id",
           "type": "BC-\\d+",
@@ -1208,86 +1226,21 @@ pre.raw {
           "type": "boolean",
           "constraint": "",
           "description": ""
-        },
-        {
-          "name": "as_actor",
-          "type": "",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "as_object",
-          "type": "",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "as_action",
-          "type": "",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "as_event",
-          "type": "",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "as_attribute",
-          "type": "",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "as_result",
-          "type": "",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "as_error",
-          "type": "",
-          "constraint": "",
-          "description": ""
         }
       ],
       "enums": [],
       "mappings": [
         {
-          "position": "as_actor",
-          "targets": "Rol/ Module",
-          "sourceField": "actor_role_id"
+          "artifactType": "ENTITY",
+          "artifactId": "ENT-3"
         },
         {
-          "position": "as_object",
-          "targets": "Entity",
-          "sourceField": "preconditions/ postconditions (field 路径)"
+          "artifactType": "INTERFACE",
+          "artifactId": "API-20"
         },
         {
-          "position": "as_action",
-          "targets": "Interfac/ Orchestratio/ Reactio/ Schedule",
-          "sourceField": "traces.modules (间接)"
-        },
-        {
-          "position": "as_event",
-          "targets": "Event",
-          "sourceField": "exceptions.trigger_event_id/ side_effects.trigger_event_id"
-        },
-        {
-          "position": "as_attribute",
-          "targets": "Entity.field",
-          "sourceField": "preconditions/ postconditions (field 路径)"
-        },
-        {
-          "position": "as_result",
-          "targets": "StateChang/ Interface Respons/ Even/ SideEffect",
-          "sourceField": "postconditions/ side_effects"
-        },
-        {
-          "position": "as_error",
-          "targets": "Error",
-          "sourceField": "Interface.error_codes"
+          "artifactType": "ROLE",
+          "artifactId": "ROLE-1"
         }
       ]
     },
@@ -1306,7 +1259,7 @@ pre.raw {
       "dependsOn": [
         "module"
       ],
-      "notes": "BC 的 as_object / as_attribute 映射目标；owner_module_id 必填",
+      "notes": "BC 的 as 映射目标之一；owner_module_id 必填",
       "fields": [
         {
           "name": "id",
@@ -1405,7 +1358,7 @@ pre.raw {
         "entity",
         "error"
       ],
-      "notes": "BC 的 as_action 映射目标；CLI 的每个子命令对应一个 Interface",
+      "notes": "BC 的 as 映射目标之一；CLI 的每个子命令对应一个 Interface",
       "fields": [
         {
           "name": "id",
@@ -1514,7 +1467,7 @@ pre.raw {
       "stage": 1,
       "priority": "P0",
       "dependsOn": [],
-      "notes": "BC 的 as_error 映射目标；统一错误码目录",
+      "notes": "BC 的 as 映射目标之一；统一错误码目录",
       "fields": [
         {
           "name": "id",
@@ -1605,7 +1558,7 @@ pre.raw {
       "stage": 2,
       "priority": "P1",
       "dependsOn": [],
-      "notes": "BC 的 as_event 映射目标；异步通信契约",
+      "notes": "BC 的 as 映射目标之一；异步通信契约",
       "fields": [
         {
           "name": "id",
@@ -2253,13 +2206,13 @@ pre.raw {
           "name": "interface_ids",
           "type": "list<ref>",
           "constraint": "API-\\d+",
-          "description": "暴露的接口"
+          "description": "本模块的接口"
         },
         {
           "name": "process_ids",
           "type": "list<ref>",
           "constraint": "PROC-\\d+",
-          "description": "关联的流程"
+          "description": "本模块的流程"
         },
         {
           "name": "constraint_ids",
@@ -2779,7 +2732,7 @@ pre.raw {
       "stage": 2,
       "priority": "P1",
       "dependsOn": [],
-      "notes": "BC 的 as_actor 映射目标之一（另一个是 Module）",
+      "notes": "BC 的 as 映射目标之一（另一个是 Module）",
       "fields": [
         {
           "name": "id",
@@ -4466,26 +4419,8 @@ pre.raw {
           "description": ""
         },
         {
-          "name": "name",
-          "type": "my-app",
-          "constraint": "",
-          "description": ""
-        },
-        {
           "name": "version",
           "type": "1.0.0",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "enabled",
-          "type": "true",
-          "constraint": "",
-          "description": ""
-        },
-        {
-          "name": "port",
-          "type": "8080",
           "constraint": "",
           "description": ""
         }
@@ -4586,15 +4521,7 @@ pre.raw {
     {
       "source": "module",
       "target": "entity",
-      "relation": "READS",
-      "bidirectional": false,
-      "origin": "src/contract/entity.md",
-      "mainline": false
-    },
-    {
-      "source": "module",
-      "target": "entity",
-      "relation": "WRITES",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/contract/entity.md",
       "mainline": false
@@ -4618,7 +4545,7 @@ pre.raw {
     {
       "source": "module",
       "target": "interface",
-      "relation": "EXPOSES",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/contract/interface.md",
       "mainline": true
@@ -4650,7 +4577,7 @@ pre.raw {
     {
       "source": "module",
       "target": "event",
-      "relation": "PUBLISHES",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/contract/event.md",
       "mainline": true
@@ -4690,7 +4617,7 @@ pre.raw {
     {
       "source": "module",
       "target": "process",
-      "relation": "GOVERNED_BY",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/behavior/process.md",
       "mainline": true
@@ -4730,7 +4657,7 @@ pre.raw {
     {
       "source": "module",
       "target": "reaction",
-      "relation": "OWNS",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/behavior/reaction.md",
       "mainline": false
@@ -4746,7 +4673,7 @@ pre.raw {
     {
       "source": "module",
       "target": "schedule",
-      "relation": "OWNS",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/behavior/schedule.md",
       "mainline": false
@@ -4842,10 +4769,42 @@ pre.raw {
     {
       "source": "module",
       "target": "code-ref",
-      "relation": "MAPPED_TO",
+      "relation": "CONTAINS",
       "bidirectional": false,
       "origin": "src/code/code-ref.md",
       "mainline": true
+    },
+    {
+      "source": "module",
+      "target": "orchestration",
+      "relation": "CONTAINS",
+      "bidirectional": false,
+      "origin": "src/module/module.md",
+      "mainline": false
+    },
+    {
+      "source": "module",
+      "target": "incident",
+      "relation": "CONTAINS",
+      "bidirectional": false,
+      "origin": "src/module/module.md",
+      "mainline": false
+    },
+    {
+      "source": "module",
+      "target": "runbook",
+      "relation": "CONTAINS",
+      "bidirectional": false,
+      "origin": "src/module/module.md",
+      "mainline": false
+    },
+    {
+      "source": "module",
+      "target": "playbook",
+      "relation": "CONTAINS",
+      "bidirectional": false,
+      "origin": "src/module/module.md",
+      "mainline": false
     },
     {
       "source": "module",
@@ -4968,14 +4927,6 @@ pre.raw {
       "mainline": false
     },
     {
-      "source": "module",
-      "target": "incident",
-      "relation": "MANAGES",
-      "bidirectional": false,
-      "origin": "src/incident/incident.md",
-      "mainline": false
-    },
-    {
       "source": "incident",
       "target": "entity",
       "relation": "AFFECTS",
@@ -5008,28 +4959,12 @@ pre.raw {
       "mainline": false
     },
     {
-      "source": "module",
-      "target": "runbook",
-      "relation": "MANAGES",
-      "bidirectional": false,
-      "origin": "src/incident/runbook.md",
-      "mainline": false
-    },
-    {
       "source": "playbook",
       "target": "incident",
       "relation": "HANDLES",
       "bidirectional": false,
       "origin": "src/incident/playbook.md",
       "mainline": true
-    },
-    {
-      "source": "module",
-      "target": "playbook",
-      "relation": "MANAGES",
-      "bidirectional": false,
-      "origin": "src/incident/playbook.md",
-      "mainline": false
     },
     {
       "source": "playbook",
@@ -5137,24 +5072,24 @@ pre.raw {
     },
     {
       "source": "business-concept",
-      "target": "module",
-      "relation": "AS_ACTOR",
-      "bidirectional": false,
-      "origin": "src/requirement/common.py",
-      "mainline": false
-    },
-    {
-      "source": "business-concept",
-      "target": "role",
-      "relation": "AS_ACTOR",
-      "bidirectional": false,
-      "origin": "src/requirement/common.py",
-      "mainline": false
-    },
-    {
-      "source": "business-concept",
       "target": "entity",
-      "relation": "AS_OBJECT",
+      "relation": "AS",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py",
+      "mainline": true
+    },
+    {
+      "source": "business-concept",
+      "target": "error",
+      "relation": "AS",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py",
+      "mainline": true
+    },
+    {
+      "source": "business-concept",
+      "target": "event",
+      "relation": "AS",
       "bidirectional": false,
       "origin": "src/requirement/common.py",
       "mainline": true
@@ -5162,15 +5097,23 @@ pre.raw {
     {
       "source": "business-concept",
       "target": "interface",
-      "relation": "AS_ACTION",
+      "relation": "AS",
       "bidirectional": false,
       "origin": "src/requirement/common.py",
       "mainline": true
     },
     {
       "source": "business-concept",
+      "target": "module",
+      "relation": "AS",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py",
+      "mainline": false
+    },
+    {
+      "source": "business-concept",
       "target": "orchestration",
-      "relation": "AS_ACTION",
+      "relation": "AS",
       "bidirectional": false,
       "origin": "src/requirement/common.py",
       "mainline": false
@@ -5178,7 +5121,15 @@ pre.raw {
     {
       "source": "business-concept",
       "target": "reaction",
-      "relation": "AS_ACTION",
+      "relation": "AS",
+      "bidirectional": false,
+      "origin": "src/requirement/common.py",
+      "mainline": false
+    },
+    {
+      "source": "business-concept",
+      "target": "role",
+      "relation": "AS",
       "bidirectional": false,
       "origin": "src/requirement/common.py",
       "mainline": false
@@ -5186,37 +5137,21 @@ pre.raw {
     {
       "source": "business-concept",
       "target": "schedule",
-      "relation": "AS_ACTION",
+      "relation": "AS",
       "bidirectional": false,
       "origin": "src/requirement/common.py",
       "mainline": false
-    },
-    {
-      "source": "business-concept",
-      "target": "event",
-      "relation": "AS_EVENT",
-      "bidirectional": false,
-      "origin": "src/requirement/common.py",
-      "mainline": true
-    },
-    {
-      "source": "business-concept",
-      "target": "event",
-      "relation": "AS_RESULT",
-      "bidirectional": false,
-      "origin": "src/requirement/common.py",
-      "mainline": false
-    },
-    {
-      "source": "business-concept",
-      "target": "error",
-      "relation": "AS_ERROR",
-      "bidirectional": false,
-      "origin": "src/requirement/common.py",
-      "mainline": true
     }
   ],
   "relationTypes": [
+    {
+      "name": "CONTAINS",
+      "count": 12
+    },
+    {
+      "name": "AS",
+      "count": 9
+    },
     {
       "name": "IMPLEMENTS",
       "count": 8
@@ -5224,10 +5159,6 @@ pre.raw {
     {
       "name": "TESTED_BY",
       "count": 7
-    },
-    {
-      "name": "AS_ACTION",
-      "count": 4
     },
     {
       "name": "IMPLEMENTED_BY",
@@ -5242,15 +5173,7 @@ pre.raw {
       "count": 3
     },
     {
-      "name": "MANAGES",
-      "count": 3
-    },
-    {
       "name": "APPLIES_TO",
-      "count": 2
-    },
-    {
-      "name": "AS_ACTOR",
       "count": 2
     },
     {
@@ -5262,19 +5185,11 @@ pre.raw {
       "count": 2
     },
     {
-      "name": "MAPPED_TO",
-      "count": 2
-    },
-    {
       "name": "MEASURES",
       "count": 2
     },
     {
       "name": "ON_RESOURCE",
-      "count": 2
-    },
-    {
-      "name": "OWNS",
       "count": 2
     },
     {
@@ -5290,22 +5205,6 @@ pre.raw {
       "count": 1
     },
     {
-      "name": "AS_ERROR",
-      "count": 1
-    },
-    {
-      "name": "AS_EVENT",
-      "count": 1
-    },
-    {
-      "name": "AS_OBJECT",
-      "count": 1
-    },
-    {
-      "name": "AS_RESULT",
-      "count": 1
-    },
-    {
       "name": "BUILDS",
       "count": 1
     },
@@ -5315,10 +5214,6 @@ pre.raw {
     },
     {
       "name": "CONSUMED_BY",
-      "count": 1
-    },
-    {
-      "name": "CONTAINS",
       "count": 1
     },
     {
@@ -5346,15 +5241,7 @@ pre.raw {
       "count": 1
     },
     {
-      "name": "EXPOSES",
-      "count": 1
-    },
-    {
       "name": "GATES_ON",
-      "count": 1
-    },
-    {
-      "name": "GOVERNED_BY",
       "count": 1
     },
     {
@@ -5386,19 +5273,15 @@ pre.raw {
       "count": 1
     },
     {
+      "name": "MAPPED_TO",
+      "count": 1
+    },
+    {
       "name": "OVERRIDES",
       "count": 1
     },
     {
       "name": "PROJECTS_FROM",
-      "count": 1
-    },
-    {
-      "name": "PUBLISHES",
-      "count": 1
-    },
-    {
-      "name": "READS",
       "count": 1
     },
     {
@@ -5431,10 +5314,6 @@ pre.raw {
     },
     {
       "name": "USES_TYPE",
-      "count": 1
-    },
-    {
-      "name": "WRITES",
       "count": 1
     }
   ],
@@ -5908,18 +5787,50 @@ pre.raw {
     viewport.setAttribute("class", state.view === "mainline" ? "mainline" : "");
 
     graph.nodes.forEach(function (n) {
-      var g = svgEl("g", { "class": "node" + (n.missing ? " missing" : "") + (n.prepared ? " prepared" : "") });
+      var container = n.id === "module";
+      var g = svgEl("g", {
+        "class": "node" + (n.missing ? " missing" : "") + (n.prepared ? " prepared" : "") +
+          (container ? " container" : "")
+      });
       g.setAttribute("data-id", n.id);
       var color = domainColor[n.domain] || "#64748b";
       g.style.setProperty("--domain", color);
+      var title = svgEl("text", { "class": "title" });
+      title.textContent = n.label;
+      var prefix = svgEl("text", { "class": "prefix" });
+      prefix.textContent = n.prefix || "";
+      prefix.setAttribute("fill", "rgba(255,255,255,.82)");
+      if (container) {
+        // 容器画成框：宽一点、高一点，标题在框内
+        var w = 138, h = 54;
+        n.radius = 70;
+        var halo = svgEl("rect", {
+          "class": "halo", x: -w / 2, y: -h / 2, width: w, height: h, rx: 13
+        });
+        var body = svgEl("rect", {
+          "class": "body", x: -w / 2, y: -h / 2, width: w, height: h, rx: 13
+        });
+        body.setAttribute("fill", color);
+        title.setAttribute("y", 2);
+        prefix.setAttribute("y", -h / 2 - 7);
+        prefix.setAttribute("fill", "var(--muted)");
+        var kind = svgEl("text", { "class": "kind", y: h / 2 + 13 });
+        kind.textContent = "组织容器";
+        g.appendChild(halo);
+        g.appendChild(body);
+        g.appendChild(prefix);
+        g.appendChild(title);
+        g.appendChild(kind);
+        nodeLayer.appendChild(g);
+        n.el = g;
+        n.titleEl = title;
+        return;
+      }
       var halo = svgEl("circle", { "class": "halo", r: n.radius + 4 });
       var body = svgEl("circle", { "class": "body", r: n.radius });
       body.setAttribute("fill", color);
-      var title = svgEl("text", { "class": "title", y: n.radius + 14 });
-      title.textContent = n.label;
-      var prefix = svgEl("text", { "class": "prefix", y: 4 });
-      prefix.textContent = n.prefix || "";
-      prefix.setAttribute("fill", "rgba(255,255,255,.82)");
+      title.setAttribute("y", n.radius + 14);
+      prefix.setAttribute("y", 4);
       g.appendChild(halo);
       g.appendChild(body);
       g.appendChild(prefix);
@@ -5930,9 +5841,13 @@ pre.raw {
     });
 
     graph.edges.forEach(function (e) {
-      var cls = "edge" + (e.bidirectional ? " both" : "") + (e.mainline ? " main" : "");
+      var contain = e.relation === "CONTAINS";
+      var cls = "edge" + (e.bidirectional ? " both" : "") + (e.mainline ? " main" : "") +
+        (contain ? " contain" : "");
       var path = svgEl("path", { "class": cls });
-      path.setAttribute("marker-end", e.mainline ? "url(#arrow-main)" : "url(#arrow)");
+      if (!contain) {
+        path.setAttribute("marker-end", e.mainline ? "url(#arrow-main)" : "url(#arrow)");
+      }
       edgeLayer.appendChild(path);
       e.el = path;
       var label = svgEl("text", { "class": "edge-label" + (e.mainline ? " main" : "") });
@@ -6023,7 +5938,8 @@ pre.raw {
     var hasFocus = !!selected || hasQuery;
 
     graph.nodes.forEach(function (n) {
-      var cls = "node" + (n.missing ? " missing" : "") + (n.prepared ? " prepared" : "");
+      var cls = "node" + (n.missing ? " missing" : "") + (n.prepared ? " prepared" : "") +
+        (n.id === "module" ? " container" : "");
       var visible = isVisible(n);
       n.el.style.display = visible ? "" : "none";
       if (!visible) return;
@@ -6042,13 +5958,16 @@ pre.raw {
       e.el.style.display = visible ? "" : "none";
       e.labelEl.style.display = visible && state.showLabels ? "" : "none";
       if (!visible) return;
-      var cls = "edge" + (e.bidirectional ? " both" : "") + (e.mainline ? " main" : "");
+      var cls = "edge" + (e.bidirectional ? " both" : "") + (e.mainline ? " main" : "") +
+        (e.relation === "CONTAINS" ? " contain" : "");
       var touches = selected && (e.source.id === selected.id || e.target.id === selected.id);
       if (state.dimMode && hasFocus && !touches) cls += " dim";
       if (touches) cls += " hot";
       e.el.setAttribute("class", cls);
-      e.el.setAttribute("marker-end", touches ? "url(#arrow-hot)"
-        : (e.mainline ? "url(#arrow-main)" : "url(#arrow)"));
+      if (e.relation !== "CONTAINS") {
+        e.el.setAttribute("marker-end", touches ? "url(#arrow-hot)"
+          : (e.mainline ? "url(#arrow-main)" : "url(#arrow)"));
+      }
       var lbl = "edge-label" + (e.mainline ? " main" : "");
       if (touches) lbl += " hot";
       else if (state.dimMode && hasFocus) lbl += " dim";
@@ -6171,13 +6090,13 @@ pre.raw {
     }
 
     if (raw.mappings && raw.mappings.length) {
-      detailEl.appendChild(el("h4", null, "语义位置"));
+      detailEl.appendChild(el("h4", null, "映射到内部制品（as）"));
       var mlist = el("ul", "rel-list");
       raw.mappings.forEach(function (m) {
         var li = el("li");
         var link = el("div", "rel-link");
-        link.appendChild(el("span", "rel", m.position));
-        link.appendChild(el("span", "tgt", m.targets));
+        link.appendChild(el("span", "rel", m.artifactType));
+        link.appendChild(el("span", "tgt", m.artifactId));
         li.appendChild(link);
         mlist.appendChild(li);
       });
@@ -6196,6 +6115,26 @@ pre.raw {
     if (incoming.length) {
       detailEl.appendChild(el("h4", null, "入向关系 (" + incoming.length + ")"));
       detailEl.appendChild(relationList(incoming, "in"));
+    }
+
+    if (node.id === "module") {
+      var contained = state.graph.edges.filter(function (e) {
+        return e.source.id === "module" && e.relation === "CONTAINS";
+      });
+      detailEl.appendChild(el("h4", null, "包含的制品 (" + contained.length + ")"));
+      var containedList = el("ul", "rel-list");
+      contained.forEach(function (e) {
+        var li = el("li");
+        var btn = el("button", "rel-link");
+        btn.type = "button";
+        btn.appendChild(el("span", "rel", e.target.prefix));
+        btn.appendChild(el("span", "tgt", e.target.label));
+        btn.addEventListener("click", function () { selectNode(e.target); });
+        li.appendChild(btn);
+        containedList.appendChild(li);
+      });
+      detailEl.appendChild(containedList);
+      detailEl.appendChild(el("p", "note", "Module 是组织容器：它把属于同一服务边界的制品收在一起。"));
     }
 
     if (raw.definition) {

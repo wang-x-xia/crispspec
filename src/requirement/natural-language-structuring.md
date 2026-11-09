@@ -102,7 +102,7 @@ Then [expected outcome]
 
 ## 三、Pattern 解析示例
 
-> **说明**：以下示例展示了如何将自然语言 Pattern 解析为结构化数据。示例中使用的语义位置（如 `as_event`、`as_action` 等）的详细定义见 [业务概念](business-concept.md)。
+> **说明**：以下示例展示了如何将自然语言 Pattern 解析为结构化数据。示例中的映射目标类型（如 `EVENT`、`INTERFACE`）见 [业务概念](business-concept.md)。
 
 ### 3.1 EARS 模式 → SDS 制品
 
@@ -115,19 +115,19 @@ parsed_ears:
     - position: "trigger"
       text: "退款申请被提交"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_event"
+      mapping_type: "EVENT"
       artifact: "EVT-10"
     
     - position: "response"
       text: "设置退款SLA"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_action"
+      mapping_type: "INTERFACE"
       artifact: "API-20"
     
     - position: "response_detail"
       text: "退款SLA为24h"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_attribute"
+      mapping_type: "ENTITY_FIELD"
       artifact: "ENT-005.expected_completion"
 ```
 
@@ -142,19 +142,19 @@ parsed_gwt:
     - position: "given"
       text: "VIP会员"
       concept: "BC-CONCEPT-002"
-      mapping_target: "as_actor"
+      mapping_type: "ROLE"
       artifact: "ROLE-3"
     
     - position: "when"
       text: "用户发起退款"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_action"
+      mapping_type: "INTERFACE"
       artifact: "API-20"
     
     - position: "then"
       text: "退款SLA为24h"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_attribute"
+      mapping_type: "ENTITY_FIELD"
       artifact: "ENT-005.expected_completion"
 ```
 
@@ -169,19 +169,19 @@ parsed_svo:
     - position: "subject"
       text: "退款服务"
       concept: "BC-CONCEPT-003"
-      mapping_target: "as_actor"
+      mapping_type: "ROLE"
       artifact: "MOD-010"
     
     - position: "predicate"
       text: "处理"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_action"
+      mapping_type: "INTERFACE"
       artifact: "API-20"
     
     - position: "object"
       text: "退款单"
       concept: "BC-CONCEPT-001"
-      mapping_target: "as_object"
+      mapping_type: "ENTITY"
       artifact: "ENT-005"
 ```
 
