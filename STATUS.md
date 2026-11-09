@@ -71,7 +71,10 @@ errors    = manager.verify_module(record_id, data)  # → list[str]，空表示�
 ## 四、制品覆盖度
 
 db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`type-def` 的定义在 `src/schema/schema.md`）。
-但只有 **3** 个制品有 Python 实现：
+但只有 **3** 个制品有 Python 实现。
+
+> 逐个制品的进度、Stage 归属、依赖关系见 [`artifacts.yaml`](artifacts.yaml)（机器可读，
+> 由 `tests/registry/` 保证与代码不漂移）。下表是它的汇总视图。
 
 | 域 | 制品 | 定义 | 实现 | 缺口 |
 |----|------|:----:|:----:|------|
@@ -90,6 +93,13 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 > 契约域是当前的最大瓶颈：Business Concept 的七个语义位置里，`as_object` / `as_attribute` / `as_error`
 > 直接指向 Entity / Error，`as_action` 指向 Interface / Orchestration / Reaction / Schedule。
 > **这些制品不落地，BC 的映射就没有真实 ID 可挂。**
+
+**Stage 归属**（依据 [`TODO.md`](TODO.md) 的验收标准倒推）：
+
+| Stage | 制品数 | 已完成 | 说明 |
+|-------|------:|------:|------|
+| Stage 1 | 17 | 3 | 一个需求的 Python CLI 工具端到端：需求链 → 契约 → 行为 → 代码 → 验证 |
+| Stage 2 | 18 | 0 | 多子命令 + 制品修改与级联：事件、编排、治理、交付、故障域 |
 
 ---
 
@@ -269,6 +279,7 @@ uv run src/checker/main.py . -v                   # 带文件清单
 | 文件 | 内容 |
 |------|------|
 | [`README.md`](README.md) | 项目宏大目标与体系总览 |
+| [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**（机器可读，含 Stage / 优先级 / 依赖） |
 | [`concepts.md`](concepts.md) | 制品体系全景：域模型、制品总览、关系图、ID 规范 |
 | [`TODO.md`](TODO.md) | Stage 1 / Stage 2 目标与验收标准 |
 | [`AGENTS.md`](AGENTS.md) | 环境准备与工具用法 |
