@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """YAML schema validation module."""
 
 from __future__ import annotations
