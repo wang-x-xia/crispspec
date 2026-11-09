@@ -125,29 +125,39 @@
 ## 开发主线
 
 域是"关注点"的横向切分，主线是"工作顺序"的纵向推进——两者正交。
-35 种制品被 11 个主线阶段串成一条不重不漏的链，每一步都由一条**真实存在的关系边**交接：
+35 种制品被 10 个主线阶段串成一条不重不漏的链，每一步都由一条**真实存在的关系边**交接。
 
-| # | 阶段 | 回答什么 | 制品 | 交接 |
-|---|------|---------|------|------|
-| 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — |
-| 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | `DISAMBIGUATED_INTO` |
-| 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | `DECOMPOSES_INTO` |
-| 4 | 语义对齐 | 业务概念落到哪些技术制品上？ | Business Concept | `ACTED_BY` |
-| 5 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Error / Event | `IMPLEMENTED_BY`、`AS_ACTION`、`AS_OBJECT`、`AS_ERROR`、`AS_EVENT` |
-| 6 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
-| 7 | 组织归属 | 这些制品归哪个模块管？ | Module | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
-| 8 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref / Repository | `MAPPED_TO`、`LOCATED_IN` |
-| 9 | 验证闭环 | 怎么证明这个制品是对的？ | Acceptance / Scenario / Contract / Transition / Integration Test、Benchmark | `TESTED_BY` |
-| 10 | 交付上线 | 部署到哪？配置怎么管？ | Pipeline / Environment / Config Set / Configuration / Secret | `BUILDS`、`DEPLOYS_TO`、`USES_CONFIG`、`OVERRIDES`、`REQUIRES` |
-| 11 | 运维反馈 | 出了什么事？怎么恢复？ | Incident / Runbook / Playbook | `AFFECTS`、`RESOLVED_BY`、`HANDLES` |
+但主线不声称自己**产出**所有制品。每个阶段分两类：
 
-横切关注点——它们不推进主线，但贯穿主线全程：
+- **产出** —— 这一步创建的制品（实心圆点）
+- **可提前准备** —— 这一步用到的、但不必由这一步创建的制品（虚线圆点）：
+  业务概念可以半年前就定义好，错误目录通常先攒出来，仓库先建起来再往里映射，
+  环境与密钥由运维预先备好——主线只说它们在这一步已经就位，不规定它们何时产生
 
-| 阶段 | 回答什么 | 制品 | 交接 |
-|------|---------|------|------|
+| # | 阶段 | 回答什么 | 产出 | 可提前准备 | 交接 |
+|---|------|---------|------|-----------|------|
+| 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — | — |
+| 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`ACTED_BY` |
+| 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | — | `DECOMPOSES_INTO` |
+| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS_ACTION`、`AS_OBJECT`、`AS_ERROR`、`AS_EVENT` |
+| 5 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | — | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
+| 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
+| 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `MAPPED_TO`、`LOCATED_IN` |
+| 8 | 验证闭环 | 怎么证明这个制品是对的？ | Acceptance / Scenario / Contract / Transition / Integration Test、Benchmark | — | `TESTED_BY` |
+| 9 | 交付上线 | 部署到哪？配置怎么管？ | Pipeline | Environment / Config Set / Configuration / Secret | `BUILDS`、`DEPLOYS_TO`、`USES_CONFIG`、`OVERRIDES`、`REQUIRES` |
+| 10 | 运维反馈 | 出了什么事？怎么恢复？ | Incident / Runbook / Playbook | — | `AFFECTS`、`RESOLVED_BY`、`HANDLES` |
+
+横切关注点——它们不推进主线，也不由主线产出，但贯穿主线全程：
+
+| 阶段 | 回答什么 | 可提前准备 | 交接 |
+|------|---------|-----------|------|
 | 治理约束 | 底线是什么？依赖了谁？ | Constraint / Metric / Dependency | `CONSTRAINED_BY`、`MEASURES`、`DEPENDS_ON` |
 | 访问控制 | 谁能访问什么？ | Role / Permission | `AUTHORIZED_BY`、`HAS_PERMISSION` |
 | 制品结构 | 每个制品的结构由谁定义？ | Type Def | — |
+
+> “语义对齐”曾经是主线上的一个独立阶段，但它其实不产出任何制品——
+> 业务概念到技术制品的映射是一条**关系**，不是一件东西。
+> 现在这条对齐由第 4 阶段的几条 `AS_*` 交接边表达，业务概念本身则回到第 2 阶段。
 
 > 主线声明在 [`artifacts.yaml`](artifacts.yaml) 的 `mainline:` 段，
 > 可视化页面里的「开发主线」视图就是它。

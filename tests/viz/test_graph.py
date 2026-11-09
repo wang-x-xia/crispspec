@@ -277,6 +277,20 @@ def test_lateral_phases_come_last(payload: dict[str, Any]) -> None:
     assert all(phase["handoff"] for phase in spine[1:]), "a spine phase has no hand-off"
 
 
+def test_prepared_artifacts_are_not_produced(payload: dict[str, Any]) -> None:
+    """An artifact is either produced by a phase or prepared for it, never both."""
+    for phase in payload["phases"]:
+        assert not set(phase["produces"]) & set(phase["prepares"]), phase["id"]
+        assert set(phase["artifacts"]) == set(phase["produces"]) | set(phase["prepares"])
+
+
+def test_business_concept_is_prepared_not_produced(payload: dict[str, Any]) -> None:
+    """The business concept may be defined long before the flow starts."""
+    phases = {phase["id"]: phase for phase in payload["phases"]}
+    assert "business-concept" in phases["requirement"]["prepares"]
+    assert "business-concept" not in phases["requirement"]["produces"]
+
+
 # ---------------------------------------------------------------------------
 # Page
 # ---------------------------------------------------------------------------

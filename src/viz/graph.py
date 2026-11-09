@@ -184,6 +184,8 @@ def _phase_payload(catalog: Catalog) -> list[dict[str, Any]]:
             "id": phase.id,
             "label": phase.label,
             "question": phase.question,
+            "produces": list(phase.produces),
+            "prepares": list(phase.prepares),
             "artifacts": list(phase.artifacts),
             "lateral": phase.lateral,
             "handoff": [

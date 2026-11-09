@@ -44,9 +44,15 @@ uv run python -m src.viz.build --db crispspec.db        # 额外包含制品实�
 
 ### 开发主线
 
-`artifacts.yaml` 的 `mainline:` 段声明开发的纵向顺序：11 个主线阶段 + 3 个横切阶段。
-每种制品恰好属于一个阶段，每条交接都必须是一条真实存在的关系边——
-两条约束都由 `tests/registry/test_artifacts.py` 保证。
+`artifacts.yaml` 的 `mainline:` 段声明开发的纵向顺序：10 个主线阶段 + 3 个横切阶段。
+每个阶段分 `produces`（这一步产出的）与 `prepares`（可提前准备、不由这一步产出的）——
+主线不声称自己产出所有制品，业务概念、错误目录、仓库、环境、权限都可以早就定义好。
+
+三条约束都由 `tests/registry/test_artifacts.py` 保证：
+
+- 每种制品恰好属于一个阶段的 `produces` 或 `prepares`
+- 每条 `handoff` 都必须是一条真实存在的关系边
+- 横切阶段只 `prepares`、不 `produces`
 
 改动了制品关系却忘了更新主线，测试会报红。
 
