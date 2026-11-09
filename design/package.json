@@ -1,0 +1,37 @@
+{
+  "name": "crispspec-design",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "description": "CrispSpec 制品体系的可交互前端：把制品定义、主线与关系讲清楚",
+  "scripts": {
+    "predev": "node scripts/build-content.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/build-content.mjs",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "node --test \"tests/**/*.test.mjs\"",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "marked": "^15.0.7",
+    "mermaid": "^11.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.18.1",
+    "vite": "^6.0.5"
+  }
+}

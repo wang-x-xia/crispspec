@@ -1,0 +1,540 @@
+# 制品体系登记表（设计期）
+#
+# 这份文件是 CrispSpec 制品体系的**机器可读目录**：每一种制品的类型键、
+# ID 前缀、所属域、定义文档、用途，以及开发主线的阶段划分。
+#
+# 它是前端（design/）的唯一数据源：
+#   content/<domain>/*.md   制品定义文档（字段表 / 枚举 / 关系表）
+#   scripts/build-content.mjs  把本文件 + 定义文档编译成前端消费的 JSON
+#
+# 字段说明：
+#   type             制品类型键（英文小写 + 连字符），全局唯一
+#   name             制品名
+#   id_prefix        ID 前缀，如 DRAFT → `DRAFT-1`
+#   id_pattern       ID 模式，如 `DRAFT-\d+`
+#   domain           所属域（见 domains 段）
+#   definition       定义文档（相对 design/content/）
+#   purpose          用途——一句话说明这个制品解决什么问题
+#   notes            补充说明（可选）
+#   mapping_targets 业务概念可映射到的制品类型（仅 business-concept 使用）
+
+meta:
+  updated: "2026-11-09"
+  phase: design
+  summary: "除了最开始那份反映人类意图的、模糊的「需求初稿」之外，软件生命周期内的一切——从系统架构、API 接口、数据库设计、业务流程、模块依赖到测试用例和代码本身——都必须由严谨的「结构化制品」来定义和驱动。代码只是这些制品的执行态副产品。"
+  counts:
+    total: 35
+    domains: 11
+    mainline_phases: 10
+
+domains:
+  requirement:
+    label: 需求域
+    question: 用户要什么？怎么拆成可交付的单元？
+  contract:
+    label: 契约域
+    question: 数据长什么样？模块间怎么通信？
+  behavior:
+    label: 行为域
+    question: 状态怎么变？多个接口怎么协调？
+  code:
+    label: 代码域
+    question: 代码在哪个仓库？逻辑制品怎么映射到物理代码？
+  incident:
+    label: 故障域
+    question: 出了什么事？怎么恢复？
+  governance:
+    label: 治理域
+    question: 性能底线是什么？用了哪些第三方依赖？
+  access:
+    label: 访问控制域
+    question: 谁能访问什么？权限怎么判定？
+  delivery:
+    label: 交付域
+    question: 部署到哪？配置怎么管？
+  verification:
+    label: 验证域
+    question: 怎么证明这个制品是对的？
+  organization:
+    label: 组织单元
+    question: 哪些制品归谁管？
+  meta:
+    label: 元制品
+    question: 制品本身的结构由谁定义？
+
+# 开发主线：从意图到运维的完整链路。
+#
+# 与 domains/ 的区别：域是"关注点"的横向切分，主线是"工作顺序"的纵向推进。
+# 同一件制品在主线里只出现一次，所以 35 种制品被串成了一条不重不漏的链。
+#
+# produces  这一步产出的制品
+# prepares  涉及但不由这一步产出的制品——它可以早就准备好（业务概念、错误目录、
+#           仓库、环境、权限……），也可以就在这一步创建。主线不保证它由这一步产生。
+# handoff   这一阶段与主线其他阶段之间的交接边，每一条都必须是真实存在的关系边
+#           （scripts/build-content.mjs 会核对关系表，改了定义而没改主线就会构建失败）。
+#
+# lateral: true 的阶段是横切关注点——它们不推进主线，但贯穿主线全程。
+mainline:
+  - id: intent
+    label: 意图捕获
+    question: 人类原始意图是什么？
+    produces: [draft]
+
+  - id: requirement
+    label: 结构化需求
+    question: 消歧之后的需求是什么？
+    produces: [requirement]
+    # 业务概念可以预先定义好，也可以在结构化需求时创建——它不是这一步的必然产物
+    prepares: [business-concept]
+    handoff:
+      - {relation: DISAMBIGUATED_INTO, from: draft, to: requirement}
+      - {relation: ACTED_BY, from: requirement, to: business-concept}
+
+  - id: story
+    label: 需求分解
+    question: 拆成哪些可交付的单元？
+    produces: [user-story]
+    handoff:
+      - {relation: DECOMPOSES_INTO, from: requirement, to: user-story}
+
+  - id: contract
+    label: 契约定义
+    question: 数据长什么样？模块间怎么通信？
+    produces: [interface, entity, event]
+    # 错误目录通常是先攒出来的，不是等接口写完才有
+    prepares: [error]
+    handoff:
+      - {relation: IMPLEMENTED_BY, from: user-story, to: interface}
+      - {relation: AS, from: business-concept, to: interface}
+      - {relation: AS, from: business-concept, to: entity}
+      - {relation: AS, from: business-concept, to: error}
+      - {relation: AS, from: business-concept, to: event}
+
+  - id: behavior
+    label: 行为建模
+    question: 状态怎么变？多个接口怎么协调？
+    produces: [process, orchestration, reaction, schedule]
+    handoff:
+      - {relation: IMPLEMENTED_BY, from: user-story, to: orchestration}
+      - {relation: IMPLEMENTED_BY, from: user-story, to: reaction}
+      - {relation: IMPLEMENTED_BY, from: user-story, to: schedule}
+      - {relation: COMPOSES, from: orchestration, to: interface}
+      - {relation: TRANSITIONS, from: process, to: entity}
+      - {relation: LISTENS_TO, from: reaction, to: event}
+
+  - id: organization
+    label: 组织归属
+    question: 这些制品归哪个模块管？
+    produces: [module]
+    handoff:
+      - {relation: CONTAINS, from: module, to: interface}
+      - {relation: CONTAINS, from: module, to: process}
+      - {relation: CONTAINS, from: module, to: event}
+
+  - id: code
+    label: 代码落地
+    question: 逻辑制品对应哪些源码？
+    produces: [code-ref]
+    # 仓库先建起来，之后才往里面映射
+    prepares: [repository]
+    handoff:
+      - {relation: CONTAINS, from: module, to: code-ref}
+      - {relation: LOCATED_IN, from: code-ref, to: repository}
+
+  - id: verification
+    label: 验证闭环
+    question: 怎么证明这个制品是对的？
+    produces:
+      - acceptance-test
+      - scenario-test
+      - contract-test
+      - transition-test
+      - integration-test
+      - benchmark
+    handoff:
+      - {relation: TESTED_BY, from: requirement, to: acceptance-test}
+      - {relation: TESTED_BY, from: user-story, to: scenario-test}
+      - {relation: TESTED_BY, from: interface, to: contract-test}
+      - {relation: TESTED_BY, from: process, to: transition-test}
+      - {relation: TESTED_BY, from: module, to: integration-test}
+      - {relation: TESTED_BY, from: constraint, to: benchmark}
+
+  - id: delivery
+    label: 交付上线
+    question: 部署到哪？配置怎么管？
+    produces: [pipeline]
+    # 环境、配置与密钥通常由运维预先备好，不是写流水线时顺手产生的
+    prepares: [environment, config-set, configuration, secret]
+    handoff:
+      - {relation: BUILDS, from: pipeline, to: module}
+      - {relation: DEPLOYS_TO, from: pipeline, to: environment}
+      - {relation: USES_CONFIG, from: environment, to: config-set}
+      - {relation: OVERRIDES, from: config-set, to: configuration}
+      - {relation: REQUIRES, from: environment, to: secret}
+
+  - id: operation
+    label: 运维反馈
+    question: 出了什么事？怎么恢复？
+    produces: [incident, runbook, playbook]
+    handoff:
+      - {relation: AFFECTS, from: incident, to: entity}
+      - {relation: RESOLVED_BY, from: incident, to: runbook}
+      - {relation: HANDLES, from: playbook, to: incident}
+
+  - id: governance
+    label: 治理约束
+    question: 底线是什么？依赖了谁？
+    lateral: true
+    prepares: [constraint, metric, dependency]
+    handoff:
+      - {relation: CONSTRAINED_BY, from: module, to: constraint}
+      - {relation: MEASURES, from: constraint, to: metric}
+      - {relation: DEPENDS_ON, from: module, to: dependency}
+
+  - id: access
+    label: 访问控制
+    question: 谁能访问什么？
+    lateral: true
+    prepares: [role, permission]
+    handoff:
+      - {relation: AUTHORIZED_BY, from: interface, to: role}
+      - {relation: HAS_PERMISSION, from: role, to: permission}
+      - {relation: AUTHORIZED_BY, from: secret, to: permission}
+
+  - id: meta
+    label: 制品结构
+    question: 每个制品的结构由谁定义？
+    lateral: true
+    prepares: [type-def]
+
+artifacts:
+  # ── 需求域 ────────────────────────────────────────────────────────────
+  - type: draft
+    name: Draft
+    id_prefix: DRAFT
+    id_pattern: "DRAFT-\\d+"
+    domain: requirement
+    definition: requirement/draft.md
+    purpose: 唯一的非结构化入口——人类原始意图
+    notes: 唯一允许非结构化的输入；其余制品都是它的下游
+
+  - type: requirement
+    name: Requirement
+    id_prefix: REQ
+    id_pattern: "REQ-\\d+"
+    domain: requirement
+    definition: requirement/requirement.md
+    purpose: 消歧后的结构化需求
+    notes: actor_role_id 指向 Role
+
+  - type: user-story
+    name: User Story
+    id_prefix: US
+    id_pattern: "US-\\d+"
+    domain: requirement
+    definition: requirement/user-story.md
+    purpose: 面向实现的需求分解单元
+    notes: when 指向 Interface
+
+  - type: business-concept
+    name: Business Concept
+    id_prefix: BC
+    id_pattern: "BC-\\d+"
+    domain: requirement
+    definition: requirement/business-concept.md
+    purpose: 业务概念——映射到哪些内部制品（as）
+    notes: >
+      映射是一个列表而不是固定槽位：同一个概念可以同时是 Entity、Interface 和 Role。
+      映射只说"被映射成了什么"，不说"谁先存在"。
+    mapping_targets: [role, module, entity, interface, orchestration, reaction, schedule, event, error]
+
+  # ── 契约域 ────────────────────────────────────────────────────────────
+  - type: entity
+    name: Entity
+    id_prefix: ENT
+    id_pattern: "ENT-\\d+"
+    domain: contract
+    definition: contract/entity.md
+    purpose: 数据结构契约——实体与字段定义
+    notes: BC 的 as 映射目标之一；owner_module_id 必填
+
+  - type: interface
+    name: Interface
+    id_prefix: API
+    id_pattern: "API-\\d+"
+    domain: contract
+    definition: contract/interface.md
+    purpose: 同步 API 契约——请求、响应、错误码
+    notes: BC 的 as 映射目标之一；每个对外子命令对应一个 Interface
+
+  - type: error
+    name: Error
+    id_prefix: ERR
+    id_pattern: "ERR-\\d+"
+    domain: contract
+    definition: contract/error.md
+    purpose: 错误目录——统一错误码、状态码、重试策略
+    notes: BC 的 as 映射目标之一
+
+  - type: event
+    name: Event
+    id_prefix: EVT
+    id_pattern: "EVT-\\d+"
+    domain: contract
+    definition: contract/event.md
+    purpose: 异步通信契约——领域事件
+    notes: BC 的 as 映射目标之一
+
+  # ── 行为域 ────────────────────────────────────────────────────────────
+  - type: process
+    name: Process
+    id_prefix: PROC
+    id_pattern: "PROC-\\d+"
+    domain: behavior
+    definition: behavior/process.md
+    purpose: 单实体状态机——状态集合、转换规则、守卫条件
+    notes: Transition Test 的验证对象
+
+  - type: orchestration
+    name: Orchestration
+    id_prefix: ORCH
+    id_pattern: "ORCH-\\d+"
+    domain: behavior
+    definition: behavior/orchestration.md
+    purpose: 跨模块 Interface 编排——分布式事务、多步协调
+    notes: BC 的 as 映射目标之一
+
+  - type: reaction
+    name: Reaction
+    id_prefix: SUB
+    id_pattern: "SUB-\\d+"
+    domain: behavior
+    definition: behavior/reaction.md
+    purpose: 事件反应器——模块响应领域事件自动执行
+    notes: BC 的 as 映射目标之一
+
+  - type: schedule
+    name: Schedule
+    id_prefix: SCH
+    id_pattern: "SCH-\\d+"
+    domain: behavior
+    definition: behavior/schedule.md
+    purpose: 定时任务——按 cron 或固定间隔周期执行
+    notes: BC 的 as 映射目标之一
+
+  # ── 代码域 ────────────────────────────────────────────────────────────
+  - type: repository
+    name: Repository
+    id_prefix: REPO
+    id_pattern: "REPO-\\d+"
+    domain: code
+    definition: code/repository.md
+    purpose: 代码仓库——URL、默认分支、语言栈
+    notes: Code Ref 的所在仓库
+
+  - type: code-ref
+    name: Code Ref
+    id_prefix: CREF
+    id_pattern: "CREF-\\d+"
+    domain: code
+    definition: code/code-ref.md
+    purpose: 代码映射——制品到源码位置（仓库、文件路径、符号）的追溯引用
+    notes: 制品到物理代码的落点
+
+  # ── 组织单元 ──────────────────────────────────────────────────────────
+  - type: module
+    name: Module
+    id_prefix: MOD
+    id_pattern: "MOD-\\d+"
+    domain: organization
+    definition: module/module.md
+    purpose: 组织容器——按服务边界将制品分组、声明依赖、映射源码
+    notes: >
+      Module 不是域，而是跨域的组织单元——类似文件夹。
+      code_refs 为内嵌结构，与独立的 Code Ref 制品并存，需注意区分。
+
+  # ── 治理域 ────────────────────────────────────────────────────────────
+  - type: constraint
+    name: Constraint
+    id_prefix: CON
+    id_pattern: "CON-\\d+"
+    domain: governance
+    definition: governance/constraint.md
+    purpose: 性能、安全、合规等可验证约束
+    notes: Benchmark 的验证对象
+
+  - type: metric
+    name: Metric
+    id_prefix: MET
+    id_pattern: "MET-\\d+"
+    domain: governance
+    definition: governance/metric.md
+    purpose: 度量指标——单位、聚合方式、优化方向
+    notes: Constraint 的度量对象
+
+  - type: dependency
+    name: Dependency
+    id_prefix: DEP
+    id_pattern: "DEP-\\d+"
+    domain: governance
+    definition: governance/dependency.md
+    purpose: 第三方依赖——包名、版本范围、许可证
+    notes: Module 的外部依赖声明
+
+  # ── 访问控制域 ────────────────────────────────────────────────────────
+  - type: role
+    name: Role
+    id_prefix: ROLE
+    id_pattern: "ROLE-\\d+"
+    domain: access
+    definition: access/role.md
+    purpose: 参与者角色——身份条件、权限集合、继承关系
+    notes: BC 的 as 映射目标之一；模型设计见 access/concepts.md
+
+  - type: permission
+    name: Permission
+    id_prefix: PERM
+    id_pattern: "PERM-\\d+"
+    domain: access
+    definition: access/permission.md
+    purpose: 授权条目——动作 × 资源 × 效果
+    notes: 独立访问控制体系；Secret 的访问控制引用它
+
+  # ── 故障域 ────────────────────────────────────────────────────────────
+  - type: incident
+    name: Incident
+    id_prefix: INC
+    id_pattern: "INC-\\d+"
+    domain: incident
+    definition: incident/incident.md
+    purpose: 故障定义——故障类型、影响范围、处理流程
+    notes: Runbook / Playbook 的触发对象
+
+  - type: runbook
+    name: Runbook
+    id_prefix: RB
+    id_pattern: "RB-\\d+"
+    domain: incident
+    definition: incident/runbook.md
+    purpose: 运维手册——标准化操作步骤
+    notes: Incident 的处置方式
+
+  - type: playbook
+    name: Playbook
+    id_prefix: PB
+    id_pattern: "PB-\\d+"
+    domain: incident
+    definition: incident/playbook.md
+    purpose: 应急响应预案——故障场景、处置步骤
+    notes: 面向多故障的应急预案
+
+  # ── 交付域 ────────────────────────────────────────────────────────────
+  - type: environment
+    name: Environment
+    id_prefix: ENV
+    id_pattern: "ENV-\\d+"
+    domain: delivery
+    definition: delivery/environment.md
+    purpose: 部署目标——类型（dev / staging / prod）、地域、URL、配置基线
+    notes: 全局资源，不受单个 Module 管辖
+
+  - type: pipeline
+    name: Pipeline
+    id_prefix: PIPE
+    id_pattern: "PIPE-\\d+"
+    domain: delivery
+    definition: delivery/pipeline.md
+    purpose: 交付流程——从提交到上线的阶段序列、质量关卡、触发条件
+    notes: BUILDS 引用 Module，DEPLOYS_TO 引用 Environment
+
+  - type: configuration
+    name: Configuration
+    id_prefix: CONF
+    id_pattern: "CONF-\\d+"
+    domain: delivery
+    definition: delivery/configuration.md
+    purpose: 配置项——键名、类型、默认值、验证规则
+    notes: 被 Config Set 覆盖
+
+  - type: config-set
+    name: Config Set
+    id_prefix: CSET
+    id_pattern: "CSET-\\d+"
+    domain: delivery
+    definition: delivery/config-set.md
+    purpose: 配置集合——按环境/模块分组的配置项及覆盖值
+    notes: OVERRIDES 引用 Configuration
+
+  - type: secret
+    name: Secret
+    id_prefix: SEC
+    id_pattern: "SEC-\\d+"
+    domain: delivery
+    definition: delivery/secret.md
+    purpose: 敏感信息——密码、密钥、证书、API Token
+    notes: 访问控制引用 Permission
+
+  # ── 验证域 ────────────────────────────────────────────────────────────
+  - type: acceptance-test
+    name: Acceptance Test
+    id_prefix: AT
+    id_pattern: "AT-\\d+"
+    domain: verification
+    definition: test/acceptance-test.md
+    purpose: 验证 Requirement 是否被满足
+    notes: 配对制品：Requirement
+
+  - type: scenario-test
+    name: Scenario Test
+    id_prefix: ST
+    id_pattern: "ST-\\d+"
+    domain: verification
+    definition: test/scenario-test.md
+    purpose: 验证 User Story 的场景覆盖
+    notes: 配对制品：User Story
+
+  - type: contract-test
+    name: Contract Test
+    id_prefix: CT
+    id_pattern: "CT-\\d+"
+    domain: verification
+    definition: test/contract-test.md
+    purpose: 验证 Interface 的契约
+    notes: 配对制品：Interface
+
+  - type: transition-test
+    name: Transition Test
+    id_prefix: TT
+    id_pattern: "TT-\\d+"
+    domain: verification
+    definition: test/transition-test.md
+    purpose: 验证 Process 的状态转换
+    notes: 配对制品：Process
+
+  - type: integration-test
+    name: Integration Test
+    id_prefix: IT
+    id_pattern: "IT-\\d+"
+    domain: verification
+    definition: test/integration-test.md
+    purpose: 验证 Module 之间的交互
+    notes: 配对制品：Module
+
+  - type: benchmark
+    name: Benchmark
+    id_prefix: BM
+    id_pattern: "BM-\\d+"
+    domain: verification
+    definition: test/benchmark.md
+    purpose: 验证 Constraint 的指标是否达标
+    notes: 配对制品：Constraint / Metric
+
+  # ── 元制品 ────────────────────────────────────────────────────────────
+  - type: type-def
+    name: Type Def
+    id_prefix: TYPE
+    id_pattern: "TYPE-\\d+"
+    domain: meta
+    definition: schema/schema.md
+    purpose: 制品的结构定义——每个制品的 Schema 由它给出
+    notes: 制品体系的自描述元制品
