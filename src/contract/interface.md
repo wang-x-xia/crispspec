@@ -23,7 +23,7 @@
 | `request_fields` | list\<[TypedField](../../concepts.md#typedfield)\> | | 请求参数 |
 | `response_fields` | list\<[TypedField](../../concepts.md#typedfield)\> | | 响应字段 |
 | `error_ids` | list\<ref\> | `ERR-\d+` | 可能返回的错误（引用 [Error](error.md)） |
-| `role_ids` | list\<ref\> | `ROLE-\d+` | 授权角色——谁可以调用（引用 [Role](../governance/rbac/role.md)，可选） |
+| `role_ids` | list\<ref\> | `ROLE-\d+` | 授权角色——谁可以调用（引用 [Role](../access/role.md)，可选） |
 | `rate_limit` | RateLimit | | 限流策略（可选） |
 
 ---
@@ -108,5 +108,5 @@ rate_limit:
 | ← 入 | `EXPOSES` | [Module](../module/module.md) |
 | 出 → | `USES_TYPE` | [Entity](entity.md) |
 | 出 → | `RETURNS` | [Error](error.md) |
-| 出 → | `AUTHORIZED_BY` | [Role](../governance/rbac/role.md) |
+| 出 → | `AUTHORIZED_BY` | [Role](../access/role.md) |
 | 出 → | `TESTED_BY` | [Contract Test](../test/contract-test.md) |

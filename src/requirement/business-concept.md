@@ -11,7 +11,8 @@
 根据 SDS 制品体系的实际设计，映射应直接对应到现有制品：
 
 **SDS 现有制品**：
-- **治理域**：Role, Permission, Constraint, Dependency
+- **访问控制域**：Role, Permission
+- **治理域**：Constraint, Dependency
 - **契约域**：Entity, Interface, Event, Error
 - **行为域**：Process, Orchestration, Reaction, Schedule
 - **组织单元**：Module

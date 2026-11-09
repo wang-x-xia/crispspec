@@ -49,7 +49,8 @@
 - **行为域**：Process、Orchestration、Reaction、Schedule
 - **代码域**：Repository、Code Ref
 - **故障域**：Incident、Runbook、Playbook
-- **治理域**：Constraint、Metric、RBAC、Dependency
+- **治理域**：Constraint、Metric、Dependency
+- **访问控制域**：Role、Permission
 - **交付域**：Environment、Pipeline、Configuration、Config Set、Secret
 - **测试域**：Acceptance Test、Scenario Test、Integration Test、Contract Test、Transition Test、Benchmark
 

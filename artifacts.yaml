@@ -52,7 +52,10 @@ domains:
     question: 出了什么事？怎么恢复？
   governance:
     label: 治理域
-    question: 谁能做什么？性能底线是什么？
+    question: 性能底线是什么？用了哪些第三方依赖？
+  access:
+    label: 访问控制域
+    question: 谁能访问什么？权限怎么判定？
   delivery:
     label: 交付域
     question: 部署到哪？配置怎么管？
@@ -272,32 +275,6 @@ artifacts:
       与独立的 Code Ref 制品并存，需注意区分。
 
   # ── 治理域 ────────────────────────────────────────────────────────────
-  - type: role
-    name: Role
-    id_prefix: ROLE
-    domain: governance
-    definition: src/governance/rbac/role.md
-    manager: null
-    tests: null
-    status: not-started
-    stage: 2
-    priority: P1
-    depends_on: []
-    notes: BC 的 as_actor 映射目标之一（另一个是 Module）
-
-  - type: permission
-    name: Permission
-    id_prefix: PERM
-    domain: governance
-    definition: src/governance/rbac/permission.md
-    manager: null
-    tests: null
-    status: not-started
-    stage: 2
-    priority: P2
-    depends_on: [role]
-    notes: 独立访问控制体系；Secret 的访问控制引用它
-
   - type: constraint
     name: Constraint
     id_prefix: CON
@@ -336,6 +313,33 @@ artifacts:
     priority: P2
     depends_on: []
     notes: 第三方依赖
+
+  # ── 访问控制域 ────────────────────────────────────────────────────────
+  - type: role
+    name: Role
+    id_prefix: ROLE
+    domain: access
+    definition: src/access/role.md
+    manager: null
+    tests: null
+    status: not-started
+    stage: 2
+    priority: P1
+    depends_on: []
+    notes: BC 的 as_actor 映射目标之一（另一个是 Module）
+
+  - type: permission
+    name: Permission
+    id_prefix: PERM
+    domain: access
+    definition: src/access/permission.md
+    manager: null
+    tests: null
+    status: not-started
+    stage: 2
+    priority: P2
+    depends_on: [role]
+    notes: 独立访问控制体系；Secret 的访问控制引用它
 
   # ── 故障域 ────────────────────────────────────────────────────────────
   - type: incident
