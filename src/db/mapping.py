@@ -30,7 +30,7 @@ _TYPE_TO_PREFIX: dict[str, str] = {
     "pipeline": "PIPE",
     "configuration": "CONF",
     "config-set": "CSET",
-    "confidential_value": "CONFIDENTIAL",
+    "secret": "SEC",
     "acceptance-test": "AT",
     "scenario-test": "ST",
     "integration-test": "IT",

@@ -27,7 +27,7 @@ environment = "environment"
 pipeline = "pipeline"
 configuration = "configuration"
 config_set = "config-set"
-confidential = "confidential"
+secret = "secret"
 acceptance_test = "acceptance-test"
 scenario_test = "scenario-test"
 integration_test = "integration-test"
@@ -42,7 +42,6 @@ __all__ = [
     "benchmark",
     "business_concept",
     "code_ref",
-    "confidential",
     "config_set",
     "configuration",
     "constraint",
@@ -70,6 +69,7 @@ __all__ = [
     "runbook",
     "scenario_test",
     "schedule",
+    "secret",
     "transition_test",
     "type_def",
     "user_story",
@@ -103,7 +103,7 @@ ALL_TYPES = (
     pipeline,
     configuration,
     config_set,
-    confidential,
+    secret,
     acceptance_test,
     scenario_test,
     integration_test,

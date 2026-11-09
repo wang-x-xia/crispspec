@@ -11,6 +11,9 @@ dependencies = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
+# Source root for first-party import detection: the project root, so that
+# `src.db...` is recognised as first-party (and separated from third-party).
+src = ["."]
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -27,9 +30,16 @@ allowed-confusables = ["（", "）"]
 "tests/**" = ["S101"]
 # Dynamic table name cause S608 issue, use a separated file.
 "src/db/sql.py" = ["S608"]
+# `secret` is an artifact type name (SEC-\d+), not a hardcoded credential.
+"src/db/types.py" = ["S105"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+[tool.pytest.ini_options]
+# The `src` package lives at the project root but the project is not
+# installed as a distribution, so make it importable from the repo root.
+pythonpath = ["."]
 
 [dependency-groups]
 dev = [
@@ -37,5 +47,3 @@ dev = [
     "ruff>=0.15.12",
 ]
 
-[project.scripts]
-check = "sh:uv run ruff check --ignore-noqa && uv run pytest"

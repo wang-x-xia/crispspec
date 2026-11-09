@@ -13,6 +13,22 @@ import sys
 from pathlib import Path
 
 
+def _configure_output() -> None:
+    """Make stdout/stderr able to emit the report's non-ASCII characters.
+
+    On Windows the default console encoding is often GBK, which cannot encode
+    the ``✓`` marker used by the report.  Reconfiguring to UTF-8 keeps the
+    output readable; ``errors="replace"`` guarantees the tool never crashes
+    on an exotic locale.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is None:
+            continue
+        with contextlib.suppress(OSError, ValueError):
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 class MarkdownLinkChecker:
     """Checker for markdown file links."""
 
@@ -39,11 +55,15 @@ class MarkdownLinkChecker:
         if not link_without_anchor:
             return base_file.parent
 
-        resolved_path = (base_file.parent / link_without_anchor).resolve()
+        return (base_file.parent / link_without_anchor).resolve()
 
-        with contextlib.suppress(ValueError):
+    def escapes_root(self, resolved_path: Path) -> bool:
+        """Check whether *resolved_path* points outside the project root."""
+        try:
             resolved_path.relative_to(self.root_dir)
-        return resolved_path
+        except ValueError:
+            return True
+        return False
 
     def check_local_link(self, base_file: Path, link: str) -> tuple[bool, str]:
         """Check if a local link is valid."""
@@ -54,6 +74,9 @@ class MarkdownLinkChecker:
             return True, "Anchor link (skipped)"
 
         resolved_path = self.resolve_relative_link(base_file, link)
+
+        if self.escapes_root(resolved_path):
+            return False, f"Link escapes project root: {resolved_path}"
 
         if resolved_path.exists():
             return True, "OK"
@@ -121,6 +144,8 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    _configure_output()
 
     checker = MarkdownLinkChecker(args.directory)
     checker.check_all()
