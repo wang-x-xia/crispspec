@@ -147,6 +147,23 @@ db 层注册了 **35** 个制品类型，**每个都有一份 `.md` 定义**（`
 
 `tests/module/`（35 个）+ `tests/requirement/`（24 个）。此前 `src/module` 是唯一没有测试的制品管理器。
 
+### 5.7 CI 一直是红的（`375e298` 之外的发现）
+
+`main` 上的 **6 次 CI 运行全部失败**，从第一个引入 CI 的提交（`fdab0c3`，2026-05-14）开始。
+原因有两个，都属于“Windows 上看不出来”的类型：
+
+| 原因 | 表现 | 状态 |
+|------|------|------|
+| pytest 无法导入 `src` | `ModuleNotFoundError: No module named 'src'` | 已修（`pythonpath = ["."]`） |
+| `EXE001` shebang 与可执行位不一致 | `src/module/__init__.py`、`src/schema/__init__.py` 带 shebang 但 git mode 是 644 | 已修（删掉无意义的 shebang） |
+
+`EXE001` 只在 Linux runner 上触发 —— Windows 没有可执行位概念，ruff 在本地直接跳过该检查。
+包初始化文件本来就不该有 shebang（它们是被 import 的，不是被执行的），已删除，
+并加 `tests/test_repository_hygiene.py` 防止复发。
+
+> **教训**：本地 `ruff` 绿 ≠ CI 绿。凡是依赖文件模式、行尾、路径大小写的规则，
+> 都只能在 Linux runner 上暴露。
+
 ---
 
 ## 六、遗留问题与风险
@@ -209,9 +226,7 @@ BC 的七条语义映射（`as_actor → ROLE/MODULE`、`as_object → ENTITY` �
 
 **6.11 CI 只跑 ubuntu。**
 链接检查器的编码问题正是 Windows 专属故障，却因为 CI 不跑 Windows 而漏网。
-建议加一条 `runs-on: windows-latest` 的 job。
-
-**6.12 `src/requirement/natural-language-structuring.md` 归属不明。**
+建议加一条 `runs-on: windows-latest` 的 job。**6.12 `src/requirement/natural-language-structuring.md` 归属不明。**
 它是过程文档而非制品，但放在制品目录里，且不在 `src/db/types.py` 注册。
 
 ---

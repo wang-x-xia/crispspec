@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Module artifact management."""
 
 from __future__ import annotations

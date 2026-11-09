@@ -16,8 +16,8 @@ import yaml
 from src.db.mapping import _TYPE_TO_PREFIX
 from src.db.types import ALL_TYPES
 
-REGISTRY_PATH = Path("artifacts.yaml")
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
+REGISTRY_PATH = PROJECT_ROOT / "artifacts.yaml"
 
 STAGE_ONE = 1
 STAGE_TWO = 2
