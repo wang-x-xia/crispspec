@@ -1,5 +1,8 @@
 # CrispSpec — Software Defined by Structured Artifacts
 
+> **本项目当前处于设计期。** 仓库里没有实现代码，只有制品体系本身，
+> 和一个把它讲清楚的交互式前端。
+
 ## 宏大目标
 
 ### 一句话定义
@@ -40,9 +43,25 @@
 
 ---
 
-## 项目结构
+## 仓库结构
 
-本项目定义了一套完整的结构化制品体系，用于描述软件系统的各个方面：
+```
+crispspec/
+├── README.md          本文件
+├── AGENTS.md          给 AI 协作者的工作说明
+└── design/            制品体系 + 它的交互式前端
+    ├── content/       设计文档（唯一事实来源）
+    ├── data/          制品登记表
+    ├── scripts/       编译脚本
+    ├── tests/         一致性测试
+    └── src/           前端应用
+```
+
+**整个工程都在 `design/` 里。** 它既是被展示的内容，也是展示内容的工具。
+
+### 制品体系
+
+35 种制品，分 11 个域：
 
 - **需求域**：Draft、Requirement、User Story、Business Concept
 - **契约域**：Entity、Interface、Event、Error
@@ -52,67 +71,64 @@
 - **治理域**：Constraint、Metric、Dependency
 - **访问控制域**：Role、Permission
 - **交付域**：Environment、Pipeline、Configuration、Config Set、Secret
-- **测试域**：Acceptance Test、Scenario Test、Integration Test、Contract Test、Transition Test、Benchmark
+- **验证域**：Acceptance / Scenario / Integration / Contract / Transition Test、Benchmark
+- **组织单元**：Module
+- **元制品**：Type Def
 
-详细的制品定义请参考 [`concepts.md`](concepts.md) 和 `src/` 目录下的各个子模块。
+它们通过 **83 条 typed ID 关系边**互相引用，形成一张知识图谱；
+**10 个主线阶段**把 35 种制品串成一条不重不漏的链（外加 3 个横切阶段）。
 
-### 制品图谱（交互网页）
+---
 
-[`docs/artifact-graph.html`](docs/artifact-graph.html) 把整个制品体系渲染成一张可交互的关系图，
-提供三种视图：
-
-- **体系图** —— 35 种制品类型的全景网络：按域着色，标注 ID 前缀、实现状态、Stage；
-  90 条关系边来自每份制品定义的 `## 关联` 表（不是另维护一份清单）
-- **开发主线** —— 从意图到运维的**纵向链路**：10 个阶段把 35 种制品串成一条不重不漏的链；
-  区分「产出」与「可提前准备」，39 次交接全部是真实存在的关系边；
-  横切关注点（治理 / 访问控制 / 制品结构）单独标出
-- **实例图** —— 传入制品数据库后，真实制品与它们之间的引用（含悬空引用标记）
-
-点击节点看**完整字段表、枚举、映射、出入关系**；点击主线阶段看**该阶段的制品与交接**。
-按域 / 关系类型 / 实现状态筛选，搜索、缩放、拖拽。
-
-> 网页由 `src/viz/` 从仓库自身的数据生成，不手写、不依赖 CDN、不联网。
-> 改了制品定义后重新生成即可：
+## 交互式前端
 
 ```bash
-uv run python -m src.viz.build
+cd design
+npm install
+npm run dev      # http://localhost:5173
 ```
 
-### 开发主线
+前端把整个体系摊开：
 
-主线是"工作顺序"，域是"关注点"——两者是正交的。主线声明在 `artifacts.yaml` 的 `mainline:` 段：
+| 视图 | 内容 |
+|------|------|
+| **概览** | 愿景、设计原则、域模型、35 种制品的用途清单、主线表格 |
+| **体系图** | 制品全景关系图——按域着色，按关系类型筛选，搜索、缩放、拖拽；点开看完整字段表 |
+| **开发主线** | 从意图到运维的纵向链路：每一步的产出、可提前准备的东西、交接边 |
+| **制品** | 每种制品的字段、枚举、子结构、映射、出入关系，以及完整定义文档 |
+| **文档** | 全部设计文档——愿景、体系概览、RBAC 子系统、自然语言结构化、路线图…… |
 
-```yaml
-mainline:
-  - id: requirement
-    label: 结构化需求
-    question: 消歧之后的需求是什么？
-    produces: [requirement]
-    # 业务概念可以预先定义好，也可以在结构化需求时创建——它不是这一步的必然产物
-    prepares: [business-concept]
-    handoff:
-      - {relation: DISAMBIGUATED_INTO, from: draft, to: requirement}
-```
+> 页面里的每个数字、每条边、每个字段都来自仓库自身：
+> `design/data/artifacts.yaml`（登记表）+ 各制品定义文档里的 `## 字段定义` 与 `## 关联` 表。
+> **没有第二份手写的数据**，所以图和文档不可能对不上。
 
-**`produces` 与 `prepares` 的区别是这张表的关键**：主线不声称自己产出所有制品。
-业务概念可能半年前就定义好了，错误目录通常先攒出来，环境与密钥由运维预先备好——
-主线只说它们在对应阶段已经就位，不规定它们何时产生。
+---
 
-三条约束由 `tests/registry/` 保证：
+## 为什么现在只有设计
 
-- 每种制品**恰好**出现在一个阶段的 `produces` 或 `prepares` 里——主线不重不漏地串起全部 35 种制品
-- 每条 `handoff` 都必须是制品定义里**真实存在**的关系边——主线不是编出来的
-- 横切阶段只 `prepares`、不 `produces`——它们不推进主线
+设计期先把"制品应该长什么样"说清楚，并让这些说法**可被机器检查**：
 
-### 延伸阅读
+- 每种制品恰好属于一个主线阶段
+- 每条主线交接都是真实存在的关系边
+- 横切阶段只准备、不产出
+- 每份定义文档都存在，且能解析出字段表
+- 文档内部的相对链接都指向存在的文件
+
+这五条由 `design/scripts/build-content.mjs` 与 `design/tests/` 双重保证——
+违反了，`npm run build` 直接失败。
+
+实现期（存储、校验、CLI、代码生成）等制品定稿后再启动。
+
+---
+
+## 延伸阅读
 
 | 文档 | 内容 |
 |------|------|
-| [`docs/artifact-graph.html`](docs/artifact-graph.html) | **制品图谱**：体系图 / 开发主线 / 实例图 |
-| [`STATUS.md`](STATUS.md) | **项目现状**：当前进度、制品覆盖度、遗留问题与风险 |
-| [`artifacts.yaml`](artifacts.yaml) | **制品实现进度登记表**：35 个制品的定义 / 实现 / Stage / 依赖 / 主线阶段 |
-| [`TODO.md`](TODO.md) | Stage 1 / Stage 2 的目标与验收标准 |
-| [`concepts.md`](concepts.md) | 制品体系全景：域模型、关系图、ID 规范 |
-| [`AGENTS.md`](AGENTS.md) | 环境准备与工具用法 |
-
----
+| [`design/content/vision.md`](design/content/vision.md) | 愿景与目标全景 |
+| [`design/content/concepts.md`](design/content/concepts.md) | 制品体系全景：域模型、制品总览、主线、关系图、ID 规范 |
+| [`design/content/roadmap.md`](design/content/roadmap.md) | 路线图：设计期的验收标准与后续阶段 |
+| [`design/content/status.md`](design/content/status.md) | 项目现状：仓库结构、已确定的决策、遗留问题 |
+| [`design/data/artifacts.yaml`](design/data/artifacts.yaml) | 制品登记表（机器可读） |
+| [`design/README.md`](design/README.md) | 前端工程说明：怎么跑、怎么加制品 |
+| [`AGENTS.md`](AGENTS.md) | 给 AI 协作者的工作说明 |

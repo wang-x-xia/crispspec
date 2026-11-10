@@ -1,0 +1,365 @@
+# Structured Artifacts — 制品体系概览
+
+> 📊 **想看图？** [制品图谱（交互网页）](../) 是本文件的交互式版本：
+> 35 种制品 + 83 条关系，可筛选、可搜索、可点开看字段定义。
+
+## 设计原则
+
+1. **两个描述性字段**：每个制品最多包含 `name`（短标题）和 `description`（一句话说明）两个自由文本字段。
+2. **其余字段皆结构化**：所有非描述性字段必须是可枚举（enum）、可验证（typed reference / pattern）、或可计算的（number / boolean / datetime）。
+3. **ID 即引用**：制品之间通过 typed ID 互相引用，形成可追溯的知识图谱。
+4. **单向熵减**：信息从非结构化（Draft）逐层转化为严格结构化制品，不允许反向退化。
+
+---
+
+## 关系在哪
+
+**关系全部外置。** 制品与制品之间的关系只出现在定义文档末尾的 `## 关联` 表里：
+
+| 方向 | 边类型 | 目标制品 |
+|------|--------|---------|
+| `出 →` | `RELATION_NAME` | `目标制品.md` |
+| `← 入` | `RELATION_NAME` | `来源制品.md` |
+| `出 ↔` | `RELATION_NAME` | 双向 |
+
+字段表里**不出现**指向其它制品的字段（`xxx_id`、`xxx_ids`）——
+那是同一件事的重复表述：一边是“关系表里的一行”，一边是“字段表里的一列”。
+每件制品的字段表只回答一个问题：**这件东西自己有哪些数据**。
+
+| | 表达在 | 例子 |
+|---|---|---|
+| 这件制品**自己**的数据 | 字段表 | `Entity.fields`、`Interface.protocol`、`User Story.story_points` |
+| 这件制品**和谁**有关系 | `## 关联` 表 | `Entity ← Module.CONTAINS`、`User Story → Interface.IMPLEMENTED_BY` |
+
+> 实例级的引用（“这条配置覆盖了哪个配置项”“这个故事实现了哪个接口的具体实例”）
+> 目前还没有落点——它既不是字段，也不是类型级的关系。
+> 见 [项目现状](status.md) 的遗留问题。
+
+
+---
+
+## 域模型
+
+制品按关注点划分为若干域，Module 作为跨域的组织容器将它们分组管理：
+
+| 域 | 关注点 | 核心问题 |
+|----|--------|---------|
+| **需求域** | 意图与交付 | 用户要什么？怎么拆成可交付的单元？ |
+| **契约域** | 结构与通信 | 数据长什么样？模块间怎么通信？ *(Module 内部域)* |
+| **行为域** | 状态与编排 | 状态怎么变？多个接口怎么协调？ *(Module 内部域)* |
+| **代码域** | 实现映射 | 代码在哪个仓库？逻辑制品怎么映射到物理代码？ *(Module 内部域)* |
+| **故障域** | 故障与恢复 | 出了什么事？怎么恢复？ *(Module 内部域)* |
+| **治理域** | 约束与依赖 | 性能底线是什么？用了哪些第三方依赖？ |
+| **访问控制域** | 身份与授权 | 谁能访问什么？权限怎么判定？ |
+
+> **Module** 不是一个域，而是组织单元——类似文件夹，将契约域、行为域、代码域和故障域的制品按服务边界分组。由于模块会随项目演进经历拆分与合并，Module 与 Repository 之间存在 M:N 映射——同一 Module 的代码可能散布在多个 Repository 中，同一 Repository 也可能包含多个 Module 的代码。所有非需求、非治理制品都通过 `CONTAINS` 边归属于某个 Module。
+
+---
+
+## 制品总览
+
+### 需求域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Draft](requirement/draft.md) | `DRAFT-\d+` | `requirement/draft.md` | 唯一的非结构化入口——人类原始意图 |
+| [Requirement](requirement/requirement.md) | `REQ-\d+` | `requirement/requirement.md` | 消歧后的结构化需求——由多个业务概念描述，向下拆分成多个用户故事 |
+| [User Story](requirement/user-story.md) | `US-\d+` | `requirement/user-story.md` | 面向实现的需求分解单元 |
+| [Business Concept](requirement/business-concept.md) | `BC-\d+` | `requirement/business-concept.md` | 业务概念——映射到哪些内部制品（`as`） |
+
+### 契约域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Entity](contract/entity.md) | `ENT-\d+` | `contract/entity.md` | 数据结构契约——实体与字段定义 |
+| [Interface](contract/interface.md) | `API-\d+` | `contract/interface.md` | 同步 API 契约——请求、响应、错误码 |
+| [Event](contract/event.md) | `EVT-\d+` | `contract/event.md` | 异步通信契约——领域事件 |
+| [Error](contract/error.md) | `ERR-\d+` | `contract/error.md` | 错误目录——统一错误码、状态码、重试策略 |
+
+### 行为域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Process](behavior/process.md) | `PROC-\d+` | `behavior/process.md` | 单实体状态机——状态集合、转换规则、守卫条件 |
+| [Orchestration](behavior/orchestration.md) | `ORCH-\d+` | `behavior/orchestration.md` | 跨模块 Interface 编排——分布式事务、多步协调 |
+| [Reaction](behavior/reaction.md) | `SUB-\d+` | `behavior/reaction.md` | 事件反应器——模块响应领域事件自动执行 |
+| [Schedule](behavior/schedule.md) | `SCH-\d+` | `behavior/schedule.md` | 定时任务——按 cron 或固定间隔周期执行 |
+
+### 代码域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Repository](code/repository.md) | `REPO-\d+` | `code/repository.md` | 代码仓库——URL、默认分支、语言栈 |
+| [Code Ref](code/code-ref.md) | `CREF-\d+` | `code/code-ref.md` | 代码映射——制品到源码位置（仓库、文件路径、符号）的追溯引用 |
+
+### 故障域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Incident](incident/incident.md) | `INC-\d+` | `incident/incident.md` | 故障定义——故障类型、影响范围、处理流程 |
+| [Runbook](incident/runbook.md) | `RB-\d+` | `incident/runbook.md` | 运维手册——标准化操作步骤 |
+| [Playbook](incident/playbook.md) | `PB-\d+` | `incident/playbook.md` | 应急响应预案——故障场景、处置步骤 |
+### 治理域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Constraint](governance/constraint.md) | `CON-\d+` | `governance/constraint.md` | 性能、安全、合规等可验证约束 |
+| [Metric](governance/metric.md) | `MET-\d+` | `governance/metric.md` | 度量指标——单位、聚合方式、优化方向 |
+| [Dependency](governance/dependency.md) | `DEP-\d+` | `governance/dependency.md` | 第三方依赖——包名、版本范围、许可证 |
+
+### 访问控制域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Role](access/role.md) | `ROLE-\d+` | `access/role.md` | 参与者角色——身份条件、权限集合、继承关系 |
+| [Permission](access/permission.md) | `PERM-\d+` | `access/permission.md` | 授权条目——动作 × 资源 × 效果 |
+
+> 访问控制域原为治理域下的 RBAC 子系统，因“身份与授权”和“约束与依赖”关注点不同而独立。
+> 模型设计（RBAC 层级、显式否定优先）见 [RBAC — 访问控制子系统](access/concepts.md)。
+
+### 组织单元
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Module](module/module.md) | `MOD-\d+` | `module/module.md` | 组织容器——按服务边界将制品分组、声明依赖、映射源码 |
+
+### 环境与配置域
+
+| 制品类型 | ID 模式 | 文件 | 用途 |
+|---------|---------|------|------|
+| [Environment](delivery/environment.md) | `ENV-\d+` | `delivery/environment.md` | 部署目标——类型（dev / staging / prod）、地域、URL、配置基线 |
+| [Pipeline](delivery/pipeline.md) | `PIPE-\d+` | `delivery/pipeline.md` | 交付流程——从提交到上线的阶段序列、质量关卡、触发条件 |
+| [Configuration](delivery/configuration.md) | `CONF-\d+` | `delivery/configuration.md` | 配置项——键名、类型、默认值、验证规则 |
+| [Config Set](delivery/config-set.md) | `CSET-\d+` | `delivery/config-set.md` | 配置集合——按环境/模块分组的配置项及覆盖值 |
+| [Secret](delivery/secret.md) | `SEC-\d+` | `delivery/secret.md` | 敏感信息——密码、密钥、证书、API Token |
+
+> 环境与配置域是全局的，不受单个 Module 管辖。Pipeline 通过 `BUILDS` 引用 Module，通过 `DEPLOYS_TO` 引用 Environment，通过 `GATES_ON` 引用治理域的 Constraint 作为质量关卡。Environment 通过 `USES_CONFIG` 引用 Config Set，Config Set 通过 `OVERRIDES` 引用 Configuration。
+
+### 验证（测试制品）
+
+| 配对域 | 制品类型 | ID 模式 | 文件 | 验证对象 |
+|--------|---------|---------|------|---------|
+| 需求 | [Acceptance Test](test/acceptance-test.md) | `AT-\d+` | `test/acceptance-test.md` | Requirement |
+| 需求 | [Scenario Test](test/scenario-test.md) | `ST-\d+` | `test/scenario-test.md` | User Story |
+| 组织 | [Integration Test](test/integration-test.md) | `IT-\d+` | `test/integration-test.md` | Module 间交互 |
+| 契约 | [Contract Test](test/contract-test.md) | `CT-\d+` | `test/contract-test.md` | Interface 契约 |
+| 行为 | [Transition Test](test/transition-test.md) | `TT-\d+` | `test/transition-test.md` | Process 状态转换 |
+| 治理 | [Benchmark](test/benchmark.md) | `BM-\d+` | `test/benchmark.md` | Constraint 指标达标 |
+
+---
+
+## 需求域的结构
+
+需求域是整个体系的入口，它只有三件东西：
+
+```
+Draft（唯一允许非结构化的输入）
+  │  DISAMBIGUATED_INTO
+  ▼
+Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
+  │                                        │ AS
+  │  DECOMPOSES_INTO                       ▼
+  ▼                                  多个内部制品
+多个 User Story ──── IMPLEMENTED_BY ────▶ （Interface / Orchestration / …）
+```
+
+| 关系 | 基数 | 谁声明 |
+|------|------|--------|
+| `DISAMBIGUATED_INTO` | 1 → 1 | Draft 的下游：消歧后成为一条 Requirement |
+| `DESCRIBED_BY` | 多 → 多 | 一条需求由若干个业务概念描述 |
+| `DECOMPOSES_INTO` | 1 → 多 | 一条需求拆成若干个用户故事 |
+| `AS` | 多 → 多 | Business Concept 映射到哪些内部制品 |
+
+**需求不区分概念的语义位置。** 执行者、条件、动作、结果这些角色，
+由每个 Business Concept 自己的 `as` 映射决定：
+映射到 Role 的是执行者，映射到 Entity 字段的是条件，映射到 Interface 的是动作。
+需求只负责说"这句话涉及这些概念"，剩下的交给业务概念自己解释。
+
+因此一条需求的出向关系只有四条：`DESCRIBED_BY`、`DECOMPOSES_INTO`、
+`ACTED_BY`（执行角色）、`TESTED_BY`（验收测试）。
+
+---
+
+## 开发主线
+
+域是"关注点"的横向切分，主线是"工作顺序"的纵向推进——两者正交。
+35 种制品被 10 个主线阶段串成一条不重不漏的链，每一步都由一条**真实存在的关系边**交接。
+
+但主线不声称自己**产出**所有制品。每个阶段分两类：
+
+- **产出** —— 这一步创建的制品（实心圆点）
+- **可提前准备** —— 这一步用到的、但不必由这一步创建的制品（虚线圆点）：
+  业务概念可以半年前就定义好，错误目录通常先攒出来，仓库先建起来再往里映射，
+  环境与密钥由运维预先备好——主线只说它们在这一步已经就位，不规定它们何时产生
+
+| # | 阶段 | 回答什么 | 产出 | 可提前准备 | 交接 |
+|---|------|---------|------|-----------|------|
+| 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — | — |
+| 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`DESCRIBED_BY` |
+| 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | — | `DECOMPOSES_INTO` |
+| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS` |
+| 5 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | — | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
+| 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
+| 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `MAPPED_TO`、`LOCATED_IN` |
+| 8 | 验证闭环 | 怎么证明这个制品是对的？ | Acceptance / Scenario / Contract / Transition / Integration Test、Benchmark | — | `TESTED_BY` |
+| 9 | 交付上线 | 部署到哪？配置怎么管？ | Pipeline | Environment / Config Set / Configuration / Secret | `BUILDS`、`DEPLOYS_TO`、`USES_CONFIG`、`OVERRIDES`、`REQUIRES` |
+| 10 | 运维反馈 | 出了什么事？怎么恢复？ | Incident / Runbook / Playbook | — | `AFFECTS`、`RESOLVED_BY`、`HANDLES` |
+
+横切关注点——它们不推进主线，也不由主线产出，但贯穿主线全程：
+
+| 阶段 | 回答什么 | 可提前准备 | 交接 |
+|------|---------|-----------|------|
+| 治理约束 | 底线是什么？依赖了谁？ | Constraint / Metric / Dependency | `CONSTRAINED_BY`、`MEASURES`、`DEPENDS_ON` |
+| 访问控制 | 谁能访问什么？ | Role / Permission | `AUTHORIZED_BY`、`HAS_PERMISSION` |
+| 制品结构 | 每个制品的结构由谁定义？ | Type Def | — |
+
+> “语义对齐”曾经是主线上的一个独立阶段，但它其实不产出任何制品——
+> 业务概念到技术制品的映射是一条**关系**，不是一件东西。
+> 现在这条对齐由第 4 阶段的几条 `AS_*` 交接边表达，业务概念本身则回到第 2 阶段。
+
+> 主线声明在 [`artifacts.yaml`](../data/artifacts.yaml) 的 `mainline:` 段，
+> 可视化页面里的「开发主线」视图就是它。
+> 两条约束由构建脚本保证：**每种制品恰好属于一个阶段**，
+> **每条交接都是真实存在的关系边**——改了关系却忘了改主线，前端就构建不过。
+
+---
+
+## 制品关系图
+
+> 下面的静态图是 [制品图谱（交互网页）](../) 的简化版——
+> 网页版由每份制品定义的 `## 关联` 表自动生成，能看到关系类型、出入方向，
+> 以及 Business Concept 的映射边（本图里没有）。
+
+### 跨域总览
+
+```mermaid
+graph LR
+    RD["需求域"] -->|IMPLEMENTED_BY| CD["契约域"]
+    RD -->|IMPLEMENTED_BY| BD["行为域"]
+    BD -->|COMPOSES / TRANSITIONS / LISTENS_TO| CD
+    RD -->|ACTED_BY| AC["访问控制域"]
+    CD -->|AUTHORIZED_BY| AC
+    GD["治理域"] -->|CONSTRAINED_BY| CD & BD
+    DL["环境与配置域"] -->|BUILDS| CD & BD
+    DL -->|GATES_ON| GD
+```
+
+### 完整制品关系
+
+```mermaid
+graph TD
+    subgraph requirement["需求域"]
+        DRAFT["Draft"] -->|DISAMBIGUATED_INTO| REQ["Requirement"]
+        REQ -->|DECOMPOSES_INTO| US["User Story"]
+        BC["Business Concept"]
+        REQ -.->|DESCRIBED_BY| BC
+    end
+
+    subgraph module_boundary["Module（组织边界）"]
+        MOD["Module"]
+
+        subgraph contract["契约域"]
+            ENT["Entity"] -->|PROJECTS_FROM| ENT
+            API["Interface"] -->|USES_TYPE| ENT
+            API -->|RETURNS| ERR["Error"]
+            EVT["Event"]
+        end
+
+        subgraph behavior["行为域"]
+            PROC["Process"]
+            ORCH["Orchestration"]
+            SUB["Reaction"]
+            SCH["Schedule"]
+        end
+
+        subgraph code["代码域"]
+            CREF["Code Ref"] -->|LOCATED_IN| REPO["Repository"]
+        end
+        
+        subgraph incident["故障域"]
+            INC["Incident"] -->|RESOLVED_BY| RB["Runbook"]
+            PB["Playbook"] -->|HANDLES| INC
+            PB -->|EXECUTES| RB
+        end
+
+        %% Module 是容器：归属只有一条边
+        MOD -->|CONTAINS| API & ENT & EVT & ERR
+        MOD -->|CONTAINS| PROC & ORCH & SUB & SCH
+        MOD -->|CONTAINS| CREF
+        MOD -->|CONTAINS| INC & RB & PB
+    end
+
+    subgraph governance["治理域"]
+        CON["Constraint"] -->|MEASURES| MET["Metric"]
+        DEP["Dependency"]
+    end
+
+    subgraph access["访问控制域"]
+        ROLE["Role"] -->|HAS_PERMISSION| PERM["Permission"]
+    end
+
+    subgraph delivery["环境与配置域"]
+        PIPE["Pipeline"] -->|DEPLOYS_TO| ENV["Environment"]
+        ENV -->|USES_CONFIG| CSET["Config Set"]
+        CSET -->|OVERRIDES| CONF["Configuration"]
+        SEC["Secret"]
+    end
+
+    %% 需求 → 实现
+    US -->|IMPLEMENTED_BY| API
+    US -->|IMPLEMENTED_BY| ORCH
+
+    %% 行为 → 契约
+    PROC -->|TRANSITIONS| ENT
+    PROC -->|TRIGGERS| EVT
+    ORCH -->|COMPOSES| API
+    SUB -->|LISTENS_TO| EVT
+
+    %% 契约/行为 → 代码
+    API -.->|MAPPED_TO| CREF
+    PROC -.->|MAPPED_TO| CREF
+
+    %% 业务概念的映射（as）
+    BC -->|AS| API & ENT & EVT & ERR
+    BC -->|AS| ROLE & MOD
+
+    %% → 访问控制
+    REQ -->|ACTED_BY| ROLE
+    API -->|AUTHORIZED_BY| ROLE
+
+    %% → 治理
+    module_boundary -->|DEPENDS_ON| DEP
+    
+    %% → 故障域
+    INC -->|AFFECTS| ENT
+
+    %% 交付
+    PIPE -->|BUILDS| module_boundary
+    PIPE -->|GATES_ON| CON
+```
+
+### 测试配对
+
+| 被测制品 | 测试制品 | 验证目标 |
+|---------|---------|---------|
+| Requirement | Acceptance Test | 需求验收 |
+| User Story | Scenario Test | 场景覆盖 |
+| Module | Integration Test | 模块间交互 |
+| Interface | Contract Test | 接口契约 |
+| Process | Transition Test | 状态转换 |
+| Constraint | Benchmark | 指标达标 |
+
+---
+
+## ID 规范
+
+- **格式**：`{TYPE_PREFIX}-{NUMBER}`，序号为不限位数的正整数（如 `REQ-1`、`MOD-42`、`ENT-10086`）
+- **不可复用**：ID 一旦分配永不回收，即使制品被废弃
+- **引用表示**：在其他制品中通过完整 ID 字符串（如 `"MOD-10"`）引用
+
+---
+
+## TODO — 待扩展域
+
+- [ ] **可观测域** — 生产系统的可观测性支撑（告警、监控面板、日志、链路追踪等），复杂度高，暂不定义具体制品
+- [ ] **变更域** — 企业级系统的变更管理（变更请求、版本发布、回滚策略等），涉及风险管控和审批流程，复杂度高，暂不定义具体制品

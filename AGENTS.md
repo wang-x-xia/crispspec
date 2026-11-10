@@ -1,95 +1,124 @@
-# 项目工具
+# AGENTS.md — 给 AI 协作者的工作说明
+
+> 本项目处于**设计期**：仓库里没有实现代码，只有制品体系与展示它的前端。
+> 改动前先读 [`README.md`](README.md) 与 [`design/content/status.md`](design/content/status.md)。
+
+---
+
+## 仓库结构
+
+```
+crispspec/
+├── README.md          项目入口
+├── AGENTS.md          本文
+└── design/            唯一的工程
+    ├── content/       设计文档——唯一事实来源
+    ├── data/artifacts.yaml   制品登记表
+    ├── scripts/       编译脚本（登记表 + 文档 → 前端数据）
+    ├── tests/         体系一致性测试
+    └── src/           前端应用（React + TypeScript + Vite）
+```
+
+---
 
 ## 环境准备
 
-项目使用 [uv](https://docs.astral.sh/uv/) 管理依赖：
-
 ```bash
-uv sync --all-groups
+cd design
+npm install
 ```
+
+---
 
 ## 代码检查
 
-CI（`.github/workflows/check.yaml`）执行以下三步，本地可用同样的命令验证：
+CI（`.github/workflows/design.yml`）执行以下四步，本地可用同样的命令验证：
 
 ```bash
-uv run ruff check --ignore-noqa   # 静态检查
-uv run pytest                     # 单元测试
-uv run src/checker/main.py        # Markdown 链接检查
+cd design
+npm run build     # 编译内容 + 类型检查 + 生产构建（编译内容时会校验体系一致性）
+npm test          # 体系一致性测试
+npm run lint      # ESLint
 ```
 
-> 项目未打包为发行版，因此 `src` 包不是通过安装引入的。`pyproject.toml` 中已配置
-> `[tool.pytest.ini_options] pythonpath = ["."]`，让 pytest 能从仓库根目录导入 `src`。
+> **改完设计文档，一定要跑 `npm run build`。**
+> 它会重新编译 `content/` + `data/`，并检查体系是否自洽——
+> 改了关系却忘了改主线、链接指向不存在的文件，都会在这里报错。
 
-## 制品图谱网页
+---
 
-`src/viz/` 把制品体系渲染成一个自包含的交互网页（`docs/artifact-graph.html`）。
+## 制品体系
 
-### 生成
+### 唯一事实来源
 
-```bash
-uv run python -m src.viz.build                          # 体系图（默认写到 docs/）
-uv run python -m src.viz.build --db crispspec.db        # 额外包含制品实例图
-```
+每种制品的**定义文档**（`design/content/<domain>/<artifact>.md`）是唯一事实来源。
+前端展示的一切——图、清单、详情面板、字段表——都是从这些文档编译出来的：
 
-页面数据全部来自仓库自身：
+| 文档小节 | 编译成什么 |
+|----------|------------|
+| `## 目标` | 制品的用途摘要 |
+| `## 字段定义` | 字段表 + 枚举表 |
+| `## 子结构定义` | 子结构表 |
+| `## 关联` | 关系边（边类型、出入方向、目标制品） |
+| `## 映射关系` | Business Concept 的 `as` 映射 |
 
-| 来源 | 提供的内容 |
-|------|-----------|
-| `artifacts.yaml` | 35 种制品类型、所属域、ID 前缀、实现状态、Stage、**开发主线阶段** |
-| `src/<domain>/*.md` 的 `## 关联` 表 | 关系边（边类型、出入方向） |
-| `src/<domain>/*.md` 的 `## 字段定义` 表 | 字段、约束、枚举、语义位置 |
-| `src/requirement/common.py` | Business Concept 的映射目标类型 |
-| SQLite 数据库（可选） | 制品实例与实例之间的引用 |
+**不要**在别处再维护一份字段清单或关系清单——它们会漂移。
 
-### 开发主线
+### 关系外置，字段不重复声明
 
-`artifacts.yaml` 的 `mainline:` 段声明开发的纵向顺序：10 个主线阶段 + 3 个横切阶段。
-每个阶段分 `produces`（这一步产出的）与 `prepares`（可提前准备、不由这一步产出的）——
-主线不声称自己产出所有制品，业务概念、错误目录、仓库、环境、权限都可以早就定义好。
+指向其它制品的字段（`xxx_id`、`xxx_ids`）**不写进字段表**：
+关系只写在 `## 关联` 表里，字段表只描述这件制品自己的数据。
+两者说同一件事，就是两处会漂移的副本。
 
-三条约束都由 `tests/registry/test_artifacts.py` 保证：
+### 登记表
 
-- 每种制品恰好属于一个阶段的 `produces` 或 `prepares`
-- 每条 `handoff` 都必须是一条真实存在的关系边
-- 横切阶段只 `prepares`、不 `produces`
+`design/data/artifacts.yaml` 声明每种制品的：类型键、ID 前缀、ID 模式、所属域、
+定义文档路径、**用途**（`purpose`，一句话说明它解决什么问题）、备注，
+以及开发主线（`mainline:` 段）。
 
-改动了制品关系却忘了更新主线，测试会报红。
+### 体系不变量
 
-### 约定
+以下五条由构建脚本与测试保证，违反即构建失败：
 
-- **页面是生成物，不是手写文件**。改了制品定义后必须重新生成，
-  `tests/viz/` 里有测试锁定 `docs/artifact-graph.html` 与源文档不漂移。
-- **页面自包含**：不引用 CDN、不联网，双击即可打开。
-- 数据库以**只读**方式打开，可视化器不会修改被查看的库。
+1. 每种制品**恰好**出现在一个主线阶段的 `produces` 或 `prepares` 里
+2. 每条 `handoff` 都必须是制品定义里**真实存在**的关系边
+3. 横切阶段（`lateral: true`）只 `prepares`、不 `produces`
+4. 每份定义文档都存在，且能解析出字段表
+5. 文档内部的相对链接都指向存在的文件
 
+---
 
-## Markdown 链接检查器
+## 改动的规矩
 
-项目包含一个 Markdown 链接检查器，用于验证文档中的链接是否正确。
+### 加一种制品
 
-### 使用方法
+1. 写定义文档：`design/content/<domain>/<artifact>.md`，
+   至少包含 `## 目标`、`## 字段定义`、`## 关联` 三节；
+   `## 关联` 的表是三列：`| 方向 | 边类型 | 目标制品 |`，
+   方向用 `出 →` / `← 入` / `出 ↔`，目标制品用 markdown 链接。
+2. 在 `design/data/artifacts.yaml` 登记它（含 `purpose`）。
+3. 归入主线阶段，并写清交接边。
+4. `npm run build`。
 
-```bash
-uv run src/checker/main.py
-```
+### 改关系
 
-### 功能
+改 `## 关联` 表就行——但要记得检查主线：如果这条边是交接边，
+`mainline:` 里的 `handoff` 也要跟着改，否则构建会报"不是真实存在的关系边"。
 
-- 递归检查项目中所有 `.md` 文件
-- 验证本地文件链接是否存在
-- 跳过 HTTP/HTTPS 链接（不进行网络请求）
-- 跳过锚点链接
-- 报告指向项目根目录之外的链接
-- 生成详细的错误报告
+### 改前端
 
-### 输出示例
+- 视图组件在 `design/src/components/`
+- 布局算法（力导向、主线排布）在 `design/src/graph/layout.ts`
+- 路由在 `design/src/router.ts`
+- 数据是 `design/src/generated/content.json` 的类型化外壳（`design/src/data.ts`），
+  **由构建脚本生成，不要手改**
 
-```
-检查了 37 个markdown文件
-发现 0 个错误
+---
 
-✓ 所有链接检查通过!
-```
+## 约定
 
-如果发现错误，会显示详细的文件路径、链接内容和错误信息。
+- **页面是生成物，不是手写文件。** 改了制品定义后必须重新构建，
+  `design/tests/` 里有测试锁定内容与源文档不漂移。
+- **页面自包含**：不引用 CDN、不联网，构建产物可以直接双击打开。
+- **中文优先**：界面文案、文档、注释都用中文；代码标识符用英文。
+- **不引入实现期代码**：设计期不写 Python/后端代码，也不加实现期的流水线。

@@ -1,1 +1,0 @@
-"""Markdown link checker package."""
