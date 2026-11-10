@@ -1,7 +1,7 @@
 # Structured Artifacts — 制品体系概览
 
 > 📊 **想看图？** [制品图谱（交互网页）](../) 是本文件的交互式版本：
-> 35 种制品 + 89 条关系，可筛选、可搜索、可点开看字段定义。
+> 35 种制品 + 83 条关系，可筛选、可搜索、可点开看字段定义。
 
 ## 设计原则
 
@@ -37,7 +37,7 @@
 | 制品类型 | ID 模式 | 文件 | 用途 |
 |---------|---------|------|------|
 | [Draft](requirement/draft.md) | `DRAFT-\d+` | `requirement/draft.md` | 唯一的非结构化入口——人类原始意图 |
-| [Requirement](requirement/requirement.md) | `REQ-\d+` | `requirement/requirement.md` | 消歧后的结构化需求 |
+| [Requirement](requirement/requirement.md) | `REQ-\d+` | `requirement/requirement.md` | 消歧后的结构化需求——由多个业务概念描述，向下拆分成多个用户故事 |
 | [User Story](requirement/user-story.md) | `US-\d+` | `requirement/user-story.md` | 面向实现的需求分解单元 |
 | [Business Concept](requirement/business-concept.md) | `BC-\d+` | `requirement/business-concept.md` | 业务概念——映射到哪些内部制品（`as`） |
 
@@ -122,6 +122,38 @@
 
 ---
 
+## 需求域的结构
+
+需求域是整个体系的入口，它只有三件东西：
+
+```
+Draft（唯一允许非结构化的输入）
+  │  DISAMBIGUATED_INTO
+  ▼
+Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
+  │                                        │ AS
+  │  DECOMPOSES_INTO                       ▼
+  ▼                                  多个内部制品
+多个 User Story ──── IMPLEMENTED_BY ────▶ （Interface / Orchestration / …）
+```
+
+| 关系 | 基数 | 谁声明 |
+|------|------|--------|
+| `DISAMBIGUATED_INTO` | 1 → 1 | Draft 的下游：消歧后成为一条 Requirement |
+| `DESCRIBED_BY` | 多 → 多 | Requirement 的 `concept_ids` 列出这条需求涉及的业务概念 |
+| `DECOMPOSES_INTO` | 1 → 多 | User Story 的 `requirement_ids` 列出它服务哪些需求 |
+| `AS` | 多 → 多 | Business Concept 映射到哪些内部制品 |
+
+**需求不区分概念的语义位置。** 执行者、条件、动作、结果这些角色，
+由每个 Business Concept 自己的 `as` 映射决定：
+映射到 Role 的是执行者，映射到 Entity 字段的是条件，映射到 Interface 的是动作。
+需求只负责说"这句话涉及这些概念"，剩下的交给业务概念自己解释。
+
+因此一条需求的出向关系只有四条：`DESCRIBED_BY`、`DECOMPOSES_INTO`、
+`ACTED_BY`（执行角色）、`TESTED_BY`（验收测试）。
+
+---
+
 ## 开发主线
 
 域是"关注点"的横向切分，主线是"工作顺序"的纵向推进——两者正交。
@@ -137,7 +169,7 @@
 | # | 阶段 | 回答什么 | 产出 | 可提前准备 | 交接 |
 |---|------|---------|------|-----------|------|
 | 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — | — |
-| 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`ACTED_BY` |
+| 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`DESCRIBED_BY` |
 | 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | — | `DECOMPOSES_INTO` |
 | 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS` |
 | 5 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | — | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
@@ -194,8 +226,7 @@ graph TD
         DRAFT["Draft"] -->|DISAMBIGUATED_INTO| REQ["Requirement"]
         REQ -->|DECOMPOSES_INTO| US["User Story"]
         BC["Business Concept"]
-        DRAFT -.->|USES| BC
-        REQ -.->|USES| BC
+        REQ -.->|DESCRIBED_BY| BC
     end
 
     subgraph module_boundary["Module（组织边界）"]

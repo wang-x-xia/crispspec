@@ -115,5 +115,5 @@ risk_level: MEDIUM
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `RESOLVES` | [Incident](incident.md) |
+| ← 入 | `RESOLVED_BY` | [Incident](incident.md) |
 | ← 入 | `CONTAINS` | [Module](../module/module.md) |

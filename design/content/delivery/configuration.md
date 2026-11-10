@@ -93,4 +93,4 @@ sensitive: false
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| ← 入 | `CONTAINS` | [Config Set](config-set.md) |
+| ← 入 | `OVERRIDES` | [Config Set](config-set.md) |

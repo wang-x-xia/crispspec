@@ -77,5 +77,5 @@ config_overrides:
 
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
-| 出 → | `APPLIES_TO` | [Environment](environment.md) / [Module](../module/module.md) |
+| 出 → | `APPLIES_TO` | [Module](../module/module.md) |
 | 出 → | `OVERRIDES` | [Configuration](configuration.md) |

@@ -89,4 +89,4 @@ playbook_id: "PB-1"
 | ← 入 | `CONTAINS` | [Module](../module/module.md) |
 | 出 → | `AFFECTS` | [Entity](../contract/entity.md) |
 | 出 → | `RESOLVED_BY` | [Runbook](runbook.md) |
-| 出 → | `EMERGENCY_PLAN` | [Playbook](playbook.md) |
+| ← 入 | `HANDLES` | [Playbook](playbook.md) |

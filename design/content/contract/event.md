@@ -103,4 +103,3 @@ payload_fields:
 | 出 → | `CONSUMED_BY` | [Module](../module/module.md) |
 | ← 入 | `TRIGGERS` | [Process](../behavior/process.md) Transition |
 | ← 入 | `LISTENS_TO` | [Reaction](../behavior/reaction.md) |
-| ← 入 | `TRIGGERED_BY` | [Requirement](../requirement/requirement.md) Exception / SideEffect |

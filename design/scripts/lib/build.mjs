@@ -250,6 +250,45 @@ export function buildContent() {
     }
   }
 
+  // The registry and the definition document must agree on the mapping.
+  for (const artifact of artifacts.filter(Boolean)) {
+    if (artifact.mappingTargets.length === 0) continue;
+    const declared = edges
+      .filter((edge) => edge.source === artifact.id && edge.relation === 'AS')
+      .map((edge) => edge.target)
+      .sort();
+    const registered = [...artifact.mappingTargets].sort();
+    if (declared.join(',') !== registered.join(',')) {
+      fail(
+        `制品 ${artifact.id} 的映射目标在登记表与定义文档之间不一致：` +
+          `登记表 [${registered.join(', ')}]，文档 [${declared.join(', ')}]`,
+      );
+    }
+  }
+
+  // One relation name per pair of artifacts.
+  //
+  // Two edges between the same pair are only allowed when one of them
+  // is `CONTAINS` — that is "this artifact belongs to that module" plus
+  // a behavioural relation.  Anything else means the same fact was
+  // given two names, which makes the graph unreadable.
+  const pairs = new Map();
+  for (const edge of edges) {
+    const key = [edge.source, edge.target].sort().join('|');
+    const relations = pairs.get(key) ?? new Set();
+    relations.add(edge.relation);
+    pairs.set(key, relations);
+  }
+  for (const [key, relations] of pairs) {
+    if (relations.size <= 1) continue;
+    if (relations.has('CONTAINS')) continue;
+    const [source, target] = key.split('|');
+    fail(
+      `制品 ${source} 与 ${target} 之间有多个关系名 [${[...relations].join(', ')}]——` +
+        '同一事实只能有一个关系名（归属用 CONTAINS 除外）',
+    );
+  }
+
   // ── Mainline ─────────────────────────────────────────────────────────
   const phases = (registry.mainline ?? []).map((phase) => ({
     id: phase.id,

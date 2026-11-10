@@ -112,3 +112,53 @@ test('登记表里的统计与实际一致', () => {
   assert.equal(payload.stats.docs, payload.docs.length);
   assert.equal(payload.stats.handoffs, payload.phases.flatMap((phase) => phase.handoff).length);
 });
+
+test('同一对制品之间只有一个关系名（归属除外）', () => {
+  const pairs = new Map();
+  for (const edge of payload.edges) {
+    const key = [edge.source, edge.target].sort().join('|');
+    const relations = pairs.get(key) ?? new Set();
+    relations.add(edge.relation);
+    pairs.set(key, relations);
+  }
+  for (const [key, relations] of pairs) {
+    if (relations.size <= 1) continue;
+    assert.ok(
+      relations.has('CONTAINS'),
+      `${key} 之间有多个关系名 [${[...relations].join(', ')}]`,
+    );
+  }
+});
+
+test('需求的出向关系恰好是那四条', () => {
+  const requirement = payload.artifacts.find((artifact) => artifact.id === 'requirement');
+  const relations = requirement.outgoing
+    .map((relation) => `${relation.relation}->${relation.target}`)
+    .sort();
+  assert.deepEqual(relations, [
+    'ACTED_BY->role',
+    'DECOMPOSES_INTO->user-story',
+    'DESCRIBED_BY->business-concept',
+    'TESTED_BY->acceptance-test',
+  ]);
+});
+
+test('需求与用户故事之间只有一条边', () => {
+  const edges = payload.edges.filter(
+    (edge) =>
+      (edge.source === 'requirement' && edge.target === 'user-story') ||
+      (edge.source === 'user-story' && edge.target === 'requirement'),
+  );
+  assert.equal(edges.length, 1);
+  assert.equal(edges[0].relation, 'DECOMPOSES_INTO');
+  assert.equal(edges[0].mainline, true);
+});
+
+test('业务概念的映射目标在登记表与文档之间一致', () => {
+  const concept = payload.artifacts.find((artifact) => artifact.id === 'business-concept');
+  const declared = payload.edges
+    .filter((edge) => edge.source === 'business-concept' && edge.relation === 'AS')
+    .map((edge) => edge.target)
+    .sort();
+  assert.deepEqual(declared, [...concept.mappingTargets].sort());
+});

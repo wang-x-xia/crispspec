@@ -2,13 +2,46 @@
 
 ## 目标
 
-承载**严格定义的句子模式**需求。支持结构化的句子格式（如 Given-When-Then-And），每个语义元素对应 Business Concept，驱动架构设计和代码生成。
+承载**消歧之后的需求**。一条需求由若干个业务概念共同描述，
+并向下拆分成若干个可交付的用户故事。
+
+需求本身**不区分概念扮演什么语义角色**——执行者、条件、动作、结果这些位置，
+由每个 Business Concept 自己的 `as` 映射决定：
+映射到 Role 的就是执行者，映射到 Entity 字段的就是条件，映射到 Interface 的就是动作。
+
+---
+
+## 结构
+
+Requirement 在体系里只做两件事：
+
+| | 关系 | 基数 | 说明 |
+|---|---|---|---|
+| **被描述** | `DESCRIBED_BY` → Business Concept | 多个 | 这条需求涉及哪些业务概念 |
+| **被拆解** | `DECOMPOSES_INTO` → User Story | 多个 | 这条需求拆成哪些可交付单元 |
+
+加上执行角色与验证方式，需求的出向关系一共**四条**：
+
+| 边 | 目标 | 基数 | 含义 |
+|----|------|------|------|
+| `DESCRIBED_BY` | Business Concept | 多个 | 描述这条需求的业务概念 |
+| `DECOMPOSES_INTO` | User Story | 多个 | 拆解出来的可交付单元 |
+| `ACTED_BY` | Role | 1 | 谁来执行 |
+| `TESTED_BY` | Acceptance Test | 多个 | 怎么证明需求被满足 |
+
+> **为什么不再有"语义槽位"？**
+> 早期版本给需求准备了 `as_actor` / `as_object` / `as_action` 这样的固定位置，
+> 每个位置只能填一个目标。但语义位置并不是制品体系的区分维度——
+> 同一个概念既是 actor 又是 object 并不矛盾，固定槽位反而限制能表达的东西。
+> 合并成"需求引用一批业务概念"之后，位置只是目标制品的属性。
+
+> **拆解是多对多的。**
+> 拆解关系写在 User Story 的 `requirement_ids` 上：
+> 一条需求拆成多个故事，一个故事也可以同时服务多条需求。
 
 ---
 
 ## 字段定义
-
-### 通用字段
 
 | 字段 | 类型 | 约束 | 说明 |
 |------|------|------|------|
@@ -17,33 +50,22 @@
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话摘要 |
 | `source_draft_id` | ref | `DRAFT-\d+` | 来源初稿 |
 | `sentence_type` | enum | 见下方 | 句子类型 |
+| `actor_role_id` | ref | `ROLE-\d+` | 执行角色（引用 [Role](../access/role.md)） |
+| `concept_ids` | list\<ref\> | `BC-\d+`，≥ 1 条 | 描述这条需求的业务概念（引用 [Business Concept](business-concept.md)） |
 | `done` | boolean | - | 是否完成 |
 
 ### sentence_type 枚举
 
 | 值 | 含义 |
 |----|------|
-| `GWT` | Given-When-Then-And 模式 |
-| `EARS` | EARS 模式（预留） |
-| `SVO` | 主谓宾模式（预留） |
-| `CUSTOM` | 自定义模式（预留） |
+| `GWT` | Given-When-Then 模式 |
+| `EARS` | EARS 模式 |
+| `SVO` | 主谓宾模式 |
+| `CUSTOM` | 自定义模式 |
 
-### GWT 模式字段
-
-| 字段 | 类型 | 约束 | 说明 |
-|------|------|------|------|
-| `gwt` | object | - | GWT 模式专用字段容器 |
-| `gwt.user_story_id` | ref | `US-\d+` | 关联的用户故事（引用 [User Story](user-story.md)） |
-| `gwt.actor_concept_id` | ref | `BC-\d+` | 执行者（引用 [Business Concept](business-concept.md)，其 as 映射到 Role/Module） |
-| `gwt.condition_concept_ids` | list\<ref\> | `BC-\d+` | 触发条件（引用 Business Concept，其 as 映射到 Entity.field，支持多个 AND） |
-| `gwt.action_concept_id` | ref | `BC-\d+` | 执行动作（引用 Business Concept，其 as 映射到 Interface/Orchestration/Reaction/Schedule） |
-| `gwt.result_concept_ids` | list\<ref\> | `BC-\d+` | 执行结果（引用 Business Concept，其 as 映射到结果类制品，支持多个 AND） |
-
-### EARS 模式字段（预留）
-
-### SVO 模式字段（预留）
-
-### CUSTOM 模式字段（预留）
+> 句式只是**分类标签**——它标记这句话属于哪种句式，不规定需求引用哪些制品。
+> 句子怎么被解析成结构化制品，见 [自然语言结构化转译](natural-language-structuring.md)；
+> 拆解出来的可交付单元带着真正的 Given / When / Then 验收条件，见 [User Story](user-story.md)。
 
 ---
 
@@ -56,19 +78,20 @@ description: "金卡和钻石卡用户的退款 SLA 从 72h 缩短为 24h"
 
 source_draft_id: "DRAFT-0078"
 sentence_type: GWT
+actor_role_id: "ROLE-3"          # VIP User
 done: false
 
-gwt:
-  user_story_id: "US-301"
-  actor_concept_id: "BC-001"         # VIP用户
-  condition_concept_ids:
-    - "BC-002"                       # 订单已支付
-    - "BC-003"                       # 用户本月退款次数<=3
-  action_concept_id: "BC-004"        # 发起退款
-  result_concept_ids:
-    - "BC-005"                       # 退款状态变为处理中
-    - "BC-006"                       # SLA设为24h
+concept_ids:                      # 这条需求由这些业务概念描述
+  - "BC-001"                     # VIP用户（as → Role）
+  - "BC-002"                     # 订单已支付（as → Entity 字段）
+  - "BC-003"                     # 用户本月退款次数<=3（as → Entity 字段）
+  - "BC-004"                     # 发起退款（as → Interface）
+  - "BC-005"                     # 退款状态变为处理中（as → Entity 字段）
+  - "BC-006"                     # SLA设为24h（as → Entity 字段）
 ```
+
+> `concept_ids` 的顺序不重要——它是一组概念，不是一串槽位。
+> 每个概念扮演什么角色，看它自己的 `as` 映射。
 
 ---
 
@@ -77,5 +100,7 @@ gwt:
 | 方向 | 边类型 | 目标制品 |
 |------|--------|---------|
 | ← 入 | `DISAMBIGUATED_INTO` | [Draft](draft.md) |
-| 出 → | `ACTED_BY` | [Business Concept](business-concept.md) |
-| 出 → | `MAPPED_TO` | [User Story](user-story.md) |
+| 出 → | `DESCRIBED_BY` | [Business Concept](business-concept.md)（多个） |
+| 出 → | `DECOMPOSES_INTO` | [User Story](user-story.md)（多个） |
+| 出 → | `ACTED_BY` | [Role](../access/role.md) |
+| 出 → | `TESTED_BY` | [Acceptance Test](../test/acceptance-test.md) |

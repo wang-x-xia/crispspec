@@ -113,7 +113,7 @@ as:
 |------|---------|------|
 | **Draft** | 无引用 | "VIP用户可以优先退款" |
 | **Structured Draft** | 软引用（自然语言标识） | "Given [actor:VIP会员] When [action:发起退款]" |
-| **Requirement** | 强引用（typed ID） | `actor_role_id: "ROLE-3"` |
+| **Requirement** | 强引用（typed ID） | `concept_ids: ["BC-001", "BC-004"]` |
 | **User Story** | 强引用 | `when: "API-20"` |
 
 ---
@@ -158,5 +158,19 @@ as:
 | `artifact_id` 指向的制品存在 | ⏸ 待实现（需要跨制品引用校验层） |
 | 同一目标不重复 | ⏸ 待实现 |
 | 映射列表可为空 | ✅ 设计如此——业务概念可以先定义，映射后补 |
+
+---
+
+## 关联
+
+| 方向 | 边类型 | 目标制品 |
+|------|--------|---------|
+| ← 入 | `DESCRIBED_BY` | [Requirement](../requirement/requirement.md)（多个） |
+| 出 → | `AS` | [Role](../access/role.md) / [Module](../module/module.md) / [Entity](../contract/entity.md) / [Interface](../contract/interface.md) / [Orchestration](../behavior/orchestration.md) / [Reaction](../behavior/reaction.md) / [Schedule](../behavior/schedule.md) / [Event](../contract/event.md) / [Error](../contract/error.md) |
+
+> `AS` 是**多对多**的：一个业务概念可以同时映射到多个制品，
+> 多个业务概念也可以映射到同一个制品。登记表 `mapping_targets` 里声明的
+> 就是这张表的目标集合，两者必须一致（构建时会核对）。
+
 
 

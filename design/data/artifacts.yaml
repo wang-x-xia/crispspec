@@ -88,7 +88,7 @@ mainline:
     prepares: [business-concept]
     handoff:
       - {relation: DISAMBIGUATED_INTO, from: draft, to: requirement}
-      - {relation: ACTED_BY, from: requirement, to: business-concept}
+      - {relation: DESCRIBED_BY, from: requirement, to: business-concept}
 
   - id: story
     label: 需求分解
@@ -224,8 +224,11 @@ artifacts:
     id_pattern: "REQ-\\d+"
     domain: requirement
     definition: requirement/requirement.md
-    purpose: 消歧后的结构化需求
-    notes: actor_role_id 指向 Role
+    purpose: 消歧后的结构化需求——由多个业务概念描述，向下拆分成多个用户故事
+    notes: >
+      出向关系只有四条：DESCRIBED_BY（多个业务概念）、DECOMPOSES_INTO（多个用户故事）、
+      ACTED_BY（一个角色）、TESTED_BY（多个验收测试）。
+      需求不再区分概念的语义位置——位置由业务概念自己的 as 映射承担。
 
   - type: user-story
     name: User Story
@@ -246,6 +249,7 @@ artifacts:
     notes: >
       映射是一个列表而不是固定槽位：同一个概念可以同时是 Entity、Interface 和 Role。
       映射只说"被映射成了什么"，不说"谁先存在"。
+      一个业务概念可以被多条需求描述（DESCRIBED_BY，多对多）。
     mapping_targets: [role, module, entity, interface, orchestration, reaction, schedule, event, error]
 
   # ── 契约域 ────────────────────────────────────────────────────────────
