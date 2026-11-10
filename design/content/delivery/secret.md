@@ -16,7 +16,6 @@
 | `type` | enum | 见下方 | 敏感信息类型 |
 | `algorithm` | enum | 见下方 | 加密算法 |
 | `rotation_policy` | RotationPolicy | | 轮换策略（可选） |
-| `access_control_ids` | list\<ref\> | `PERM-\d+` | 访问控制权限（引用 [Permission](../access/permission.md)） |
 
 ### type 枚举
 
@@ -67,9 +66,6 @@ rotation_policy:
   interval: "90d"
   auto_rotate: true
 
-access_control_ids:
-  - "PERM-1"   # 数据库管理员权限
-  - "PERM-2"   # 应用服务读取权限
 ```
 
 ```yaml
@@ -85,8 +81,6 @@ rotation_policy:
   interval: null
   auto_rotate: false
 
-access_control_ids:
-  - "PERM-3"   # 支付服务权限
 ```
 
 ---

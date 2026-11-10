@@ -4,7 +4,7 @@
 
 定义故障——故障类型、影响范围、处理流程。Incident 是故障域的核心制品，它记录已知故障的标准化定义，确保故障处理的一致性和可追溯性。
 
-每个 Incident 归属于一个 Module（`owner_module_id`），用于描述该模块可能出现的故障场景。
+每个 Incident 归属于一个 Module（关系 `CONTAINS`），用于描述该模块可能出现的故障场景。
 
 ---
 
@@ -17,12 +17,8 @@
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | 故障类型 |
 | `severity` | enum | 见下方 | 严重程度 |
-| `owner_module_id` | ref | `MOD-\d+` | 归属模块 |
-| `affected_entity_ids` | list\<ref\> | `ENT-\d+` | 受影响的实体 |
 | `symptoms` | list\<string\> | ≥ 1 条 | 故障症状（可观测的表现） |
 | `detection_method` | enum | 见下方 | 检测方式 |
-| `runbook_id` | ref | `RB-\d+` | 处理手册（引用 [Runbook](runbook.md)） |
-| `playbook_id` | ref | `PB-\d+` | 应急预案（引用 [Playbook](playbook.md)，可选） |
 
 ### type 枚举
 
@@ -65,19 +61,12 @@ description: "数据库连接池耗尽导致新请求无法获取连接"
 
 type: RESOURCE_EXHAUSTION
 severity: HIGH
-owner_module_id: "MOD-2"    # OrderService
-
-affected_entity_ids:
-  - "ENT-3"    # Order
-
 symptoms:
   - "API 响应时间 > 5s"
   - "错误日志中出现 'Connection timeout'"
   - "监控显示连接池使用率 100%"
 
 detection_method: ALERT
-runbook_id: "RB-1"
-playbook_id: "PB-1"
 ```
 
 ---

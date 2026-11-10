@@ -15,8 +15,6 @@
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | 约束类别 |
 | `scope` | enum | 见下方 | 作用范围 |
-| `target_id` | ref | 任意制品 ID | 约束对象 |
-| `metric_id` | ref | `MET-\d+` | 度量指标（引用 [Metric](metric.md)） |
 | `operator` | enum | `<=` / `>=` / `==` / `!=` / `IN` / `NOT_IN` | 比较运算符 |
 | `threshold` | number | | 阈值 |
 | `enforcement` | enum | 见下方 | 执行强度 |
@@ -72,8 +70,6 @@ description: "退款接口 P99 延迟不超过 300ms"
 
 type: PERFORMANCE
 scope: ENDPOINT
-target_id: "API-020"
-metric_id: "MET-1"              # P99 延迟 (unit: ms)
 operator: "<="
 threshold: 300
 enforcement: HARD_BLOCK
@@ -87,8 +83,6 @@ description: "退款接口必须保证幂等"
 
 type: ARCHITECTURE
 scope: ENDPOINT
-target_id: "API-020"
-metric_id: "MET-3"              # 幂等性 (unit: count)
 operator: "=="
 threshold: 1
 enforcement: HARD_BLOCK

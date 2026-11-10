@@ -14,26 +14,16 @@
 | `name` | string | ≤ 80 字符 | **描述性** — 配置集合名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `scope` | enum | 见下方 | 作用范围 |
-| `target_id` | ref | `ENV-\d+` / `MOD-\d+` | 目标环境或模块 |
-| `config_overrides` | list\<ConfigOverride\> | ≥ 1 条 | 配置覆盖列表 |
 
 ### scope 枚举
 
 | 值 | 含义 |
 |----|------|
-| `ENVIRONMENT` | 环境级配置（引用 [Environment](environment.md)） |
-| `MODULE` | 模块级配置（引用 [Module](../module/module.md)） |
+| `ENVIRONMENT` | 环境级配置 |
+| `MODULE` | 模块级配置 |
 
----
-
-## 子结构定义
-
-### ConfigOverride
-
-| 字段 | 类型 | 约束 |
-|------|------|------|
-| `config_id` | ref | `CONF-\d+`（引用 [Configuration](configuration.md)） |
-| `value` | any | 覆盖值（必须符合配置项的类型约束） |
+> 覆盖了哪些配置项、各自的值，暂时没有落点——那是实例级的引用，
+> 而引用现在统一由关系表表达（`OVERRIDES`）。
 
 ---
 
@@ -45,15 +35,6 @@ name: "Production Config"
 description: "生产环境配置集合"
 
 scope: ENVIRONMENT
-target_id: "ENV-1"    # Production CN
-
-config_overrides:
-  - config_id: "CONF-1"
-    value: 50         # 生产环境连接池大小为 50
-  - config_id: "CONF-2"
-    value: true      # 生产环境启用新结账流程
-  - config_id: "CONF-3"
-    value: "10m"     # 生产环境缓存过期时间为 10 分钟
 ```
 
 ```yaml
@@ -62,13 +43,6 @@ name: "OrderService Config"
 description: "订单服务模块配置"
 
 scope: MODULE
-target_id: "MOD-2"    # OrderService
-
-config_overrides:
-  - config_id: "CONF-1"
-    value: 20         # 订单服务连接池大小为 20
-  - config_id: "CONF-3"
-    value: "2m"       # 订单服务缓存过期时间为 2 分钟
 ```
 
 ---

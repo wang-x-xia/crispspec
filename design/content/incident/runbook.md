@@ -14,7 +14,6 @@
 | `name` | string | ≤ 80 字符 | **描述性** — 手册名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | 手册类型 |
-| `owner_module_id` | ref | `MOD-\d+` | 归属模块 |
 | `prerequisites` | list\<string\> | | 前置条件 |
 | `steps` | list\<Step\> | ≥ 1 条 | 操作步骤 |
 | `rollback_steps` | list\<Step\> | | 回滚步骤（可选） |
@@ -64,7 +63,6 @@ name: "Database Connection Pool Recovery"
 description: "数据库连接池耗尽时的恢复操作"
 
 type: RECOVERY
-owner_module_id: "MOD-2"    # OrderService
 
 prerequisites:
   - "拥有数据库管理员权限"

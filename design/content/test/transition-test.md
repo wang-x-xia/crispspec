@@ -13,10 +13,8 @@
 | `id` | string | `TT-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 用例名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `process_id` | ref | `PROC-\d+` | 验证的流程 |
 | `test_type` | enum | 见下方 | 测试场景类型 |
 | `initial_state` | string | 状态 ID | 起始状态 |
-| `event_id` | ref | `EVT-\d+` | 触发事件（引用 [Event](../contract/event.md)） |
 | `guard_values` | list\<[Condition](../concepts.md#condition)\> | | 守卫条件的输入值 |
 | `expected_state` | string \| null | 状态 ID 或 `null` | 预期目标状态（`null` = 转换被拒绝） |
 | `expected_action_called` | boolean | | 是否预期触发转换动作 |
@@ -38,10 +36,8 @@ id: "TT-1"
 name: "订单支付成功转换"
 description: "CREATED 状态收到支付确认后应转为 PAID"
 
-process_id: "PROC-5"
 test_type: VALID_TRANSITION
 initial_state: "CREATED"
-event_id: "EVT-5"                # PaymentConfirmedEvent
 guard_values:
   - field: "order.total_amount"
     operator: ">"
@@ -55,10 +51,8 @@ id: "TT-2"
 name: "零元订单不可支付"
 description: "金额为 0 时守卫应拒绝 CREATED → PAID 转换"
 
-process_id: "PROC-5"
 test_type: GUARD_REJECTION
 initial_state: "CREATED"
-event_id: "EVT-5"                # PaymentConfirmedEvent
 guard_values:
   - field: "order.total_amount"
     operator: "=="
@@ -72,16 +66,17 @@ id: "TT-3"
 name: "终态不可变更"
 description: "CLOSED 状态不允许任何转换"
 
-process_id: "PROC-5"
 test_type: FORBIDDEN_TRANSITION
 initial_state: "CLOSED"
-event_id: "EVT-5"                # PaymentConfirmedEvent
 guard_values: []
 expected_state: null
 expected_action_called: false
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

@@ -16,8 +16,6 @@
 | `type` | enum | 见下方 | 环境类型 |
 | `region` | string | ISO 3166-2 地区代码 | 部署地域（如 `cn-north-1`） |
 | `url` | string | URL 格式 | 访问端点 |
-| `config_set_id` | ref | `CSET-\d+` | 配置集合（引用 [Config Set](config-set.md)） |
-| `baseline_module_ids` | list\<ref\> | `MOD-\d+` | 基线模块列表（该环境必须部署的模块） |
 
 ### type 枚举
 
@@ -40,12 +38,6 @@ description: "中国区生产环境"
 type: PRODUCTION
 region: "cn-north-1"
 url: "https://api.example.com"
-config_set_id: "CSET-1"
-
-baseline_module_ids:
-  - "MOD-1"    # UserService
-  - "MOD-2"    # OrderService
-  - "MOD-3"    # PaymentService
 ```
 
 ---

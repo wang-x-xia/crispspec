@@ -15,9 +15,6 @@
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `trigger` | enum | 见下方 | 触发方式 |
 | `stages` | list\<Stage\> | ≥ 1 个 | 阶段序列 |
-| `build_module_ids` | list\<ref\> | `MOD-\d+` | 构建的模块列表 |
-| `deploy_to_env_id` | ref | `ENV-\d+` | 部署目标环境（引用 [Environment](environment.md)） |
-| `gate_constraint_ids` | list\<ref\> | `CON-\d+` | 质量关卡（引用 [Constraint](../governance/constraint.md)） |
 
 ### trigger 枚举
 
@@ -52,17 +49,6 @@ name: "Production Deployment"
 description: "生产环境部署流水线"
 
 trigger: ON_TAG
-build_module_ids:
-  - "MOD-1"    # UserService
-  - "MOD-2"    # OrderService
-
-deploy_to_env_id: "ENV-1"     # Production CN
-
-gate_constraint_ids:
-  - "CON-1"   # 测试覆盖率 >= 80%
-  - "CON-2"   # 安全扫描无高危漏洞
-  - "CON-3"   # 性能回归 < 5%
-
 stages:
   - name: "Build"
     type: BUILD

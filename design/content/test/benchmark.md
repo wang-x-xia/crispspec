@@ -13,10 +13,8 @@
 | `id` | string | `BM-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 用例名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `constraint_id` | ref | `CON-\d+` | 验证的约束 |
 | `environment` | enum | 见下方 | 测试环境 |
 | `load_profile` | LoadProfile | 见下方 | 负载配置 |
-| `metric_id` | ref | `MET-\d+` | 度量指标（引用 [Metric](../governance/metric.md)，应与 Constraint.metric_id 一致） |
 | `operator` | enum | 同 [Constraint](../governance/constraint.md) | 比较运算符（应与 Constraint.operator 一致） |
 | `threshold` | number | | 阈值（应与 Constraint.threshold 一致） |
 | `pass_criteria` | enum | 见下方 | 通过标准 |
@@ -51,7 +49,6 @@ id: "BM-1"
 name: "退款接口 P99 延迟"
 description: "在 100 并发下验证退款接口 P99 延迟不超过 300ms"
 
-constraint_id: "CON-10"
 environment: STAGING
 
 load_profile:
@@ -59,13 +56,15 @@ load_profile:
   duration_seconds: 300
   ramp_up_seconds: 30
 
-metric_id: "MET-1"              # latency_p99
 operator: "<="
 threshold: 300
 pass_criteria: P99
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

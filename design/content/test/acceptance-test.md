@@ -13,7 +13,6 @@
 | `id` | string | `AT-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 用例名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `requirement_id` | ref | `REQ-\d+` | 验证的需求 |
 | `scope` | enum | 见下方 | 测试范围 |
 | `preconditions` | list\<[Condition](../concepts.md#condition)\> | | 前置条件 |
 | `steps` | list\<TestStep\> | ≥ 1 步 | 有序执行步骤 |
@@ -32,7 +31,6 @@
 | 字段 | 类型 | 约束 |
 |------|------|------|
 | `order` | integer | 步骤序号（从 1 开始） |
-| `trigger_ref` | ref | `API-\d+` / `SUB-\d+` / `SCH-\d+`（引用 [Interface](../contract/interface.md)、[Reaction](../behavior/reaction.md) 或 [Schedule](../behavior/schedule.md)，可选） |
 | `input` | list\<[TypedField](../concepts.md#typedfield)\> | 输入参数（带测试值 `value`） |
 | `checkpoint` | [Assertion](../concepts.md#assertion) | 可选，步骤级断言 |
 
@@ -45,7 +43,6 @@ id: "AT-1"
 name: "VIP用户优先退款端到端验收"
 description: "验证金卡用户从发起退款到完成的完整流程符合 24h SLA"
 
-requirement_id: "REQ-78"
 scope: E2E
 
 preconditions:
@@ -58,7 +55,6 @@ preconditions:
 
 steps:
   - order: 1
-    trigger_ref: "API-20"       # 创建退款申请
     input:
       - name: order_id
         type: UUID
@@ -72,7 +68,6 @@ steps:
       expected: "PROCESSING"
 
   - order: 2
-    trigger_ref: null            # AwaitCompletion（无触发动作，辅助等待步骤）
     input:
       - name: timeout_seconds
         type: INTEGER
@@ -91,6 +86,9 @@ expected_outcomes:
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

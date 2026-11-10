@@ -36,8 +36,8 @@ Requirement 在体系里只做两件事：
 > 合并成"需求引用一批业务概念"之后，位置只是目标制品的属性。
 
 > **拆解是多对多的。**
-> 拆解关系写在 User Story 的 `requirement_ids` 上：
-> 一条需求拆成多个故事，一个故事也可以同时服务多条需求。
+> 拆解关系写在关系表里（`DECOMPOSES_INTO`）：一条需求拆成多个故事，
+> 一个故事也可以同时服务多条需求——所以它是多对多。
 
 ---
 
@@ -48,10 +48,7 @@ Requirement 在体系里只做两件事：
 | `id` | string | `REQ-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 简短标题 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话摘要 |
-| `source_draft_id` | ref | `DRAFT-\d+` | 来源初稿 |
 | `sentence_type` | enum | 见下方 | 句子类型 |
-| `actor_role_id` | ref | `ROLE-\d+` | 执行角色（引用 [Role](../access/role.md)） |
-| `concept_ids` | list\<ref\> | `BC-\d+`，≥ 1 条 | 描述这条需求的业务概念（引用 [Business Concept](business-concept.md)） |
 | `done` | boolean | - | 是否完成 |
 
 ### sentence_type 枚举
@@ -76,24 +73,18 @@ id: "REQ-0078"
 name: "VIP用户优先退款"
 description: "金卡和钻石卡用户的退款 SLA 从 72h 缩短为 24h"
 
-source_draft_id: "DRAFT-0078"
 sentence_type: GWT
-actor_role_id: "ROLE-3"          # VIP User
 done: false
 
-concept_ids:                      # 这条需求由这些业务概念描述
-  - "BC-001"                     # VIP用户（as → Role）
-  - "BC-002"                     # 订单已支付（as → Entity 字段）
-  - "BC-003"                     # 用户本月退款次数<=3（as → Entity 字段）
-  - "BC-004"                     # 发起退款（as → Interface）
-  - "BC-005"                     # 退款状态变为处理中（as → Entity 字段）
-  - "BC-006"                     # SLA设为24h（as → Entity 字段）
 ```
 
-> `concept_ids` 的顺序不重要——它是一组概念，不是一串槽位。
-> 每个概念扮演什么角色，看它自己的 `as` 映射。
+> 需求的字段里不再区分概念的语义位置，也不列出它引用了哪些概念——
+> “被哪些业务概念描述”是关系（`DESCRIBED_BY`），写在 `## 关联` 表里。
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

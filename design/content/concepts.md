@@ -12,6 +12,32 @@
 
 ---
 
+## 关系在哪
+
+**关系全部外置。** 制品与制品之间的关系只出现在定义文档末尾的 `## 关联` 表里：
+
+| 方向 | 边类型 | 目标制品 |
+|------|--------|---------|
+| `出 →` | `RELATION_NAME` | `目标制品.md` |
+| `← 入` | `RELATION_NAME` | `来源制品.md` |
+| `出 ↔` | `RELATION_NAME` | 双向 |
+
+字段表里**不出现**指向其它制品的字段（`xxx_id`、`xxx_ids`）——
+那是同一件事的重复表述：一边是“关系表里的一行”，一边是“字段表里的一列”。
+每件制品的字段表只回答一个问题：**这件东西自己有哪些数据**。
+
+| | 表达在 | 例子 |
+|---|---|---|
+| 这件制品**自己**的数据 | 字段表 | `Entity.fields`、`Interface.protocol`、`User Story.story_points` |
+| 这件制品**和谁**有关系 | `## 关联` 表 | `Entity ← Module.CONTAINS`、`User Story → Interface.IMPLEMENTED_BY` |
+
+> 实例级的引用（“这条配置覆盖了哪个配置项”“这个故事实现了哪个接口的具体实例”）
+> 目前还没有落点——它既不是字段，也不是类型级的关系。
+> 见 [项目现状](status.md) 的遗留问题。
+
+
+---
+
 ## 域模型
 
 制品按关注点划分为若干域，Module 作为跨域的组织容器将它们分组管理：
@@ -26,7 +52,7 @@
 | **治理域** | 约束与依赖 | 性能底线是什么？用了哪些第三方依赖？ |
 | **访问控制域** | 身份与授权 | 谁能访问什么？权限怎么判定？ |
 
-> **Module** 不是一个域，而是组织单元——类似文件夹，将契约域、行为域、代码域和故障域的制品按服务边界分组。由于模块会随项目演进经历拆分与合并，Module 与 Repository 之间存在 M:N 映射——同一 Module 的代码可能散布在多个 Repository 中，同一 Repository 也可能包含多个 Module 的代码。所有非需求、非治理制品通过 `module_id` 字段声明归属。
+> **Module** 不是一个域，而是组织单元——类似文件夹，将契约域、行为域、代码域和故障域的制品按服务边界分组。由于模块会随项目演进经历拆分与合并，Module 与 Repository 之间存在 M:N 映射——同一 Module 的代码可能散布在多个 Repository 中，同一 Repository 也可能包含多个 Module 的代码。所有非需求、非治理制品都通过 `CONTAINS` 边归属于某个 Module。
 
 ---
 
@@ -140,8 +166,8 @@ Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
 | 关系 | 基数 | 谁声明 |
 |------|------|--------|
 | `DISAMBIGUATED_INTO` | 1 → 1 | Draft 的下游：消歧后成为一条 Requirement |
-| `DESCRIBED_BY` | 多 → 多 | Requirement 的 `concept_ids` 列出这条需求涉及的业务概念 |
-| `DECOMPOSES_INTO` | 1 → 多 | User Story 的 `requirement_ids` 列出它服务哪些需求 |
+| `DESCRIBED_BY` | 多 → 多 | 一条需求由若干个业务概念描述 |
+| `DECOMPOSES_INTO` | 1 → 多 | 一条需求拆成若干个用户故事 |
 | `AS` | 多 → 多 | Business Concept 映射到哪些内部制品 |
 
 **需求不区分概念的语义位置。** 执行者、条件、动作、结果这些角色，

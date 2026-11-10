@@ -23,7 +23,6 @@
 | `source_url` | string | URL | 源码仓库链接 |
 | `security_risk` | enum | 见下方 | 安全风险等级 |
 | `vulnerabilities` | list\<Vulnerability\> | | 已知漏洞（可选） |
-| `usage_scope` | list\<ref\> | `MOD-\d+` | 使用该依赖的模块列表 |
 | `introduction_reason` | string | | 引入原因（可选） |
 
 ### type 枚举
@@ -108,11 +107,6 @@ source_url: "https://github.com/spring-projects/spring-boot"
 security_risk: LOW
 vulnerabilities: []
 
-usage_scope:
-  - "MOD-1"    # UserService
-  - "MOD-2"    # OrderService
-  - "MOD-3"    # PaymentService
-
 introduction_reason: "提供 RESTful API 开发框架"
 ```
 
@@ -141,10 +135,6 @@ vulnerabilities:
     fixed_in_version: "2.15.0"
     reference_url: "https://nvd.nist.gov/vuln/detail/CVE-2021-44228"
 
-usage_scope:
-  - "MOD-1"    # UserService
-  - "MOD-2"    # OrderService
-
 introduction_reason: "日志记录"
 ```
 
@@ -166,9 +156,6 @@ source_url: "https://docs.aws.amazon.com/"
 
 security_risk: LOW
 vulnerabilities: []
-
-usage_scope:
-  - "MOD-4"    # FileStorageService
 
 introduction_reason: "对象存储服务"
 ```

@@ -162,3 +162,20 @@ test('业务概念的映射目标在登记表与文档之间一致', () => {
     .sort();
   assert.deepEqual(declared, [...concept.mappingTargets].sort());
 });
+
+test('字段表里没有指向其它制品的引用字段', () => {
+  const exempt = new Set(['foreign_key']); // 字段级外键：数据约束，不是导航引用
+  for (const artifact of payload.artifacts) {
+    for (const field of artifact.fields) {
+      if (!/ref/.test(field.type)) continue;
+      if (exempt.has(field.name)) continue;
+      for (const other of payload.artifacts) {
+        if (other.id === artifact.id) continue;
+        assert.ok(
+          !field.constraint.includes(`${other.prefix}-`),
+          `${artifact.id}.${field.name} 指向 ${other.name}——关系应写在「## 关联」表里`,
+        );
+      }
+    }
+  }
+});

@@ -15,11 +15,8 @@
 | `id` | string | `CREF-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 引用名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `artifact_id` | ref | 契约域或行为域制品 ID（`API-\d+` / `ENT-\d+` / `EVT-\d+` / `ERR-\d+` / `PROC-\d+` / `ORCH-\d+` / `SUB-\d+` / `SCH-\d+`） | 被引用的逻辑制品 |
-| `repository_id` | ref | `REPO-\d+` | 所在仓库 |
 | `path` | string | 相对仓库根目录的路径 | 源代码文件路径 |
 | `symbol` | string | | 导出符号名（类名 / 函数名 / 常量名） |
-| `module_id` | ref | `MOD-\d+` | 该实现所属的模块 |
 
 ---
 
@@ -30,11 +27,8 @@ id: "CREF-1"
 name: "CreateCommand 实现"
 description: "Module 创建接口的 CLI 命令实现"
 
-artifact_id: "API-1"
-repository_id: "REPO-1"
 path: "src/cli/commands/create.py"
 symbol: "CreateCommand"
-module_id: "MOD-1"
 ```
 
 ```yaml
@@ -42,11 +36,8 @@ id: "CREF-2"
 name: "Order 实体实现"
 description: "订单实体的持久化模型定义"
 
-artifact_id: "ENT-3"
-repository_id: "REPO-1"
 path: "src/db/models/order.py"
 symbol: "Order"
-module_id: "MOD-2"
 ```
 
 ---

@@ -13,8 +13,6 @@
 | `id` | string | `IT-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 用例名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `source_module_id` | ref | `MOD-\d+` | 发起调用的模块 |
-| `target_module_id` | ref | `MOD-\d+` | 被调用的模块 |
 | `protocol` | enum | `gRPC / HTTP / EVENT / SDK / DB_SHARED` | 通信协议 |
 | `tags` | list\<enum\> | 见下方 | 分类标签 |
 | `request` | list\<[TypedField](../concepts.md#typedfield)\> | | 请求参数（带测试值 `value`） |
@@ -55,8 +53,6 @@ id: "IT-1"
 name: "RefundService 调用 VIPEngine 正常路径"
 description: "验证退款服务成功调用 VIP 引擎获取用户等级"
 
-source_module_id: "MOD-10"
-target_module_id: "MOD-11"
 protocol: HTTP
 tags: [HAPPY_PATH]
 
@@ -82,8 +78,6 @@ id: "IT-2"
 name: "RefundService 调用 VIPEngine 超时降级"
 description: "VIP 引擎超时时退款服务应降级为默认 SLA"
 
-source_module_id: "MOD-10"
-target_module_id: "MOD-11"
 protocol: HTTP
 tags: [TIMEOUT, FALLBACK]
 
@@ -99,6 +93,9 @@ expected_fallback: DEGRADE
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

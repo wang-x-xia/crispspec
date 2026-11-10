@@ -13,8 +13,6 @@
 | `id` | string | `SCH-\d+` | 唯一标识符 |
 | `name` | string | PascalCase，≤ 80 字符 | **描述性** — 任务名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `owner_module_id` | ref | `MOD-\d+` | 负责执行的模块 |
-| `target_entity_id` | ref | `ENT-\d+` | 操作的目标实体（可选） |
 | `cron` | string | UNIX cron 表达式（如 `0 2 * * *`） | 定时规则（与 `interval` 互斥） |
 | `interval` | duration | 如 `30m`、`6h` | 固定间隔（与 `cron` 互斥） |
 | `timezone` | string | IANA 时区（如 `Asia/Shanghai`） | 执行时区（仅 `cron` 时需要） |
@@ -28,8 +26,6 @@ id: "SCH-1"
 name: "DailySettlement"
 description: "每日凌晨 2 点执行商户结算"
 
-owner_module_id: "MOD-12"
-target_entity_id: "ENT-7"
 cron: "0 2 * * *"
 timezone: "Asia/Shanghai"
 ```
@@ -39,7 +35,6 @@ id: "SCH-2"
 name: "HealthCheck"
 description: "每 30 秒检查支付网关可用性"
 
-owner_module_id: "MOD-3"
 interval: "30s"
 ```
 

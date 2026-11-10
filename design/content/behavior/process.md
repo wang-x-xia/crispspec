@@ -14,7 +14,6 @@
 | `name` | string | PascalCase，≤ 80 字符 | **描述性** — 流程名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | 流程类型 |
-| `target_entity_id` | ref | `ENT-\d+` | 管理哪个实体的状态 |
 | `target_field` | string | 实体字段名（如 `status`） | 状态字段 |
 | `states` | list\<State\> | ≥ 2 个 | 状态集合 |
 | `transitions` | list\<Transition\> | ≥ 1 条 | 合法转换规则 |
@@ -45,9 +44,7 @@
 |------|------|------|
 | `from` | string | 起始状态 ID |
 | `to` | string | 目标状态 ID |
-| `event_id` | ref | `EVT-\d+`（引用 [Event](../contract/event.md)） |
 | `guard` | [Condition](../concepts.md#condition) | 守卫条件（可选，不满足则转换被拒绝） |
-| `action_module_id` | ref | `MOD-\d+` — 执行转换动作的模块（可选） |
 | `action_method` | string | 模块方法名（可选） |
 
 ### Forbidden
@@ -68,7 +65,6 @@ name: "OrderLifecycle"
 description: "订单从创建到终态的完整生命周期状态机"
 
 type: STATE_MACHINE
-target_entity_id: "ENT-003"
 target_field: "status"
 
 states:
@@ -90,40 +86,28 @@ states:
 transitions:
   - from: CREATED
     to: PAID
-    event_id: "EVT-5"            # PaymentConfirmedEvent
     guard:
       field: "order.total_amount"
       operator: ">"
       value: 0
-    action_module_id: "MOD-8"
     action_method: "sendPaymentConfirmation"
 
   - from: CREATED
     to: CANCELLED
-    event_id: "EVT-6"            # UserCancelEvent
     guard:
       field: "elapsed_time(order.created_at)"
       operator: "<"
       value: "30min"
-    action_module_id: "MOD-10"
     action_method: "refund"
 
   - from: PAID
     to: SHIPPED
-    event_id: "EVT-11"           # ShipmentCreatedEvent
-
   - from: SHIPPED
     to: DELIVERED
-    event_id: "EVT-12"           # DeliveryConfirmedEvent
-
   - from: DELIVERED
     to: COMPLETED
-    event_id: "EVT-13"           # CompletionTimerEvent
-
   - from: COMPLETED
     to: CLOSED
-    event_id: "EVT-14"           # ArchiveEvent
-
 forbidden_transitions:
   - from: CLOSED
     to: "*"
@@ -134,6 +118,9 @@ forbidden_transitions:
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

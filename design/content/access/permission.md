@@ -15,7 +15,6 @@
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `action` | enum | 见下方 | 授权动作 |
 | `resource_type` | enum | `INTERFACE` / `ENTITY` | 资源类型 |
-| `resource_id` | ref | `API-\d+` / `ENT-\d+` | 资源 ID |
 | `effect` | enum | `ALLOW` / `DENY` | 效果（DENY 优先于 ALLOW） |
 | `conditions` | list\<[Condition](../concepts.md#condition)\> | ≥ 0 条 | 附加条件（可选，满足时该条目才生效） |
 
@@ -39,7 +38,6 @@ description: "允许调用创建退款申请接口"
 
 action: INVOKE
 resource_type: INTERFACE
-resource_id: "API-20"
 effect: ALLOW
 ```
 
@@ -50,7 +48,6 @@ description: "允许调用 VIP 专属退款通道"
 
 action: INVOKE
 resource_type: INTERFACE
-resource_id: "API-21"
 effect: ALLOW
 ```
 
@@ -61,7 +58,6 @@ description: "禁止直接删除订单实体数据"
 
 action: DELETE
 resource_type: ENTITY
-resource_id: "ENT-3"
 effect: DENY
 ```
 
@@ -72,7 +68,6 @@ description: "仅当金额 ≤ 50000 时允许写入退款实体"
 
 action: WRITE
 resource_type: ENTITY
-resource_id: "ENT-5"
 effect: ALLOW
 conditions:
   - field: "refund.amount"
@@ -81,6 +76,9 @@ conditions:
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

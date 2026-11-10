@@ -13,8 +13,6 @@
 | `id` | string | `PB-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 预案名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `incident_id` | ref | `INC-\d+` | 关联的故障（引用 [Incident](incident.md)） |
-| `owner_module_id` | ref | `MOD-\d+` | 归属模块 |
 | `trigger_conditions` | list\<Condition\> | ≥ 1 条 | 触发条件 |
 | `response_flow` | ResponseFlow | | 响应流程（决策树） |
 | `escalation_policy` | EscalationPolicy | | 升级策略 |
@@ -46,7 +44,6 @@
 | `order` | integer | 步骤序号 |
 | `condition` | Condition | 触发条件（可选，用于决策分支） |
 | `action` | string | 处置动作 |
-| `runbook_id` | ref | `RB-\d+`（引用 [Runbook](runbook.md)，可选） |
 | `next_step_on_success` | integer | 成功后跳转的步骤序号 |
 | `next_step_on_failure` | integer | 失败后跳转的步骤序号 |
 
@@ -62,7 +59,6 @@
 |------|------|------|
 | `level` | integer | 升级级别（1 最高） |
 | `trigger_after` | string | 触发时间（如 `15m`、`1h`） |
-| `notify_roles` | list\<ref\> | `ROLE-\d+` | 通知的角色 |
 | `auto_escalate` | boolean | 是否自动升级 |
 
 ---
@@ -73,9 +69,6 @@
 id: "PB-1"
 name: "Database Connection Pool Exhaustion Response"
 description: "数据库连接池耗尽时的应急响应预案"
-
-incident_id: "INC-1"
-owner_module_id: "MOD-2"    # OrderService
 
 trigger_conditions:
   - metric: "db_pool_usage_percentage"
@@ -92,7 +85,6 @@ response_flow:
 
     - order: 2
       action: "执行 Runbook RB-1 进行恢复"
-      runbook_id: "RB-1"
       next_step_on_success: 3
       next_step_on_failure: 4
 
@@ -116,21 +108,14 @@ escalation_policy:
   levels:
     - level: 1
       trigger_after: "15m"
-      notify_roles:
-        - "ROLE-1"    # On-call Engineer
       auto_escalate: true
 
     - level: 2
       trigger_after: "30m"
-      notify_roles:
-        - "ROLE-2"    # Team Lead
-        - "ROLE-3"    # DBA
       auto_escalate: true
 
     - level: 3
       trigger_after: "1h"
-      notify_roles:
-        - "ROLE-4"    # Engineering Manager
       auto_escalate: false
 
 communication_plan:

@@ -4,7 +4,7 @@
 
 定义系统中的数据实体——字段、类型、索引、约束。Entity 是数据层（L3）的核心制品，其 `fields` + `constraints` 本身就是数据合法性的完备定义（**定义即约束，无需额外的数据测试制品**）。对数据行为的验证（如"提交负数金额会怎样"）由上层 [Scenario Test](../test/scenario-test.md) 在用户动作上下文中覆盖。
 
-每个 Entity 归属于一个 Module（`owner_module_id`）。当多个模块需要同一现实概念时，各模块定义自己的投影实体，通过 `projects_from_id` 指向主实体，只包含本模块所需的字段子集。
+每个 Entity 归属于一个 Module（关系 `CONTAINS`）。当多个模块需要同一现实概念时，各模块定义自己的投影实体，通过 `PROJECTS_FROM` 指向主实体，只包含本模块所需的字段子集。
 
 ---
 
@@ -16,8 +16,6 @@
 | `name` | string | PascalCase，≤ 80 字符 | **描述性** — 实体名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | DDD 分类 |
-| `owner_module_id` | ref | `MOD-\d+` | 权威所有者模块（唯一写入者） |
-| `projects_from_id` | ref | `ENT-\d+` | 投影来源（可选，主实体不填） |
 | `fields` | list\<Field\> | ≥ 1 条 | 字段列表 |
 | `indexes` | list\<Index\> | | 索引列表 |
 | `constraints` | list\<TableConstraint\> | | 表级约束 |
@@ -74,8 +72,6 @@ name: "Order"
 description: "订单实体，记录用户购买行为的完整生命周期"
 
 type: AGGREGATE_ROOT
-owner_module_id: "MOD-5"     # OrderService
-
 fields:
   - name: order_id
     type: UUID
@@ -124,9 +120,6 @@ name: "NotifOrder"
 description: "通知服务的订单投影——仅包含发送通知所需的最少字段"
 
 type: ENTITY
-owner_module_id: "MOD-8"     # NotificationService
-projects_from_id: "ENT-3"    # 投影自主实体 Order
-
 fields:
   - name: order_id
     type: UUID

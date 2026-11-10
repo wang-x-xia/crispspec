@@ -14,10 +14,7 @@
 | `name` | string | ≤ 80 字符 | **描述性** — 角色名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
 | `type` | enum | 见下方 | 角色类别 |
-| `entity_id` | ref | `ENT-\d+` | 该角色对应的主体实体（可选，`SYSTEM` 类型无需） |
 | `qualifiers` | list\<[Condition](../concepts.md#condition)\> | ≥ 0 条 | 识别条件——全部满足时属于该角色 |
-| `permission_ids` | list\<ref\> | `PERM-\d+` | 拥有的权限列表 |
-| `inherits_from_id` | ref | `ROLE-\d+` | 继承的父角色（可选，子角色自动获得父角色全部权限） |
 
 ### type 枚举
 
@@ -37,9 +34,7 @@ name: "Regular User"
 description: "普通注册用户"
 
 type: HUMAN
-entity_id: "ENT-1"
 qualifiers: []
-permission_ids: ["PERM-1", "PERM-2", "PERM-3"]
 ```
 
 ```yaml
@@ -48,13 +43,10 @@ name: "VIP User"
 description: "金卡或钻石卡会员，享有优先退款等特权"
 
 type: HUMAN
-entity_id: "ENT-1"
 qualifiers:
   - field: "membership_level"
     operator: IN
     values: ["GOLD", "DIAMOND"]
-permission_ids: ["PERM-4", "PERM-5"]
-inherits_from_id: "ROLE-1"
 ```
 
 ```yaml
@@ -64,10 +56,12 @@ description: "第三方支付网关回调身份"
 
 type: EXTERNAL_SERVICE
 qualifiers: []
-permission_ids: ["PERM-20"]
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

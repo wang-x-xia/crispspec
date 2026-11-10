@@ -2,7 +2,7 @@
 
 ## 目标
 
-将 Requirement 分解为面向实现的最小交付单元，连接需求层（L1）与架构层（L2）。每个 User Story 对应一个可独立验收的行为切片，通过结构化的 Given / When / Then 验收条件消除"完成"的歧义。
+将 Requirement 分解为面向实现的最小交付单元，连接需求层（L1）与架构层（L2）。每个 User Story 对应一个可独立验收的行为切片，通过结构化的验收条件（前置条件 + 预期结果）消除"完成"的歧义。
 
 ---
 
@@ -13,8 +13,6 @@
 | `id` | string | `US-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 简短标题 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话摘要 |
-| `requirement_ids` | list\<ref\> | `REQ-\d+` | 来源需求 |
-| `actor_role_id` | ref | `ROLE-\d+` | 执行角色（引用 [Role](../access/role.md)） |
 | `priority` | enum | `CRITICAL / HIGH / MEDIUM / LOW` | 优先级 |
 | `status` | enum | 见下方 | 故事状态 |
 | `story_points` | integer | Fibonacci: `1, 2, 3, 5, 8, 13, 21` | 复杂度估算 |
@@ -34,13 +32,15 @@
 
 ## 子结构定义
 
-### Criterion（Given / When / Then）
+### Criterion（前置条件 / 预期结果）
 
 | 字段 | 类型 | 约束 |
 |------|------|------|
 | `given` | [Condition](../concepts.md#condition) | 前置条件 |
-| `when` | ref | `API-\d+` / `SUB-\d+` / `SCH-\d+`（引用 [Interface](../contract/interface.md)、[Reaction](../behavior/reaction.md) 或 [Schedule](../behavior/schedule.md)） |
 | `then` | [Assertion](../concepts.md#assertion) | 预期结果 |
+
+> 触发动作（哪个 Interface / Reaction / Schedule）是关系，
+> 由 User Story 的 `IMPLEMENTED_BY` 边表达，不在字段里重复。
 
 ---
 
@@ -51,8 +51,6 @@ id: "US-301"
 name: "VIP用户发起退款申请"
 description: "钻石卡用户可在订单完成后发起退款，享受 24h SLA"
 
-requirement_ids: ["REQ-0078"]
-actor_role_id: "ROLE-3"          # VIP User
 priority: HIGH
 status: READY
 story_points: 5
@@ -62,7 +60,6 @@ acceptance_criteria:
       field: "user.membership_level"
       operator: IN
       values: ["GOLD", "DIAMOND"]
-    when: "API-20"               # 创建退款申请
     then:
       field: "refund.sla"
       operator: "=="
@@ -72,7 +69,6 @@ acceptance_criteria:
       field: "user.membership_level"
       operator: NOT_IN
       values: ["GOLD", "DIAMOND"]
-    when: "API-20"               # 创建退款申请
     then:
       field: "refund.sla"
       operator: "=="
@@ -80,6 +76,9 @@ acceptance_criteria:
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

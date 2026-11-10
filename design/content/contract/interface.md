@@ -13,7 +13,6 @@
 | `id` | string | `API-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 接口名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `module_id` | ref | `MOD-\d+` | 所属模块 |
 | `protocol` | enum | `HTTP` / `gRPC` / `GraphQL` / `WebSocket` / `EVENT` | 通信协议 |
 | `method` | enum | `GET` / `POST` / `PUT` / `DELETE` / `PATCH` | HTTP 方法（仅 `protocol: HTTP`） |
 | `path` | string | URL 模式（如 `/api/v1/refunds`） | 端点路径 |
@@ -22,8 +21,6 @@
 | `auth` | Auth | 见下方 | 认证要求 |
 | `request_fields` | list\<[TypedField](../concepts.md#typedfield)\> | | 请求参数 |
 | `response_fields` | list\<[TypedField](../concepts.md#typedfield)\> | | 响应字段 |
-| `error_ids` | list\<ref\> | `ERR-\d+` | 可能返回的错误（引用 [Error](error.md)） |
-| `role_ids` | list\<ref\> | `ROLE-\d+` | 授权角色——谁可以调用（引用 [Role](../access/role.md)，可选） |
 | `rate_limit` | RateLimit | | 限流策略（可选） |
 
 ---
@@ -54,7 +51,6 @@ id: "API-020"
 name: "创建退款申请"
 description: "接收退款请求并创建退款工单"
 
-module_id: "MOD-010"
 protocol: HTTP
 method: POST
 path: "/api/v1/refunds"
@@ -89,10 +85,6 @@ response_fields:
     type: DATETIME
     required: true
 
-error_ids: ["ERR-1", "ERR-5", "ERR-10"]
-
-role_ids: ["ROLE-3"]             # VIP User
-
 rate_limit:
   requests: 10
   window: 1
@@ -100,6 +92,9 @@ rate_limit:
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

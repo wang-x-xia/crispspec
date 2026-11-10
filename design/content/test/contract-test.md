@@ -13,12 +13,10 @@
 | `id` | string | `CT-\d+` | 唯一标识符 |
 | `name` | string | ≤ 80 字符 | **描述性** — 用例名称 |
 | `description` | string | ≤ 200 字符 | **描述性** — 一句话说明 |
-| `interface_id` | ref | `API-\d+` | 验证的接口 |
 | `tags` | list\<enum\> | 见下方 | 分类标签 |
 | `request_input` | list\<[TypedField](../concepts.md#typedfield)\> | | 请求参数（带测试值 `value`） |
 | `expected_status` | integer | HTTP 状态码 | 预期 HTTP 状态码 |
 | `expected_response` | list\<[Assertion](../concepts.md#assertion)\> | | 预期响应断言 |
-| `expected_error_id` | ref | `ERR-\d+` | 预期错误（可选，错误场景时，引用 [Error](../contract/error.md)） |
 
 ### tags 枚举
 
@@ -33,7 +31,6 @@ id: "CT-1"
 name: "创建退款 — 正常请求"
 description: "验证合法的退款请求返回 PROCESSING 状态"
 
-interface_id: "API-20"
 tags: [HAPPY_PATH]
 
 request_input:
@@ -62,7 +59,6 @@ id: "CT-2"
 name: "创建退款 — 超频限流"
 description: "超过限流阈值时返回 429 和 REFUND_LIMIT_EXCEEDED"
 
-interface_id: "API-20"
 tags: [RATE_LIMIT, ERROR_CODE]
 
 request_input:
@@ -78,10 +74,12 @@ request_input:
 
 expected_status: 429
 expected_response: []
-expected_error_id: "ERR-5"       # REFUND_LIMIT_EXCEEDED
 ```
 
 ---
+
+> **关系不在字段里。** 与其它制品的关系统一写在下面的 `## 关联` 表——
+> 字段表只描述这件制品自己的数据，不重复声明"我引用了谁"。
 
 ## 关联
 

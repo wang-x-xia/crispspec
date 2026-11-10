@@ -2,18 +2,16 @@
 
 ## 目标
 
-定义系统的组织单元——按服务边界将制品分组，声明模块间依赖，并将制品映射到具体的代码实现。Module 类似文件夹，负责回答三个问题：
-
-1. **这个模块管哪些制品？**（契约域 + 行为域 + 代码域 + 故障域的制品归属）
-2. **这个模块依赖谁？**（模块间运行时依赖）
-3. **这些制品对应哪些代码？**（制品到源码的追溯）
+定义系统的组织单元——按服务边界把制品分组。Module 类似文件夹：
+它自己只声明身份（名字、类型、版本、负责人、状态），
+“管哪些制品”“依赖谁”“对应哪些代码”全部由关系表达。
 
 > **Module 是一个容器，不是一个普通节点。** 它把属于同一个服务边界的制品收在一起，
 > 所以图上它画成一个框，而不是一个圆点。
 > 归属关系统一用一条边 `CONTAINS` 表达——“这个制品属于这个模块”——
 > 不再按制品类型分成 `EXPOSES` / `PUBLISHES` / `GOVERNED_BY` / `OWNS` / `MAPPED_TO` /
 > `MANAGES` 等一堆同义反复的谓词。
-> 制品自己声明归属（`module_id` 字段），Module 这一侧的列表只是反向索引。
+> 归属只出现在关系表里：制品侧不声明 `module_id`，Module 侧也不维护反向列表。
 
 ---
 
@@ -29,11 +27,6 @@
 | `owner` | string | 团队 / 人员 ID | 负责人 |
 | `used` | boolean | 默认 `true` | 是否在使用 |
 | `deprecated` | boolean | 默认 `false` | 是否已废弃 |
-| `dependencies` | list\<Dependency\> | | 依赖的其他模块 |
-| `interface_ids` | list\<ref\> | `API-\d+` | 本模块的接口 |
-| `process_ids` | list\<ref\> | `PROC-\d+` | 本模块的流程 |
-| `constraint_ids` | list\<ref\> | `CON-\d+` | 关联的约束 |
-| `code_refs` | list\<[CodeRef](#coderef)\> | | 制品到源码的映射 |
 
 ### type 枚举
 
@@ -42,28 +35,6 @@
 | `CLI` | 命令行模块 |
 | `INTERNAL_LIB` | 内部功能模块 |
 | `EXTERNAL_LIB` | 外部功能模块 |
-
----
-
-## 子结构定义
-
-### Dependency
-
-| 字段 | 类型 | 约束 |
-|------|------|------|
-| `module_id` | ref | `MOD-\d+` |
-| `protocol` | enum | `PYTHON_API` |
-| `required` | boolean | `true` = 强依赖（不可降级），`false` = 弱依赖 |
-
-### CodeRef
-
-将一个制品映射到其源码实现位置。
-
-| 字段 | 类型 | 约束 |
-|------|------|------|
-| `artifact_id` | ref | 契约域或行为域制品 ID（`API-\d+` / `ENT-\d+` / `EVT-\d+` / `ERR-\d+` / `PROC-\d+` / `ORCH-\d+` / `SUB-\d+` / `SCH-\d+`） |
-| `path` | string | 源代码文件路径（相对于仓库根目录） |
-| `symbol` | string | 导出符号名（类名 / 函数名 / 常量名） |
 
 ---
 
@@ -79,31 +50,6 @@ version: "0.1.0"
 owner: "core-team"
 used: true
 deprecated: false
-
-dependencies:
-  - module_id: "MOD-002"
-    protocol: PYTHON_API
-    required: true
-  - module_id: "MOD-003"
-    protocol: PYTHON_API
-    required: true
-
-interface_ids: ["API-001", "API-002"]
-process_ids: ["PROC-001"]
-constraint_ids: ["CON-001"]
-
-code_refs:
-  - artifact_id: "API-001"
-    path: "src/cli/commands/create.py"
-    symbol: "CreateCommand"
-
-  - artifact_id: "API-002"
-    path: "src/cli/commands/validate.py"
-    symbol: "ValidateCommand"
-
-  - artifact_id: "PROC-001"
-    path: "src/cli/workflow/pipeline.py"
-    symbol: "PipelineWorkflow"
 ```
 
 ---

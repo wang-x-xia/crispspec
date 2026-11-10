@@ -260,7 +260,7 @@ artifacts:
     domain: contract
     definition: contract/entity.md
     purpose: 数据结构契约——实体与字段定义
-    notes: BC 的 as 映射目标之一；owner_module_id 必填
+    notes: BC 的 as 映射目标之一；归属由 CONTAINS 边表达
 
   - type: interface
     name: Interface

@@ -266,6 +266,28 @@ export function buildContent() {
     }
   }
 
+  // Relations are externalised: the field table must not repeat them.
+  //
+  // A field that points at another artifact is a second copy of a row
+  // in the `## 关联` table — and two copies drift.  Only the field-level
+  // foreign key is allowed: it constrains a column's value rather than
+  // navigating to another artifact.
+  const EXEMPT_FIELDS = new Set(['foreign_key']);
+  for (const artifact of artifacts.filter(Boolean)) {
+    for (const field of artifact.fields) {
+      if (!/ref/.test(field.type)) continue;
+      if (EXEMPT_FIELDS.has(field.name)) continue;
+      for (const other of artifacts.filter(Boolean)) {
+        if (other.id === artifact.id) continue;
+        if (!field.constraint.includes(`${other.prefix}-`)) continue;
+        fail(
+          `制品 ${artifact.id} 的字段 ${field.name} 指向 ${other.name}（${other.prefix}-…）——` +
+            '关系应写在「## 关联」表里，字段表只描述制品自己的数据',
+        );
+      }
+    }
+  }
+
   // One relation name per pair of artifacts.
   //
   // Two edges between the same pair are only allowed when one of them
