@@ -127,8 +127,6 @@ npm run dev      # http://localhost:5173
 |------|------|
 | [`design/content/vision.md`](design/content/vision.md) | 愿景与目标全景 |
 | [`design/content/concepts.md`](design/content/concepts.md) | 制品体系全景：域模型、制品总览、主线、关系图、ID 规范 |
-| [`design/content/roadmap.md`](design/content/roadmap.md) | 路线图：设计期的验收标准与后续阶段 |
-| [`design/content/status.md`](design/content/status.md) | 项目现状：仓库结构、已确定的决策、遗留问题 |
 | [`design/data/artifacts.yaml`](design/data/artifacts.yaml) | 制品登记表（机器可读） |
 | [`design/README.md`](design/README.md) | 前端工程说明：怎么跑、怎么加制品 |
 | [`AGENTS.md`](AGENTS.md) | 给 AI 协作者的工作说明 |
