@@ -148,11 +148,19 @@ export function ArtifactPage({ type }: { type: string }) {
           <div className="relation-columns">
             <RelationColumn
               title={`出向关系 (${artifact.outgoing.length})`}
-              relations={artifact.outgoing.map((relation) => ({ relation: relation.relation, id: relation.target }))}
+              relations={artifact.outgoing.map((relation) => ({
+                relation: relation.relation,
+                id: relation.target,
+                mainline: relation.mainline,
+              }))}
             />
             <RelationColumn
               title={`入向关系 (${artifact.incoming.length})`}
-              relations={artifact.incoming.map((relation) => ({ relation: relation.relation, id: relation.source }))}
+              relations={artifact.incoming.map((relation) => ({
+                relation: relation.relation,
+                id: relation.source,
+                mainline: relation.mainline,
+              }))}
             />
           </div>
         </section>
@@ -173,7 +181,7 @@ function RelationColumn({
   relations,
 }: {
   title: string;
-  relations: { relation: string; id: string }[];
+  relations: { relation: string; id: string; mainline: boolean }[];
 }) {
   if (relations.length === 0) return null;
   return (
@@ -188,6 +196,7 @@ function RelationColumn({
               <a className="rel-link" href={`#/artifact/${other.id}`}>
                 <span className="rel">{relation.relation}</span>
                 <span className="tgt">{other.name}</span>
+                {relation.mainline && <span className="tag">主线</span>}
               </a>
             </li>
           );

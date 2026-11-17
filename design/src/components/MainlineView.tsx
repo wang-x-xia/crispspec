@@ -7,7 +7,10 @@ import { GraphCanvas } from './GraphCanvas';
 
 /** The mainline view: the ten vertical phases and the three lateral ones. */
 export function MainlineView({ query }: { query: string }) {
-  const model = useMemo(() => buildGraph(artifacts, edges, phases, 'mainline'), []);
+  // Only the hand-off edges carry the mainline; the other relations are
+  // context and belong to the schema view.
+  const mainlineEdges = useMemo(() => edges.filter((edge) => edge.mainline), []);
+  const model = useMemo(() => buildGraph(artifacts, mainlineEdges, phases, 'mainline'), [mainlineEdges]);
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
@@ -15,7 +18,8 @@ export function MainlineView({ query }: { query: string }) {
   const artifact = selectedNode ? (artifacts.find((item) => item.id === selectedNode) ?? null) : null;
 
   const visibleDomains = useMemo(() => new Set(artifacts.map((item) => item.domain)), []);
-  const visibleRelations = useMemo(() => new Set(edges.map((edge) => edge.relation)), []);
+  // The mainline view draws no relation edges at all.
+  const visibleRelations = useMemo(() => new Set<string>(), []);
 
   return (
     <div className="workspace">
@@ -48,12 +52,6 @@ export function MainlineView({ query }: { query: string }) {
           <h2>图例</h2>
           <ul className="legend-list">
             <li>
-              <i className="dot main" /> 主线交接
-            </li>
-            <li>
-              <i className="dot side" /> 上下文关系
-            </li>
-            <li>
               <i className="dot prepared" /> 可提前准备
             </li>
             <li>
@@ -67,6 +65,12 @@ export function MainlineView({ query }: { query: string }) {
           <p className="note">
             域是"关注点"的横向切分，主线是"工作顺序"的纵向推进——两者正交。
             每个阶段分「产出」与「可提前准备」：后者可以早就准备好，主线只说它在这一步已经就位。
+          </p>
+          <p className="note">
+            这里只呈现主线的骨架：阶段、产出、可提前准备的东西，
+            以及每个阶段的交接清单（点阶段带看）。
+            关系边全部留在
+            <a href="#/graph">体系图</a>里。
           </p>
         </section>
       </aside>
@@ -97,18 +101,20 @@ export function MainlineView({ query }: { query: string }) {
             阶段 <b>{phases.length}</b>
           </span>
           <span>
-            交接 <b>{phases.reduce((total, item) => total + item.handoff.length, 0)}</b>
+            交接 <b>{mainlineEdges.length}</b>
           </span>
           <span>
             制品 <b>{artifacts.length}</b>
           </span>
         </div>
-        <div className="overlay hint">点击阶段带查看该阶段 · 点击节点查看制品</div>
+        <div className="overlay hint">
+          点击阶段带查看该阶段与交接 · 点击节点查看制品
+        </div>
       </section>
 
       <aside className="detail">
         {artifact ? (
-          <ArtifactPanel artifact={artifact} onSelect={setSelectedNode} />
+          <ArtifactPanel artifact={artifact} onSelect={setSelectedNode} mainlineOnly />
         ) : (
           <PhasePanel phase={phase} onSelect={setSelectedNode} />
         )}

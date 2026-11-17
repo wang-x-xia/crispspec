@@ -24,7 +24,6 @@ export interface SimNode {
   phase: string | null;
   prepared: boolean;
   lateral: boolean;
-  onSpine: boolean;
   artifact: Artifact;
 }
 
@@ -37,7 +36,6 @@ export interface SimEdge {
   origin: string;
   slot: number;
   siblings: number;
-  lane: number;
 }
 
 export interface Band {
@@ -105,35 +103,31 @@ export function buildGraph(
       phase: phase ? phase.id : null,
       prepared: preparedOf.has(artifact.id),
       lateral: phase ? phase.lateral : false,
-      onSpine: false,
       artifact,
     };
   });
 
   const byId = new Map(nodes.map((node) => [node.id, node]));
   const simEdges: SimEdge[] = [];
-  for (const edge of edges) {
-    const source = byId.get(edge.source);
-    const target = byId.get(edge.target);
-    if (!source || !target) continue;
-    simEdges.push({
-      source,
-      target,
-      relation: edge.relation,
-      bidirectional: edge.bidirectional,
-      mainline: edge.mainline,
-      origin: edge.origin,
-      slot: 0,
-      siblings: 1,
-      lane: 0,
-    });
-  }
 
-  if (mode === 'mainline') {
-    for (const edge of simEdges) {
-      if (!edge.mainline) continue;
-      edge.source.onSpine = true;
-      edge.target.onSpine = true;
+  // The mainline view shows the *structure* of the mainline — the phases
+  // and the artifacts in them.  Relation edges are the subject of the
+  // schema view, so the mainline model carries no edges at all.
+  if (mode !== 'mainline') {
+    for (const edge of edges) {
+      const source = byId.get(edge.source);
+      const target = byId.get(edge.target);
+      if (!source || !target) continue;
+      simEdges.push({
+        source,
+        target,
+        relation: edge.relation,
+        bidirectional: edge.bidirectional,
+        mainline: edge.mainline,
+        origin: edge.origin,
+        slot: 0,
+        siblings: 1,
+      });
     }
   }
 
@@ -328,17 +322,6 @@ export function layoutMainline(model: GraphModel, phases: Phase[], width: number
   model.bands = bands;
   model.size = { width, height: y };
 
-  // Backward edges (feedback loops) get a lane each, so they do not
-  // overlap.
-  let lane = 0;
-  for (const edge of model.edges) {
-    if (edge.target.y > edge.source.y + 1) {
-      edge.lane = 0;
-      continue;
-    }
-    edge.lane = lane;
-    lane += 1;
-  }
   return bands;
 }
 
@@ -374,32 +357,4 @@ export function edgeGeometry(edge: SimEdge): { d: string; mx: number; my: number
   return { d: `M ${sx} ${sy} Q ${cx} ${cy} ${tx} ${ty}`, mx: cx, my: cy };
 }
 
-/** The path of an edge in the mainline view. */
-export function mainlineEdgeGeometry(edge: SimEdge): { d: string; mx: number; my: number } {
-  const source = edge.source;
-  const target = edge.target;
-  if (target.y > source.y + 1) {
-    // Forward: from top to bottom, through the phase bands.
-    const sx = source.x;
-    const sy = source.y + source.radius + 2;
-    const tx = target.x;
-    const ty = target.y - target.radius - 9;
-    const midY = (sy + ty) / 2;
-    return {
-      d: `M ${sx} ${sy} C ${sx} ${midY}, ${tx} ${midY}, ${tx} ${ty}`,
-      mx: (sx + tx) / 2,
-      my: midY,
-    };
-  }
-  // Backward (feedback): around the right hand side.
-  const lane = Math.max(source.x, target.x) + 70 + edge.lane * 26;
-  const bsx = source.x + source.radius;
-  const bsy = source.y;
-  const btx = target.x + target.radius;
-  const bty = target.y;
-  return {
-    d: `M ${bsx} ${bsy} C ${lane} ${bsy}, ${lane} ${bty}, ${btx} ${bty}`,
-    mx: lane,
-    my: (bsy + bty) / 2,
-  };
-}
+/** The path of an edge in the schema view. */

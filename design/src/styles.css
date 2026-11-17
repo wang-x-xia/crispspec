@@ -390,10 +390,6 @@ code {
   background: var(--accent);
 }
 
-.legend-list .dot.side {
-  background: #6b7fa8;
-}
-
 .legend-list .dot.prepared,
 .legend-list .dot.lateral {
   background: transparent;
@@ -646,6 +642,17 @@ table.fields td.constraint {
   flex: 0 0 auto;
 }
 
+.rel-link .tag {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  line-height: 1.5;
+  padding: 0 6px;
+  border-radius: 5px;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 .note {
   color: var(--muted);
   font-size: 12.5px;
@@ -785,34 +792,6 @@ table.fields td.constraint {
   stroke: var(--border);
   stroke-width: 2;
   fill: none;
-}
-
-.mainline .edge {
-  opacity: 0.1;
-}
-
-.mainline .edge.main {
-  opacity: 1;
-  stroke: var(--accent);
-  stroke-width: 2.2px;
-}
-
-.mainline .edge-label {
-  opacity: 0.12;
-}
-
-.mainline .edge-label.main {
-  opacity: 1;
-  fill: var(--accent);
-  font-weight: 700;
-}
-
-.mainline .node {
-  opacity: 0.45;
-}
-
-.mainline .node.on-spine {
-  opacity: 1;
 }
 
 .node {

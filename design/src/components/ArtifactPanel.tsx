@@ -5,9 +5,12 @@ import type { Artifact, Phase } from '../types';
 export function ArtifactPanel({
   artifact,
   onSelect,
+  mainlineOnly = false,
 }: {
   artifact: Artifact | null;
   onSelect: (id: string) => void;
+  /** Show only the relations that carry the mainline. */
+  mainlineOnly?: boolean;
 }) {
   if (!artifact) {
     return (
@@ -20,6 +23,17 @@ export function ArtifactPanel({
   }
 
   const phase = artifact.phase ? phaseById.get(artifact.phase) : undefined;
+
+  // The mainline view keeps only the hand-off relations; the schema view
+  // shows every relation the artifact has.
+  const outgoing = mainlineOnly
+    ? artifact.outgoing.filter((relation) => relation.mainline)
+    : artifact.outgoing;
+  const incoming = mainlineOnly
+    ? artifact.incoming.filter((relation) => relation.mainline)
+    : artifact.incoming;
+  const hidden =
+    artifact.outgoing.length + artifact.incoming.length - (outgoing.length + incoming.length);
 
   return (
     <div className="panel-body">
@@ -103,32 +117,41 @@ export function ArtifactPanel({
         </>
       )}
 
-      {artifact.outgoing.length > 0 && (
+      {outgoing.length > 0 && (
         <>
-          <h4>出向关系 ({artifact.outgoing.length})</h4>
+          <h4>出向关系 ({outgoing.length})</h4>
           <RelationList
-            relations={artifact.outgoing.map((relation) => ({
+            relations={outgoing.map((relation) => ({
               relation: relation.relation,
               other: relation.target,
               direction: 'out',
+              mainline: relation.mainline,
             }))}
             onSelect={onSelect}
           />
         </>
       )}
 
-      {artifact.incoming.length > 0 && (
+      {incoming.length > 0 && (
         <>
-          <h4>入向关系 ({artifact.incoming.length})</h4>
+          <h4>入向关系 ({incoming.length})</h4>
           <RelationList
-            relations={artifact.incoming.map((relation) => ({
+            relations={incoming.map((relation) => ({
               relation: relation.relation,
               other: relation.source,
               direction: 'in',
+              mainline: relation.mainline,
             }))}
             onSelect={onSelect}
           />
         </>
+      )}
+
+      {mainlineOnly && hidden > 0 && (
+        <p className="note">
+          这里只列主线交接关系，还有 {hidden} 条上下文关系未显示——
+          <a href={`#/artifact/${artifact.id}`}>完整关系见制品页</a>。
+        </p>
       )}
 
       <h4>定义文档</h4>
@@ -233,7 +256,7 @@ function RelationList({
   relations,
   onSelect,
 }: {
-  relations: { relation: string; other: string; direction: 'out' | 'in' }[];
+  relations: { relation: string; other: string; direction: 'out' | 'in'; mainline: boolean }[];
   onSelect: (id: string) => void;
 }) {
   return (
@@ -246,6 +269,7 @@ function RelationList({
             <button type="button" className="rel-link" onClick={() => onSelect(relation.other)}>
               <span className="rel">{relation.relation}</span>
               <span className="tgt">{other.name}</span>
+              {relation.mainline && <span className="tag">主线</span>}
               <span className="dir">{relation.direction === 'out' ? '→' : '←'}</span>
             </button>
           </li>
