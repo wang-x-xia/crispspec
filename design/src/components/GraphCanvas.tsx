@@ -11,7 +11,6 @@ import {
   layoutDomain,
   layoutMainline,
   layoutRadial,
-  mainlineEdgeGeometry,
   seedPositions,
   stepForce,
 } from '../graph/layout';
@@ -139,7 +138,6 @@ export function GraphCanvas(props: GraphCanvasProps) {
       let classes = 'node';
       if (node.id === CONTAINER_ID) classes += ' container';
       if (node.prepared) classes += ' prepared';
-      if (mode === 'mainline' && node.onSpine) classes += ' on-spine';
       if (selectedId) {
         if (node.id === selectedId) classes += ' selected';
         else if (neighbors.has(node.id)) classes += ' neighbor';
@@ -177,7 +175,7 @@ export function GraphCanvas(props: GraphCanvasProps) {
         label.setAttribute('class', labelClasses);
       }
     }
-  }, [dimMode, mode, model, query, selectedId, showLabels, visibleDomains, visibleRelations]);
+  }, [dimMode, model, query, selectedId, showLabels, visibleDomains, visibleRelations]);
 
   const paintGeometry = useCallback(() => {
     for (const node of model.nodes) {
@@ -189,14 +187,14 @@ export function GraphCanvas(props: GraphCanvasProps) {
       const path = edgeRefs.current.get(edgeKey(edge));
       const label = labelRefs.current.get(edgeKey(edge));
       if (!path) continue;
-      const geometry = mode === 'mainline' ? mainlineEdgeGeometry(edge) : edgeGeometry(edge);
+      const geometry = edgeGeometry(edge);
       path.setAttribute('d', geometry.d);
       if (label) {
         label.setAttribute('x', String(geometry.mx));
         label.setAttribute('y', String(geometry.my));
       }
     }
-  }, [mode, model]);
+  }, [model]);
 
   const applyTransform = useCallback(() => {
     const viewport = viewportRef.current;
@@ -440,7 +438,7 @@ export function GraphCanvas(props: GraphCanvasProps) {
           <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f9dff" />
         </marker>
       </defs>
-      <g ref={viewportRef} className={mode === 'mainline' ? 'mainline' : undefined}>
+      <g ref={viewportRef}>
         {mode === 'mainline' && <BandLayer bands={bands} model={model} onSelectPhase={onSelectPhase} />}
         <g className="edge-layer">
           {model.edges.map((edge) => (

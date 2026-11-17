@@ -1,7 +1,7 @@
 # Structured Artifacts — 制品体系概览
 
 > 📊 **想看图？** [制品图谱（交互网页）](../) 是本文件的交互式版本：
-> 35 种制品 + 83 条关系，可筛选、可搜索、可点开看字段定义。
+> 全部制品 + 全部关系，可筛选、可搜索、可点开看字段定义。
 
 ## 设计原则
 
@@ -33,7 +33,6 @@
 
 > 实例级的引用（“这条配置覆盖了哪个配置项”“这个故事实现了哪个接口的具体实例”）
 > 目前还没有落点——它既不是字段，也不是类型级的关系。
-> 见 [项目现状](status.md) 的遗留问题。
 
 
 ---
@@ -183,7 +182,7 @@ Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
 ## 开发主线
 
 域是"关注点"的横向切分，主线是"工作顺序"的纵向推进——两者正交。
-35 种制品被 10 个主线阶段串成一条不重不漏的链，每一步都由一条**真实存在的关系边**交接。
+全部制品被主线阶段串成一条不重不漏的链，每一步都由一条**真实存在的关系边**交接。
 
 但主线不声称自己**产出**所有制品。每个阶段分两类：
 
@@ -197,10 +196,10 @@ Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
 | 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — | — |
 | 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`DESCRIBED_BY` |
 | 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | — | `DECOMPOSES_INTO` |
-| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS` |
+| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY` |
 | 5 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | — | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
-| 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
-| 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `MAPPED_TO`、`LOCATED_IN` |
+| 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `CONTAINS` |
+| 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `CONTAINS`、`LOCATED_IN` |
 | 8 | 验证闭环 | 怎么证明这个制品是对的？ | Acceptance / Scenario / Contract / Transition / Integration Test、Benchmark | — | `TESTED_BY` |
 | 9 | 交付上线 | 部署到哪？配置怎么管？ | Pipeline | Environment / Config Set / Configuration / Secret | `BUILDS`、`DEPLOYS_TO`、`USES_CONFIG`、`OVERRIDES`、`REQUIRES` |
 | 10 | 运维反馈 | 出了什么事？怎么恢复？ | Incident / Runbook / Playbook | — | `AFFECTS`、`RESOLVED_BY`、`HANDLES` |
@@ -214,11 +213,13 @@ Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
 | 制品结构 | 每个制品的结构由谁定义？ | Type Def | — |
 
 > “语义对齐”曾经是主线上的一个独立阶段，但它其实不产出任何制品——
-> 业务概念到技术制品的映射是一条**关系**，不是一件东西。
-> 现在这条对齐由第 4 阶段的几条 `AS_*` 交接边表达，业务概念本身则回到第 2 阶段。
+> 业务概念到技术制品的映射是一条**关系**（`AS`），不是一件东西。
+> 所以它不进主线：语义对齐在「体系图」里表达，主线只管工作顺序。
 
 > 主线声明在 [`artifacts.yaml`](../data/artifacts.yaml) 的 `mainline:` 段，
-> 可视化页面里的「开发主线」视图就是它。
+> 可视化页面里的「开发主线」视图就是它——
+> **只呈现骨架**：阶段、产出、可提前准备的东西与每个阶段的交接清单；
+> 关系边属于体系图，不画在这里。
 > 两条约束由构建脚本保证：**每种制品恰好属于一个阶段**，
 > **每条交接都是真实存在的关系边**——改了关系却忘了改主线，前端就构建不过。
 

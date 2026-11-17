@@ -61,7 +61,7 @@ crispspec/
 
 ### 制品体系
 
-35 种制品，分 11 个域：
+全部制品按域划分：
 
 - **需求域**：Draft、Requirement、User Story、Business Concept
 - **契约域**：Entity、Interface、Event、Error
@@ -75,8 +75,8 @@ crispspec/
 - **组织单元**：Module
 - **元制品**：Type Def
 
-它们通过 **83 条 typed ID 关系边**互相引用，形成一张知识图谱；
-**10 个主线阶段**把 35 种制品串成一条不重不漏的链（外加 3 个横切阶段）。
+它们通过 typed ID 关系边互相引用，形成一张知识图谱；
+主线阶段把它们串成一条不重不漏的链（外加几个横切阶段）。
 
 ---
 
@@ -92,11 +92,11 @@ npm run dev      # http://localhost:5173
 
 | 视图 | 内容 |
 |------|------|
-| **概览** | 愿景、设计原则、域模型、35 种制品的用途清单、主线表格 |
+| **概览** | 愿景、设计原则、域模型、每种制品的用途清单、主线表格 |
 | **体系图** | 制品全景关系图——按域着色，按关系类型筛选，搜索、缩放、拖拽；点开看完整字段表 |
 | **开发主线** | 从意图到运维的纵向链路：每一步的产出、可提前准备的东西、交接边 |
 | **制品** | 每种制品的字段、枚举、子结构、映射、出入关系，以及完整定义文档 |
-| **文档** | 全部设计文档——愿景、体系概览、RBAC 子系统、自然语言结构化、路线图…… |
+| **文档** | 全部设计文档——愿景、体系概览、RBAC 子系统、自然语言结构化…… |
 
 > 页面里的每个数字、每条边、每个字段都来自仓库自身：
 > `design/data/artifacts.yaml`（登记表）+ 各制品定义文档里的 `## 字段定义` 与 `## 关联` 表。
@@ -127,8 +127,6 @@ npm run dev      # http://localhost:5173
 |------|------|
 | [`design/content/vision.md`](design/content/vision.md) | 愿景与目标全景 |
 | [`design/content/concepts.md`](design/content/concepts.md) | 制品体系全景：域模型、制品总览、主线、关系图、ID 规范 |
-| [`design/content/roadmap.md`](design/content/roadmap.md) | 路线图：设计期的验收标准与后续阶段 |
-| [`design/content/status.md`](design/content/status.md) | 项目现状：仓库结构、已确定的决策、遗留问题 |
 | [`design/data/artifacts.yaml`](design/data/artifacts.yaml) | 制品登记表（机器可读） |
 | [`design/README.md`](design/README.md) | 前端工程说明：怎么跑、怎么加制品 |
 | [`AGENTS.md`](AGENTS.md) | 给 AI 协作者的工作说明 |

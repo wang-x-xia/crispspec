@@ -370,8 +370,18 @@ export function buildContent() {
     const source = artifactById.get(edge.source);
     const target = artifactById.get(edge.target);
     if (!source || !target) continue;
-    source.outgoing.push({ relation: edge.relation, target: edge.target, origin: edge.origin });
-    target.incoming.push({ relation: edge.relation, source: edge.source, origin: edge.origin });
+    source.outgoing.push({
+      relation: edge.relation,
+      target: edge.target,
+      origin: edge.origin,
+      mainline: edge.mainline,
+    });
+    target.incoming.push({
+      relation: edge.relation,
+      source: edge.source,
+      origin: edge.origin,
+      mainline: edge.mainline,
+    });
   }
 
   // ── Documents ────────────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 # AGENTS.md — 给 AI 协作者的工作说明
 
 > 本项目处于**设计期**：仓库里没有实现代码，只有制品体系与展示它的前端。
-> 改动前先读 [`README.md`](README.md) 与 [`design/content/status.md`](design/content/status.md)。
+> 改动前先读 [`README.md`](README.md) 与 [`design/content/concepts.md`](design/content/concepts.md)（制品体系总览）。
 
 ---
 

@@ -44,12 +44,16 @@ export interface OutgoingRelation {
   relation: string;
   target: string;
   origin: string;
+  /** Is this edge one of the mainline hand-offs? */
+  mainline: boolean;
 }
 
 export interface IncomingRelation {
   relation: string;
   source: string;
   origin: string;
+  /** Is this edge one of the mainline hand-offs? */
+  mainline: boolean;
 }
 
 export interface Artifact {

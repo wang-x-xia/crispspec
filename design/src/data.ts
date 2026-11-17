@@ -41,7 +41,6 @@ export function docGroupLabel(group: string): string {
     incident: '故障域',
     test: '验证域',
     schema: '元制品',
-    archive: '归档',
   };
   return labels[group] ?? group;
 }
