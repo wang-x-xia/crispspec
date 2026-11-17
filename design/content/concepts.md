@@ -197,10 +197,10 @@ Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
 | 1 | 意图捕获 | 人类原始意图是什么？ | Draft | — | — |
 | 2 | 结构化需求 | 消歧之后的需求是什么？ | Requirement | Business Concept | `DISAMBIGUATED_INTO`、`DESCRIBED_BY` |
 | 3 | 需求分解 | 拆成哪些可交付的单元？ | User Story | — | `DECOMPOSES_INTO` |
-| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY`、`AS` |
+| 4 | 契约定义 | 数据长什么样？模块间怎么通信？ | Interface / Entity / Event | Error | `IMPLEMENTED_BY` |
 | 5 | 行为建模 | 状态怎么变？多个接口怎么协调？ | Process / Orchestration / Reaction / Schedule | — | `IMPLEMENTED_BY`、`COMPOSES`、`TRANSITIONS`、`LISTENS_TO` |
-| 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `EXPOSES`、`GOVERNED_BY`、`PUBLISHES` |
-| 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `MAPPED_TO`、`LOCATED_IN` |
+| 6 | 组织归属 | 这些制品归哪个模块管？ | Module | — | `CONTAINS` |
+| 7 | 代码落地 | 逻辑制品对应哪些源码？ | Code Ref | Repository | `CONTAINS`、`LOCATED_IN` |
 | 8 | 验证闭环 | 怎么证明这个制品是对的？ | Acceptance / Scenario / Contract / Transition / Integration Test、Benchmark | — | `TESTED_BY` |
 | 9 | 交付上线 | 部署到哪？配置怎么管？ | Pipeline | Environment / Config Set / Configuration / Secret | `BUILDS`、`DEPLOYS_TO`、`USES_CONFIG`、`OVERRIDES`、`REQUIRES` |
 | 10 | 运维反馈 | 出了什么事？怎么恢复？ | Incident / Runbook / Playbook | — | `AFFECTS`、`RESOLVED_BY`、`HANDLES` |
@@ -214,8 +214,8 @@ Requirement ──── DESCRIBED_BY ────▶ 多个 Business Concept
 | 制品结构 | 每个制品的结构由谁定义？ | Type Def | — |
 
 > “语义对齐”曾经是主线上的一个独立阶段，但它其实不产出任何制品——
-> 业务概念到技术制品的映射是一条**关系**，不是一件东西。
-> 现在这条对齐由第 4 阶段的几条 `AS_*` 交接边表达，业务概念本身则回到第 2 阶段。
+> 业务概念到技术制品的映射是一条**关系**（`AS`），不是一件东西。
+> 所以它不进主线：语义对齐在「体系图」里表达，主线只管工作顺序。
 
 > 主线声明在 [`artifacts.yaml`](../data/artifacts.yaml) 的 `mainline:` 段，
 > 可视化页面里的「开发主线」视图就是它——
